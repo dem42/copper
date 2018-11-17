@@ -4,7 +4,7 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    println!("cargo:rustc-link-lib=glut");
+    println!("cargo:rustc-link-lib=glut32");
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")

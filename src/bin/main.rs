@@ -4,6 +4,8 @@ use libc::{size_t, c_int, c_uint, c_char};
 use std::str;
 use std::ffi::CStr;
 
+extern crate copper;
+
 extern "C" {
     fn abs(input: i32) -> i32;
 }
@@ -25,17 +27,6 @@ extern {
     fn glewGetString(name: c_uint) -> *const c_char;
 }
 
-// the glut library (utilities for creating context) uses a static lib that then loads the glut32.dll -> in windows this dll needs to be either in PATH or same folder
-#[link(name = "glut32", kind = "static")]
-#[allow(non_snake_case)]
-extern "stdcall" {
-    fn glutInit(argc: *const c_int, argv: *const *const u8);
-    fn glutCreateWindow(title: *const u8) -> c_int;
-    fn glutMainLoop();
-    fn glutInitWindowSize(width: c_int, height: c_int);
-    fn glutInitWindowPosition(x: c_int, y: c_int);
-    fn glutDisplayFunc(func: extern fn());
-}
 
 extern fn display_callback() {
 
@@ -48,14 +39,15 @@ fn test_manual_bindings() {
     let x = unsafe { snappy_max_compressed_length(100) };
     println!("Length: {}", x);
 
-    let x = "test".as_bytes();
-    let z = &(x.as_ptr());
-    let y = z as *const *const u8;
+    let mut x = [0i8; 0];
+    let z = &mut (x.as_mut_ptr());
+    let y = z as *mut *mut c_char;    
+    let mut argc = 0;
     unsafe {
-        glutInit(&0 as *const c_int, y);
-        glutInitWindowSize(500, 500);
-        glutInitWindowPosition(10, 10);
-        glutCreateWindow(x.as_ptr());
+        copper::glutInit(&mut argc as *mut c_int, y);
+        copper::glutInitWindowSize(500, 500);
+        copper::glutInitWindowPosition(10, 10);
+        copper::glutCreateWindow(x.as_ptr());
 
         let err = glewInit();
         if err != GLEW_OK {
@@ -70,11 +62,11 @@ fn test_manual_bindings() {
         let str_slice: &str = version_str.to_str().unwrap();
         println!("Status: using GLEW version {}", str_slice);
 
-        glutDisplayFunc(display_callback);
-        glutMainLoop();
+        copper::glutDisplayFunc(Some(display_callback));
+        copper::glutMainLoop();
     }
 }
 
 fn main() {
-    
+    test_manual_bindings();
 }
