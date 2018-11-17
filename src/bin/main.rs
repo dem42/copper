@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate libc;
 use libc::{size_t, c_int, c_uint, c_char};
 use std::str;
@@ -40,7 +41,7 @@ extern fn display_callback() {
 
 }
 
-fn main() {
+fn test_manual_bindings() {
     unsafe {
         println!("FFI test. callings abs from c standard library: {}", abs(-3));
     }
@@ -72,4 +73,8 @@ fn main() {
         glutDisplayFunc(display_callback);
         glutMainLoop();
     }
+}
+
+fn main() {
+    
 }
