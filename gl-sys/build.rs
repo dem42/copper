@@ -4,11 +4,12 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    println!("cargo:rustc-link-lib=glut32");
+    println!("cargo:rustc-link-lib=OpenGL32");
 
-    let bindings = bindgen::Builder::default()
+    let bindings = bindgen::Builder::default()        
         .header("wrapper.h")
-        .clang_arg(r"-IC:\Program Files (x86)\NVIDIA Corporation\Cg\include\GL")
+        .clang_arg(r"-IC:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\gl")
+        .derive_debug(false)
         .generate()
         .expect("Unable to generate bindings");
 
@@ -16,6 +17,6 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings");
-    
-    println!(r"cargo:rustc-link-search=C:\Program Files (x86)\NVIDIA Corporation\Cg\lib.x64");
+
+    println!(r"cargo:rustc-link-search=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.14393.0\um\x64");    
 }

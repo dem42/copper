@@ -104,17 +104,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "glob"
-version = "0.2.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "glut-sys"
+name = "glfw-sys"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.42.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "glob"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "humantime"

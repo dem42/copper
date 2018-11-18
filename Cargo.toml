@@ -5,5 +5,5 @@ authors = ["martin <martin.papanek@gmail.com>"]
 
 [dependencies]
 libc = "0.2.0"
-glut-sys = { path = "glut-sys" }
 glew-sys = { path = "glew-sys" }
+glfw-sys = { path = "glfw-sys" }
