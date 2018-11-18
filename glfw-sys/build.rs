@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 fn main() {
     println!("cargo:rustc-link-lib=glfw3");
+    println!("cargo:rustc-link-lib=OpenGL32");
     println!("cargo:rustc-link-lib=User32");
     println!("cargo:rustc-link-lib=Gdi32");
 
