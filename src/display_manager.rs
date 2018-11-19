@@ -1,101 +1,82 @@
-use glfw_sys::*;
-use glew_sys::{
-    glewInit,    
-    glewGetErrorString,
-    glewGetString,
-    GLEW_OK,
-    GLEW_VERSION
-};
-use libc::{c_char, c_int};
-use std::ffi::{CString, CStr};
-use std::ptr;
 
-const WIDTH: i32 = 1280;
-const HEIGHT: i32 = 720;
+use glfw::{Action, Context, Key};
+
+const WIDTH: u32 = 1280;
+const HEIGHT: u32 = 720;
 // const FPS_CAP: u32 = 120;
 // investigate framerate limits (high framerates vs VSync and flickering)
 // what happens when we use lwjgl Display.Sync(frame_rate_cap)
 
-static mut WINDOW: *mut GLFWwindow = ptr::null_mut();
 
-unsafe extern "C" fn error_callback(_error_code: c_int, description: *const c_char) {
-    let err_str = description as *const i8;
-    let err_str = CStr::from_ptr(err_str);
-    let str_slice: &str = err_str.to_str().unwrap();
-    println!("GLFW error: {}", str_slice);
+mod gl {
+    include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
 }
 
-unsafe extern "C" fn key_callback(window: *mut GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) {
-        
+pub struct Display {
+    glfw: glfw::Glfw,
+    window: glfw::Window,
 }
 
-pub fn create_display() {
-    let title = CString::new("Hello Copper").expect("CString::new failed");    
-    unsafe {        
 
-        if glfwInit() != GLFW_TRUE as i32 {
-            panic!("Unsuccessful initialziation of GLFW");
+impl Display {
+    pub fn create() -> Display {        
+        let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        glfw.window_hint(glfw::WindowHint::ContextVersion(3, 2));
+        glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
+        glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+
+        let (mut window, _events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", glfw::WindowMode::Windowed)
+            .expect("Failed to create GLFW window.");
+
+        window.make_current();
+
+        Display::print_opengl_info(&window);
+
+        gl::load_with(|s| window.get_proc_address(s) as *const _);
+
+        Display {
+            glfw,
+            window,
         }
-
-        glfwSetErrorCallback(Some(error_callback));
-
-        // uncomment these lines if on Apple OS X
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR as i32, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR as i32, 2);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT as i32, GL_TRUE as i32);
-        glfwWindowHint(GLFW_OPENGL_PROFILE as i32, GLFW_OPENGL_CORE_PROFILE as i32);
-
-        WINDOW = glfwCreateWindow(WIDTH, HEIGHT, title.into_raw(), ptr::null_mut(), ptr::null_mut());
-        if WINDOW == ptr::null_mut() {
-            glfwTerminate();
-            panic!("Unable to create window and OpenGL context");
-        }
-        glfwSetKeyCallback(WINDOW, Some(key_callback));
-
-        glfwMakeContextCurrent(WINDOW);
-    
-        let err = glewInit();
-        if err != GLEW_OK {
-            let err_str = glewGetErrorString(err) as *const i8;
-            let err_str = CStr::from_ptr(err_str);
-            let str_slice: &str = err_str.to_str().unwrap();
-            println!("Failed to start glew: {}", str_slice);
-        }
-
-        let version_str = glewGetString(GLEW_VERSION) as *const i8;
-        let version_str = CStr::from_ptr(version_str);
-        let str_slice: &str = version_str.to_str().unwrap();
-        println!("Status: using GLEW version {}", str_slice);        
     }
-}
+ 
+    fn print_opengl_info(window: &glfw::Window) {
+        let gl_version = window.get_context_version();    
+        let is_core_profile = window.get_opengl_profile() == glfw::OpenGlProfileHint::Core as i32;
+        let is_forward_compat = window.is_opengl_forward_compat();
+        println!("{}", "*".repeat(10));
+        println!("OpenGL version: {}", gl_version);    
+        println!("Core profile: {}, Forward compatibility: {}", is_core_profile, is_forward_compat);    
+        println!("{}", "*".repeat(10));
+    }
 
-pub fn update_display() {
-    let mut width: c_int = 0;
-    let mut height: c_int = 0;
-    let mut width_ptr = &mut width as *mut c_int;
-    let mut height_ptr = &mut height as *mut c_int;
-    unsafe { 
+    pub fn update_display(&mut self) {
         // set the viewport size (measured in pixels unlike the window size which is in screen coordinates)
-        glfwGetFramebufferSize(WINDOW, width_ptr, height_ptr);
-        let ratio = (width as f32) / (height as f32);
-        glfw_sys::glViewport(0 as c_int, 0 as c_int, width, height);
+        let (width, height) = self.window.get_framebuffer_size();        
+        let _ratio = (width as f32) / (height as f32);
 
-        glfw_sys::glClear(GL_COLOR_BUFFER_BIT);
+        unsafe { 
+            gl::Viewport(0, 0, width, height);
 
-        glfwPollEvents(); 
+            self.glfw.poll_events();
+
+            // for (_, event) in glfw::flush_messages(&events) {
+            //     handle_window_event(&mut window, event);
+            // }
+        }
+    }
+
+    pub fn is_close_requested(&self) -> bool {  
+        self.window.should_close()
+    }
+
+    fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
+        match event {
+            glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
+                window.set_should_close(true)
+            }
+            _ => {}
+        }
     }
 }
 
-pub fn close_display() {
-    unsafe {
-        glfwDestroyWindow(WINDOW);
-        glfwTerminate();
-    }
-}
-
-pub fn is_close_requested() -> bool {    
-    unsafe {
-        let close_flag = glfwWindowShouldClose(WINDOW);
-        close_flag != 0
-    }
-}

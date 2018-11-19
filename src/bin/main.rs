@@ -1,16 +1,14 @@
 extern crate copper;
-use copper::display_manager;
+use copper::display_manager::Display;
 
 fn test_engine() {
-    display_manager::create_display();
-
-    while !display_manager::is_close_requested() {
-        display_manager::update_display();
+    let mut display = Display::create();
+    
+    while !display.is_close_requested() {
+        display.update_display();
     }
-
-    display_manager::close_display();
 }
 
 fn main() {
-    test_engine();
+    test_engine();    
 }
