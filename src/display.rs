@@ -1,16 +1,12 @@
 
 use glfw::{Action, Context, Key};
+use super::gl as gl;
 
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 720;
 // const FPS_CAP: u32 = 120;
 // investigate framerate limits (high framerates vs VSync and flickering)
 // what happens when we use lwjgl Display.Sync(frame_rate_cap)
-
-
-mod gl {
-    include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
-}
 
 pub struct Display {
     glfw: glfw::Glfw,
@@ -54,16 +50,14 @@ impl Display {
         // set the viewport size (measured in pixels unlike the window size which is in screen coordinates)
         let (width, height) = self.window.get_framebuffer_size();        
         let _ratio = (width as f32) / (height as f32);
+        
+        gl::viewport(0, 0, width, height);
 
-        unsafe { 
-            gl::Viewport(0, 0, width, height);
+        self.glfw.poll_events();
 
-            self.glfw.poll_events();
-
-            // for (_, event) in glfw::flush_messages(&events) {
-            //     handle_window_event(&mut window, event);
-            // }
-        }
+        // for (_, event) in glfw::flush_messages(&events) {
+        //     handle_window_event(&mut window, event);
+        // }    
     }
 
     pub fn is_close_requested(&self) -> bool {  

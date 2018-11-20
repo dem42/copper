@@ -1,5 +1,5 @@
 extern crate copper;
-use copper::display_manager::Display;
+use copper::display::Display;
 
 fn test_engine() {
     let mut display = Display::create();
