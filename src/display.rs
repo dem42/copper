@@ -1,6 +1,6 @@
 
 use glfw::{Action, Context, Key};
-use super::gl as gl;
+use super::gl;
 
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 720;
