@@ -17,7 +17,7 @@ pub struct Display {
 impl Display {
     pub fn create() -> Display {        
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-        glfw.window_hint(glfw::WindowHint::ContextVersion(3, 2));
+        glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
         glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
 
@@ -29,6 +29,8 @@ impl Display {
         Display::print_opengl_info(&window);
 
         gl::load_with(|s| window.get_proc_address(s) as *const _);
+
+        gl::helper::register_error_callback();
 
         Display {
             glfw,
@@ -52,6 +54,8 @@ impl Display {
         let _ratio = (width as f32) / (height as f32);
         
         gl::viewport(0, 0, width, height);
+
+        self.window.swap_buffers();
 
         self.glfw.poll_events();
 

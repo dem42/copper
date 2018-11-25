@@ -12,12 +12,13 @@ impl ModelLoader {
         <ModelLoader as Default>::default()        
     }
 
-    pub fn load_to_vao(&mut self, positions: &[f32]) -> RawModel {
+    pub fn load_to_vao(&mut self, positions: &[f32], indices: &[u32]) -> RawModel {
         let vao_id = self.create_vao();
         let attribute_id = 0;
+        self.bind_indices_buffer(indices);
         self.store_data_in_attribute_list(attribute_id, positions);
         self.unbind_vao();
-        RawModel::new(vao_id, positions.len() / 3, attribute_id)
+        RawModel::new(vao_id, indices.len(), attribute_id)
     }
 
     fn create_vao(&mut self) -> u32 {
@@ -39,6 +40,14 @@ impl ModelLoader {
         gl::buffer_data(gl::ARRAY_BUFFER, data, gl::STATIC_DRAW);
         gl::vertex_attrib_pointer(attribute_num, 3, gl::FLOAT);
         gl::bind_buffer(gl::ARRAY_BUFFER, 0);
+    }
+
+    fn bind_indices_buffer(&mut self, indices: &[u32]) {
+        let vbo_id = gl::gen_buffer();
+        self.vbo_list.push(vbo_id);
+        gl::bind_buffer(gl::ELEMENT_ARRAY_BUFFER, vbo_id);
+        gl::buffer_data(gl::ELEMENT_ARRAY_BUFFER, indices, gl::STATIC_DRAW);
+        // no unbind since we will bind data buffer next -> that means it HAS to be called after        
     }
 }
 
