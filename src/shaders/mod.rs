@@ -16,7 +16,8 @@ pub fn create_static_shader_for_model(model: &RawModel) -> ShaderProgram {
         String::from("src/shaders/vertexShader.glsl"), 
         String::from("src/shaders/fragmentShader.glsl"), 
         |shader_prog| {
-            shader_prog.bind_attribute(model.attribute_id, String::from("position"));
+            shader_prog.bind_attribute(model.pos_attrib, String::from("pos"));
+            shader_prog.bind_attribute(model.tex_coord_attrib, String::from("tex_coord"));
         });
 
     shader_program

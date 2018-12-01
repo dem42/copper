@@ -1,9 +1,16 @@
 use super::gl;
+use texture_lib::{
+    load_rgb_2d_texture,
+    Texture2DRGB,
+    Texture,
+    RGB,
+};
 
 #[derive(Default)]
 pub struct ModelLoader {    
     vao_list: Vec<u32>,
     vbo_list: Vec<u32>,
+    tex_list: Vec<u32>,
 }
 
 impl ModelLoader {
@@ -12,13 +19,53 @@ impl ModelLoader {
         <ModelLoader as Default>::default()        
     }
 
-    pub fn load_to_vao(&mut self, positions: &[f32], indices: &[u32]) -> RawModel {
+    pub fn load_to_vao(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32]) -> RawModel {
         let vao_id = self.create_vao();
-        let attribute_id = 0;
+        let pos_attrib = 0;
+        let tex_coord_attrib = 1;
         self.bind_indices_buffer(indices);
-        self.store_data_in_attribute_list(attribute_id, positions);
+        self.store_data_in_attribute_list(pos_attrib, 3, positions);
+        self.store_data_in_attribute_list(tex_coord_attrib, 2, texture_coords);
         self.unbind_vao();
-        RawModel::new(vao_id, indices.len(), attribute_id)
+        RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib)
+    }
+
+    fn test_load_texture() {
+        let texture = Texture2DRGB {
+            width: 2,
+            height: 2,
+            data: vec![RGB {r: 255, g: 0, b: 0}, RGB {r: 0, g: 255, b: 0}, RGB {r: 255, g: 0, b: 0}, RGB {r: 0, g: 0, b: 255}],
+        };
+
+        let texture = Texture {
+            width: 3,
+            height: 3,
+            data: vec![
+                RGB {r: 0.0f32, g: 0.0, b: 0.2}, RGB {r: 0.0, g: 0.2, b: 0.0}, RGB {r: 0.2, g: 0.0, b: 0.0},
+                RGB {r: 0.0, g: 0.5, b: 0.5}, RGB {r: 0.5, g: 0.5, b: 0.0}, RGB {r: 0.5, g: 0.0, b: 0.5}, 
+                RGB {r: 1.0, g: 1.0, b: 1.0}, RGB {r: 0.8, g: 0.8, b: 0.8}, RGB {r: 0.5, g: 0.5, b: 0.5},
+            ],
+        };
+    }
+
+    pub fn load_texture(&mut self) -> ModelTexture {
+        let texture = load_rgb_2d_texture("res/textures/test.png").expect("Failed to load texture");
+        println!("got rgb vec with {} elements", texture);
+
+        let tex_id = gl::gen_texture();
+        self.tex_list.push(tex_id);
+        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_BORDER);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_BORDER);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+
+        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGB, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+        gl::bind_texture(0, gl::TEXTURE_2D);
+        ModelTexture {
+            tex_id,
+        }
     }
 
     fn create_vao(&mut self) -> u32 {
@@ -33,12 +80,12 @@ impl ModelLoader {
         gl::bind_vertex_array(0);
     }
     
-    fn store_data_in_attribute_list(&mut self, attribute_num: u32, data: &[f32]) {
+    fn store_data_in_attribute_list(&mut self, attribute_num: u32, coord_size: u32, data: &[f32]) {
         let vbo_id = gl::gen_buffer();
         self.vbo_list.push(vbo_id);
         gl::bind_buffer(gl::ARRAY_BUFFER, vbo_id);
         gl::buffer_data(gl::ARRAY_BUFFER, data, gl::STATIC_DRAW);
-        gl::vertex_attrib_pointer(attribute_num, 3, gl::FLOAT);
+        gl::vertex_attrib_pointer(attribute_num, coord_size, gl::FLOAT);
         gl::bind_buffer(gl::ARRAY_BUFFER, 0);
     }
 
@@ -55,21 +102,33 @@ impl Drop for ModelLoader {
     fn drop(&mut self) {
         gl::delete_vertex_arrays(&self.vao_list[..]);
         gl::delete_buffers(&self.vbo_list[..]);
+        gl::delete_texture(&self.tex_list);
     }
 }
 
 pub struct RawModel {
     pub vao_id: u32,
     pub vertex_count: usize,
-    pub attribute_id: u32,
+    pub pos_attrib: u32,
+    pub tex_coord_attrib: u32,
 }
 
 impl RawModel {
-    pub fn new(vao_id: u32, vertex_count: usize, attribute_id: u32) -> RawModel {
+    pub fn new(vao_id: u32, vertex_count: usize, pos_attrib: u32, tex_coord_attrib: u32) -> RawModel {
         RawModel {
             vao_id,
             vertex_count,
-            attribute_id,
+            pos_attrib,
+            tex_coord_attrib,
         }
     }
+}
+
+pub struct ModelTexture {
+    pub tex_id: u32,
+}
+
+pub struct TexturedModel {
+    pub raw_model: RawModel,
+    pub texture: ModelTexture,
 }

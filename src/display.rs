@@ -1,5 +1,5 @@
 
-use glfw::{Action, Context, Key};
+use glfw::Context;
 use super::gl;
 
 const WIDTH: u32 = 1280;
@@ -68,13 +68,13 @@ impl Display {
         self.window.should_close()
     }
 
-    fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
-        match event {
-            glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
-                window.set_should_close(true)
-            }
-            _ => {}
-        }
-    }
+    // fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
+    //     match event {
+    //         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
+    //             window.set_should_close(true)
+    //         }
+    //         _ => {}
+    //     }
+    // }
 }
 

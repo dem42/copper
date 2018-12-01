@@ -1,10 +1,11 @@
 #version 400 core
 
 in vec3 pos;
+in vec2 tex_coord;
 
-out vec3 colour;
+out vec2 pass_tex_coord;
 
 void main(void) {
     gl_Position = vec4(pos, 1.0);
-    colour = vec3(pos.x + 0.5, 1.0, pos.z + 0.5);
+    pass_tex_coord = tex_coord; // get linearly interpolated as we pass them to frag shader
 }

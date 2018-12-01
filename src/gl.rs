@@ -50,6 +50,17 @@ pub fn enable(capability: types::GLenum) {
 }
 
 ///////////
+// gl 1.3
+///////////
+
+pub fn active_texture(bank_type: types::GLenum) {
+    unsafe {
+        ActiveTexture(bank_type);
+    }
+}
+
+
+///////////
 // gl 1.5
 ///////////
 pub fn gen_buffer() -> u32 {
@@ -157,12 +168,12 @@ pub fn get_shader(shader_id: u32, param_name: types::GLenum) -> i32 {
 }
 
 pub fn get_shader_info_log(shader_id: u32) -> Result<String, Error> {
-    let log_len = get_shader(shader_id, INFO_LOG_LENGTH) + 1;
+    let log_len = get_shader(shader_id, INFO_LOG_LENGTH);
     let mut log_bytes = vec![0u8; log_len as usize];
     unsafe {
         GetShaderInfoLog(shader_id, log_len, ptr::null_mut(), log_bytes.as_mut_ptr() as *mut c_char);
     }
-    let res = CString::new(log_bytes)?;
+    let res = CString::new(&log_bytes[..(log_len-1) as usize])?;
     match res.into_string() {
         Err(_) => Err(Error::new(ErrorKind::Other, "Shader info log not valid utf8")),
         Ok(st) => Ok(st),
@@ -226,13 +237,13 @@ pub fn get_program(program_id: u32, param_name: types::GLenum) -> i32 {
 }
 
 pub fn get_program_info_log(program_id: u32) -> Result<String, Error> {
-    let log_len = get_program(program_id, INFO_LOG_LENGTH) + 1;
+    let log_len = get_program(program_id, INFO_LOG_LENGTH);
     let mut log_bytes = vec![0u8; log_len as usize];
     unsafe {
         GetProgramInfoLog(program_id, log_len, ptr::null_mut(), log_bytes.as_mut_ptr() as *mut c_char);
     }
     // todo: why does this fail if we do ::new ?
-    let res = unsafe { CString::from_vec_unchecked(log_bytes) };
+    let res = CString::new(&log_bytes[..(log_len-1) as usize])?;
     match res.into_string() {
         Err(_) => Err(Error::new(ErrorKind::Other, "Program info log not valid utf8")),
         Ok(st) => Ok(st),
@@ -245,6 +256,42 @@ pub fn bind_attrib_location(program_id: u32, attribute_id: u32, variable_name: S
         BindAttribLocation(program_id, attribute_id, variable_name_nul_term.as_ptr());
     }
     Ok(())
+}
+
+pub fn gen_texture() -> u32 {
+    unsafe {
+        let mut textures = [0u32; 1];
+        let textures_ptr = textures.as_mut_ptr();
+        GenTextures(1, textures_ptr);
+        textures[0]
+    }
+}
+
+pub fn bind_texture(texture_id: u32, type_: types::GLenum) {
+    unsafe {
+        BindTexture(type_, texture_id);
+    }
+}
+
+pub fn tex_image_2d<T>(type_: types::GLenum, level_of_detail: i32, format: types::GLenum, width: usize, height: usize, pixel_format: types::GLenum, data: &[T]) {
+    unsafe {
+        
+        //TexImage2D(type_, level_of_detail, format as i32, width as i32, height as i32, 0, format, pixel_format, data.as_ptr() as *const _);
+        // let pixels = vec![
+        //     0.0, 0.0, 0.0,
+        //     1.0, 1.0, 1.0,
+        //     1.0, 1.0, 1.0,
+        //     0.0, 0.0, 0.0,
+        // ];
+        // TexImage2D(TEXTURE_2D, 0, RGB as i32, 2, 2, 0, RGB, FLOAT, pixels.as_ptr() as *const _);
+        TexImage2D(type_, level_of_detail, format as i32, width as i32, height as i32, 0, format, pixel_format, data.as_ptr() as *const _);
+    }
+}
+
+pub fn tex_parameter_iv(target: types::GLenum, pname: types::GLenum, value: u32) {
+    unsafe {        
+        TexParameteriv(target, pname, &(value as i32) as *const i32);
+    }
 }
 
 ///////////
@@ -268,6 +315,12 @@ pub fn bind_vertex_array(array_id: u32) {
 pub fn delete_vertex_arrays(array_ids: &[u32]) {
     unsafe {
         DeleteVertexArrays(array_ids.len() as i32, array_ids.as_ptr());
+    }
+}
+
+pub fn delete_texture(tex_ids: &[u32]) {
+    unsafe {
+        DeleteTextures(tex_ids.len() as i32, tex_ids.as_ptr());
     }
 }
 
