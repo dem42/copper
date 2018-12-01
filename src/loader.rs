@@ -1,5 +1,5 @@
 use super::gl;
-use texture_lib::{
+use texture_lib::texture_loader::{
     load_rgb_2d_texture,
     Texture2DRGB,
     Texture,
@@ -30,26 +30,8 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib)
     }
 
-    fn test_load_texture() {
-        let texture = Texture2DRGB {
-            width: 2,
-            height: 2,
-            data: vec![RGB {r: 255, g: 0, b: 0}, RGB {r: 0, g: 255, b: 0}, RGB {r: 255, g: 0, b: 0}, RGB {r: 0, g: 0, b: 255}],
-        };
-
-        let texture = Texture {
-            width: 3,
-            height: 3,
-            data: vec![
-                RGB {r: 0.0f32, g: 0.0, b: 0.2}, RGB {r: 0.0, g: 0.2, b: 0.0}, RGB {r: 0.2, g: 0.0, b: 0.0},
-                RGB {r: 0.0, g: 0.5, b: 0.5}, RGB {r: 0.5, g: 0.5, b: 0.0}, RGB {r: 0.5, g: 0.0, b: 0.5}, 
-                RGB {r: 1.0, g: 1.0, b: 1.0}, RGB {r: 0.8, g: 0.8, b: 0.8}, RGB {r: 0.5, g: 0.5, b: 0.5},
-            ],
-        };
-    }
-
-    pub fn load_texture(&mut self) -> ModelTexture {
-        let texture = load_rgb_2d_texture("res/textures/test.png").expect("Failed to load texture");
+    pub fn load_texture(&mut self, file_name: &str) -> ModelTexture {
+        let texture = load_rgb_2d_texture(file_name).expect("Failed to load texture");
         println!("got rgb vec with {} elements", texture);
 
         let tex_id = gl::gen_texture();

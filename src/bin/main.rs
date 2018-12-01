@@ -5,15 +5,13 @@ use copper::loader::{
     ModelLoader,
     TexturedModel,    
 };
-use copper::shaders::create_static_shader_for_model;
+use copper::shaders::shader_program::create_static_shader_for_model;
 
 fn test_engine() {
     let mut display = Display::create();
     let renderer = Renderer::new();
     let mut loader = ModelLoader::new();
     
-    loader.load_texture();
-
     let vertices = vec![
         -0.5, 0.5, 0.0, //v0
         -0.5, -0.5, 0.0, //v1
@@ -31,7 +29,7 @@ fn test_engine() {
         3,1,2,
     ];
     let raw_model = loader.load_to_vao(&vertices, &tex_coords, &indices);
-    let texture = loader.load_texture();
+    let texture = loader.load_texture("res/textures/test.png");
     let textured_model = TexturedModel { raw_model, texture };
     let shader = create_static_shader_for_model(&textured_model.raw_model);
 
