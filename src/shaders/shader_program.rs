@@ -9,21 +9,48 @@ use std::io::{
 }; 
 use super::super::gl;
 use super::super::loader::RawModel;
+use super::super::math::{Vector3f, Matrix4f};
 
-pub fn create_static_shader_for_model(model: &RawModel) -> ShaderProgram {
-    
-    let shader_program = ShaderProgram::new(
-        String::from("src/shaders/vertexShader.glsl"), 
-        String::from("src/shaders/fragmentShader.glsl"), 
-        |shader_prog| {
-            shader_prog.bind_attribute(model.pos_attrib, String::from("pos"));
-            shader_prog.bind_attribute(model.tex_coord_attrib, String::from("tex_coord"));
-        });
-
-    shader_program
+pub struct StaticShader {
+    program: ShaderProgram,
+    location_transformation_matrix: i32,
 }
 
-pub struct ShaderProgram {
+impl StaticShader {
+    pub fn new(model: &RawModel) -> StaticShader {
+
+        let mut location_transformation_matrix = 0;
+        let shader_program = ShaderProgram::new(
+            String::from("src/shaders/vertexShader.glsl"), 
+            String::from("src/shaders/fragmentShader.glsl"), 
+            |shader_prog| {
+                shader_prog.bind_attribute(model.pos_attrib, "pos");
+                shader_prog.bind_attribute(model.tex_coord_attrib, "tex_coord");
+            },
+            |shader_prog| {
+                location_transformation_matrix = shader_prog.get_uniform_location("transform");
+        });
+
+        StaticShader {
+            program: shader_program,
+            location_transformation_matrix,
+        }
+    }
+
+    pub fn start(&self) {
+        self.program.start();
+    }
+
+    pub fn stop(&self) {
+        self.program.stop();
+    }
+
+    pub fn load_transformation_matrix(&self, transform_matrix: &Matrix4f) {
+        ShaderProgram::load_matrix(self.location_transformation_matrix, transform_matrix);
+    }
+}
+
+struct ShaderProgram {
     program_id: u32,
     vertex_shader_id: u32,
     fragment_shader_id: u32,
@@ -31,8 +58,9 @@ pub struct ShaderProgram {
 
 impl ShaderProgram {
 
-    pub fn new<T>(vertex_file: String, fragment_file: String, attrib_binder_fn: T) -> ShaderProgram 
-        where T: FnOnce(&ShaderProgram) -> () {
+    pub fn new<F1, F2>(vertex_file: String, fragment_file: String, attrib_binder_fn: F1, uniform_loader: F2) -> ShaderProgram 
+        where F1: FnOnce(&ShaderProgram) -> (), 
+              F2: FnOnce(&ShaderProgram) -> () {
         let vertex_shader_id = ShaderProgram::load_shader(vertex_file, gl::VERTEX_SHADER)
             .expect("Failed to create vertex shader");
         let fragment_shader_id = ShaderProgram::load_shader(fragment_file, gl::FRAGMENT_SHADER)
@@ -59,14 +87,15 @@ impl ShaderProgram {
             println!("Validate log: {}", validate_log);
             panic!("Program linking failed");
         }
+        uniform_loader(&shader_prog);
         shader_prog
     }
 
-    pub fn start(&self) {
+    fn start(&self) {
         gl::use_program(self.program_id);
     }
 
-    pub fn stop(&self) {
+    fn stop(&self) {
         gl::use_program(0);
     }
 
@@ -76,7 +105,7 @@ impl ShaderProgram {
         let mut contents = String::new();
         buf_reader.read_to_string(&mut contents)?;
         let shader_id = gl::create_shader(type_);
-        gl::shader_source(shader_id, contents)?;
+        gl::shader_source(shader_id, &contents)?;
         gl::compile_shader(shader_id);
         if gl::get_shader(shader_id, gl::COMPILE_STATUS) == gl::FALSE as i32 {
             let compile_log = gl::get_shader_info_log(shader_id)?;
@@ -88,9 +117,29 @@ impl ShaderProgram {
         }
     }
 
-    fn bind_attribute(&self, attribute: u32, variable_name: String) {
+    fn bind_attribute(&self, attribute: u32, variable_name: &str) {
         gl::bind_attrib_location(self.program_id, attribute, variable_name).expect("Variable name invalid");
     }
+    
+    fn get_uniform_location(&self, uniform_name: &str) -> i32 {
+        gl::get_uniform_location(self.program_id, uniform_name).expect("Couldn't get uniform location")
+    }
+
+    fn load_float(location_id: i32, value: f32) {
+        gl::uniform1f(location_id, value);
+    }
+
+    fn load_bool(location_id: i32, value: bool) {
+        gl::uniform1f(location_id, if value { 1.0 } else { 0.0 });
+    }
+
+    fn load_vector(location_id: i32, value: &Vector3f) {
+        gl::uniform3f(location_id, value.x, value.y, value.z);
+    }
+
+    fn load_matrix(location_id: i32, value: &Matrix4f) {
+        gl::uniform_matrix4f(location_id, value.data());
+    } 
 }
 
 impl Drop for ShaderProgram {

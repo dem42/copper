@@ -7,3 +7,5 @@ pub mod loader;
 pub mod gl;
 pub mod renderer;
 pub mod shaders;
+pub mod math;
+pub mod entities;

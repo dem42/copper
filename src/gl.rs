@@ -100,6 +100,40 @@ pub fn delete_buffers(buffer_ids: &[u32]) {
 ///////////
 // gl 2.0
 ///////////
+pub fn get_uniform_location(program_id: u32, unifrom_name: &str) -> Result<i32, Error> {
+    let unifrom_name_nul_term = CString::new(unifrom_name)?;
+    let uniform_loc = unsafe {
+         GetUniformLocation(program_id, unifrom_name_nul_term.as_ptr())
+    };
+    if uniform_loc == -1 {
+        Err(Error::new(ErrorKind::Other, format!("Couldn't find uniform: {}", unifrom_name)))
+    }
+    else {
+        Ok(uniform_loc)
+    }
+}
+
+pub fn uniform1f(location_id: i32, value: f32) {
+    unsafe {
+        Uniform1f(location_id, value);
+    }
+}
+
+pub fn uniform3f(location_id: i32, x: f32, y: f32, z: f32) {
+    unsafe {
+        Uniform3f(location_id, x, y, z);
+    }
+}
+
+pub fn uniform_matrix4f(location_id: i32, matrix: &[[f32; 4]; 4]) {
+    unsafe {        
+        // hope this cast is ok .. in memory the 4x4 array should be just a block of 16 floats
+        // in row major order since rust uses row major 
+        let transpose = TRUE; // true implies row major order (is rust always gonna be row major?)
+        UniformMatrix4fv(location_id, 1, transpose, matrix.as_ptr() as *const f32);
+    }
+}
+ 
 pub fn vertex_attrib_pointer(
     attribute_id: u32,
     components_per_attribute: u32,
@@ -138,7 +172,7 @@ pub fn create_shader(type_: types::GLenum) -> u32 {
     }
 }
 
-pub fn shader_source(shader_id: u32, file: String) -> Result<(), Error> {
+pub fn shader_source(shader_id: u32, file: &str) -> Result<(), Error> {
     let file_contents_cstr = match CString::new(file) {
         Ok(contents) => contents,
         Err(_) => return Err(Error::new(ErrorKind::Other, "Shader source code contains nul byte")),
@@ -250,7 +284,7 @@ pub fn get_program_info_log(program_id: u32) -> Result<String, Error> {
     }
 }
 
-pub fn bind_attrib_location(program_id: u32, attribute_id: u32, variable_name: String) -> Result<(), Error> {
+pub fn bind_attrib_location(program_id: u32, attribute_id: u32, variable_name: &str) -> Result<(), Error> {
     let variable_name_nul_term = CString::new(variable_name)?;
     unsafe {        
         BindAttribLocation(program_id, attribute_id, variable_name_nul_term.as_ptr());
@@ -349,6 +383,9 @@ pub mod helper {
         message: *const raw::c_char,
         _user_param: *mut raw::c_void,
     ) {
+        if severity == DEBUG_SEVERITY_NOTIFICATION {
+            return
+        }
         let msg = unsafe { CStr::from_ptr(message) };
         let msg: &str = msg.to_str().unwrap();
             

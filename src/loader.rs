@@ -1,9 +1,6 @@
 use super::gl;
 use texture_lib::texture_loader::{
-    load_rgb_2d_texture,
-    Texture2DRGB,
-    Texture,
-    RGB,
+    load_rgb_2d_texture
 };
 
 #[derive(Default)]
