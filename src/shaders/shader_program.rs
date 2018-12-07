@@ -10,16 +10,21 @@ use std::io::{
 use super::super::gl;
 use super::super::loader::RawModel;
 use super::super::math::{Vector3f, Matrix4f};
+use super::super::camera::Camera;
 
 pub struct StaticShader {
     program: ShaderProgram,
     location_transformation_matrix: i32,
+    location_projection_matrix: i32,
+    location_view_matrix: i32,
 }
 
 impl StaticShader {
     pub fn new(model: &RawModel) -> StaticShader {
 
         let mut location_transformation_matrix = 0;
+        let mut location_projection_matrix = 0;
+        let mut location_view_matrix = 0;
         let shader_program = ShaderProgram::new(
             String::from("src/shaders/vertexShader.glsl"), 
             String::from("src/shaders/fragmentShader.glsl"), 
@@ -29,24 +34,37 @@ impl StaticShader {
             },
             |shader_prog| {
                 location_transformation_matrix = shader_prog.get_uniform_location("transform");
+                location_projection_matrix = shader_prog.get_uniform_location("projection_matrix");
+                location_view_matrix = shader_prog.get_uniform_location("view_matrix");
         });
 
         StaticShader {
             program: shader_program,
             location_transformation_matrix,
+            location_projection_matrix,
+            location_view_matrix,
         }
     }
 
-    pub fn start(&self) {
+    pub fn start(&mut self) {
         self.program.start();
     }
 
-    pub fn stop(&self) {
+    pub fn stop(&mut self) {
         self.program.stop();
     }
 
-    pub fn load_transformation_matrix(&self, transform_matrix: &Matrix4f) {
+    pub fn load_transformation_matrix(&mut self, transform_matrix: &Matrix4f) {
         ShaderProgram::load_matrix(self.location_transformation_matrix, transform_matrix);
+    }
+
+    pub fn load_projection_matrix(&mut self, projection_matrix: &Matrix4f) {
+        ShaderProgram::load_matrix(self.location_projection_matrix, projection_matrix);
+    }
+
+    pub fn load_view_matrix(&mut self, camera: &Camera) {
+        let view_matrix = Matrix4f::create_view_matrix(camera);
+        ShaderProgram::load_matrix(self.location_view_matrix, &view_matrix);
     }
 }
 

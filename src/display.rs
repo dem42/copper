@@ -2,17 +2,32 @@
 use glfw::Context;
 use super::gl;
 
+pub use glfw::Key;
+
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 720;
 // const FPS_CAP: u32 = 120;
 // investigate framerate limits (high framerates vs VSync and flickering)
 // what happens when we use lwjgl Display.Sync(frame_rate_cap)
 
+
+pub trait Keyboard {
+    fn is_pressed(&self, key: Key) -> bool;
+}
+
 pub struct Display {
     glfw: glfw::Glfw,
     window: glfw::Window,
 }
 
+impl Keyboard for Display {
+    fn is_pressed(&self, key: Key) -> bool {
+        match self.window.get_key(key) {
+            glfw::Action::Press => true,
+            _ => false,
+        }
+    }
+}
 
 impl Display {
     pub fn create() -> Display {        
@@ -34,8 +49,14 @@ impl Display {
 
         Display {
             glfw,
-            window,
+            window
         }
+    }
+
+    pub fn get_aspect_ration(&self) -> f32 {
+        let (width, height) = self.window.get_framebuffer_size();        
+        let aspect_ratio = (width as f32) / (height as f32);
+        aspect_ratio
     }
  
     fn print_opengl_info(window: &glfw::Window) {

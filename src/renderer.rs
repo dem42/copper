@@ -2,20 +2,35 @@ use super::gl;
 use super::entities::Entity;
 use super::shaders::StaticShader;
 use super::math::Matrix4f;
+use super::display::Display;
 
-pub struct Renderer;
+pub struct Renderer {
+    projection_matrix: Matrix4f,
+}
 
-impl Renderer {    
-    pub fn new() -> Renderer {
-        Renderer
+impl Renderer {
+    const FOV_HORIZONTAL: f32 = 70.0;
+    // here using actual world coords which are RHS coord sys with z axis going into screen (so more negative means further)
+    const NEAR: f32 = -0.1;
+    const FAR: f32 = -1000.0;
+    
+    pub fn new(display: &Display, shader: &mut StaticShader) -> Renderer {
+        let projection_matrix = Matrix4f::create_projection_matrix(Renderer::NEAR, Renderer::FAR, Renderer::FOV_HORIZONTAL, display.get_aspect_ration());
+        shader.start();
+        shader.load_projection_matrix(&projection_matrix);
+        shader.stop();
+        Renderer {
+            projection_matrix
+        }
     }
 
     pub fn prepare(&self) {
+        gl::enable(gl::DEPTH_TEST);
         gl::clear_color((1.0, 0.0, 0.0, 1.0));
-        gl::clear(gl::COLOR_BUFFER_BIT);
+        gl::clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
 
-    pub fn render(&self, entity: &Entity, shader: &StaticShader) {
+    pub fn render(&self, entity: &Entity, shader: &mut StaticShader) {
         gl::bind_vertex_array(entity.model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(entity.model.raw_model.pos_attrib);
         gl::enable_vertex_attrib_array(entity.model.raw_model.tex_coord_attrib);
