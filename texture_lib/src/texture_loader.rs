@@ -21,11 +21,14 @@ pub struct RGB<T> {
 
 pub type Texture2DRGB = Texture<RGB<u8>>;
 
-pub fn load_rgb_2d_texture(file_name: &str) -> Result<Texture2DRGB, Error> {
+pub fn load_rgb_2d_texture(file_name: &str, reverse: bool) -> Result<Texture2DRGB, Error> {
     let bitmap = lodepng::decode24_file(file_name)?;
-    let mut result: Vec<_> = bitmap.buffer.iter().map(|&rgb| RGB {r: rgb.r, g: rgb.g, b: rgb.b}).collect();
-    // lodepng loads from top to bottom. opengl expects bottom to top
-    result.reverse();
+    let mut result: Vec<_> = bitmap.buffer.iter().map(|&rgb| RGB {r: rgb.r, g: rgb.g, b: rgb.b}).collect();    
+    if reverse {
+        // lodepng loads from top to bottom
+        // based on how we setup the coordinates for our model we may need to reverse
+        result.reverse();
+    }
     Ok(Texture{
         width: bitmap.width,
         height: bitmap.height,

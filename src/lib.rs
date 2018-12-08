@@ -10,3 +10,4 @@ pub mod shaders;
 pub mod math;
 pub mod entities;
 pub mod camera;
+pub mod obj_loader;

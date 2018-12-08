@@ -27,8 +27,8 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib)
     }
 
-    pub fn load_texture(&mut self, file_name: &str) -> ModelTexture {
-        let texture = load_rgb_2d_texture(file_name).expect("Failed to load texture");
+    pub fn load_texture(&mut self, file_name: &str, reverse: bool) -> ModelTexture {
+        let texture = load_rgb_2d_texture(file_name, reverse).expect("Failed to load texture");
         println!("got rgb vec with {} elements", texture);
 
         let tex_id = gl::gen_texture();

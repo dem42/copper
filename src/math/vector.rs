@@ -1,6 +1,7 @@
 use std::ops::Neg;
+use std::iter::IntoIterator;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Vector3f {
     pub x: f32,
     pub y: f32,
@@ -33,5 +34,35 @@ impl<'a> Neg for &'a Vector3f {
             y: -self.y,
             z: -self.z,
         }
+    }
+}
+
+impl IntoIterator for Vector3f {
+    type Item = f32;
+    type IntoIter = ::std::vec::IntoIter<f32>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![self.x, self.y, self.z].into_iter()
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct Vector2f {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl Vector2f {
+    pub fn new(x: f32, y: f32) -> Vector2f {
+        Vector2f { x, y, }
+    }
+}
+
+impl IntoIterator for Vector2f {
+    type Item = f32;
+    type IntoIter = ::std::vec::IntoIter<f32>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![self.x, self.y].into_iter()
     }
 }
