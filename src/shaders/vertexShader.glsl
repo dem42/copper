@@ -7,6 +7,8 @@ in vec3 normal;
 out vec2 pass_tex_coord;
 out vec3 surface_normal;
 out vec3 light_direction;
+out vec3 to_camera_dir;
+out vec3 specular_reflection_dir;
 
 uniform mat4 transform;
 uniform mat4 projection_matrix;
@@ -23,4 +25,9 @@ void main(void) {
     mat4 normal_transform = transpose(inverse(transform));
     surface_normal = (normal_transform * vec4(normal, 0.0)).xyz;
     light_direction = light_pos - world_position.xyz;
+
+    // extract camera position from view matrix
+    vec3 camera_position = (inverse(view_matrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    to_camera_dir = camera_position - world_position.xyz;
+    specular_reflection_dir = reflect(-light_direction, surface_normal);
 }

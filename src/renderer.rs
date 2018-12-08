@@ -39,6 +39,7 @@ impl Renderer {
         // load transform matrix into shader
         let transform_mat = Matrix4f::create_transform_matrix(&entity.position, &entity.rotation_deg, entity.scale);
         shader.load_transformation_matrix(&transform_mat);
+        shader.load_shine_variables(entity.model.texture.shine_damper, entity.model.texture.reflectivity);
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
         gl::bind_texture(entity.model.texture.tex_id, gl::TEXTURE_2D);

@@ -26,7 +26,7 @@ fn test_engine() {
     let renderer = Renderer::new(&display, &mut shader);
 
     let mut entity = Entity::new(textured_model, Vector3f::new(0.0,0.0,-25.0), Vector3f::new(0.0, 0.0, 0.0), 1.0);
-    let light = Light::new(Vector3f::new(0.0,20.0,-20.0), Vector3f::new(1.0, 1.0, 1.0));
+    let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
 
     let mut camera = Camera::default();
 
@@ -46,19 +46,19 @@ fn test_engine() {
 
 fn blue_dragon(loader: &mut ModelLoader) -> TexturedModel {
     let raw_model = load_obj_model("res/models/DragonBlender.obj", loader).expect("Unable to load dragon .obj");
-    let texture = loader.load_texture("res/textures/dragon_texture.png", false);
+    let texture = loader.load_texture("res/textures/dragon_texture.png", 10.0, 1.0, false);
     TexturedModel { raw_model, texture }
 }
 
 fn dragon(loader: &mut ModelLoader) -> TexturedModel {
     let raw_model = load_obj_model("res/models/dragon.obj", loader).expect("Unable to load dragon .obj");
-    let texture = loader.load_texture("res/textures/white.png", false);
+    let texture = loader.load_texture("res/textures/white.png", 10.0, 1.0, false);
     TexturedModel { raw_model, texture }
 }
 
 fn stall_model(loader: &mut ModelLoader) -> TexturedModel {
     let raw_model = load_obj_model("res/models/stall_textured.obj", loader).expect("Failed to load stall.obj model");
-    let texture = loader.load_texture("res/textures/stallTexture.png", false);
+    let texture = loader.load_texture("res/textures/stallTexture.png", 1.0, 0.0, false);
     TexturedModel { raw_model, texture }
 }
 

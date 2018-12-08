@@ -22,16 +22,22 @@ pub struct StaticShader {
     location_view_matrix: i32,
     location_light_pos: i32,
     location_light_color: i32,
+    location_shine_damper: i32,
+    location_reflectivity: i32,
 }
 
 impl StaticShader {
     pub fn new(model: &RawModel) -> StaticShader {
 
-        let mut location_transformation_matrix = 0;
-        let mut location_projection_matrix = 0;
-        let mut location_view_matrix = 0;
-        let mut location_light_pos = 0;
-        let mut location_light_color = 0;
+        let (
+            mut location_transformation_matrix, 
+            mut location_projection_matrix,
+            mut location_view_matrix,
+            mut location_light_pos,
+            mut location_light_color,
+            mut location_shine_damper,
+            mut location_reflectivity,
+        ) = Default::default();
         
         let shader_program = ShaderProgram::new(
             String::from("src/shaders/vertexShader.glsl"), 
@@ -41,12 +47,16 @@ impl StaticShader {
                 shader_prog.bind_attribute(model.tex_coord_attrib, "tex_coord");
                 shader_prog.bind_attribute(model.normal_attrib, "normal");
             },
-            |shader_prog| {
+            |shader_prog| {                
                 location_transformation_matrix = shader_prog.get_uniform_location("transform");
                 location_projection_matrix = shader_prog.get_uniform_location("projection_matrix");
                 location_view_matrix = shader_prog.get_uniform_location("view_matrix");
+                // diffuse lighting
                 location_light_pos = shader_prog.get_uniform_location("light_pos");
                 location_light_color = shader_prog.get_uniform_location("light_color");
+                // specular lighting
+                location_shine_damper = shader_prog.get_uniform_location("shine_damper");
+                location_reflectivity = shader_prog.get_uniform_location("reflectivity");
         });
 
         StaticShader {
@@ -56,6 +66,8 @@ impl StaticShader {
             location_view_matrix,
             location_light_pos,
             location_light_color,
+            location_shine_damper,
+            location_reflectivity,
         }
     }
 
@@ -65,6 +77,11 @@ impl StaticShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn load_shine_variables(&mut self, shine_damper: f32, reflectivity: f32) {
+        ShaderProgram::load_float(self.location_shine_damper, shine_damper);
+        ShaderProgram::load_float(self.location_reflectivity, reflectivity);
     }
 
     pub fn load_light(&mut self, light: &Light) {

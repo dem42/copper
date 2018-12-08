@@ -29,7 +29,7 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib, normal_attrib)
     }
 
-    pub fn load_texture(&mut self, file_name: &str, reverse: bool) -> ModelTexture {
+    pub fn load_texture(&mut self, file_name: &str, shine_damper: f32, reflectivity: f32, reverse: bool) -> ModelTexture {
         let texture = load_rgb_2d_texture(file_name, reverse).expect("Failed to load texture");
         println!("got rgb vec with {} elements", texture);
 
@@ -46,6 +46,8 @@ impl ModelLoader {
         gl::bind_texture(0, gl::TEXTURE_2D);
         ModelTexture {
             tex_id,
+            shine_damper,
+            reflectivity,
         }
     }
 
@@ -109,6 +111,18 @@ impl RawModel {
 
 pub struct ModelTexture {
     pub tex_id: u32,
+    pub shine_damper: f32,
+    pub reflectivity: f32,
+}
+
+impl Default for ModelTexture {
+    fn default() -> ModelTexture {
+        ModelTexture {
+            tex_id: 0,
+            shine_damper: 1.0,
+            reflectivity: 0.0,
+        }
+    }
 }
 
 pub struct TexturedModel {
