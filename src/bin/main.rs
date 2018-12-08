@@ -20,7 +20,7 @@ fn test_engine() {
     let mut display = Display::create();    
     let mut loader = ModelLoader::new();
 
-    let textured_model = blue_dragon(&mut loader);
+    let textured_model = dragon(&mut loader);
     let mut shader = StaticShader::new(&textured_model.raw_model);
 
     let renderer = Renderer::new(&display, &mut shader);
