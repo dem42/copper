@@ -10,13 +10,18 @@ use std::io::{
 use super::super::gl;
 use super::super::loader::RawModel;
 use super::super::math::{Vector3f, Matrix4f};
-use super::super::camera::Camera;
+use super::super::entities::{
+    Camera,
+    Light,
+};
 
 pub struct StaticShader {
     program: ShaderProgram,
     location_transformation_matrix: i32,
     location_projection_matrix: i32,
     location_view_matrix: i32,
+    location_light_pos: i32,
+    location_light_color: i32,
 }
 
 impl StaticShader {
@@ -25,17 +30,23 @@ impl StaticShader {
         let mut location_transformation_matrix = 0;
         let mut location_projection_matrix = 0;
         let mut location_view_matrix = 0;
+        let mut location_light_pos = 0;
+        let mut location_light_color = 0;
+        
         let shader_program = ShaderProgram::new(
             String::from("src/shaders/vertexShader.glsl"), 
             String::from("src/shaders/fragmentShader.glsl"), 
             |shader_prog| {
                 shader_prog.bind_attribute(model.pos_attrib, "pos");
                 shader_prog.bind_attribute(model.tex_coord_attrib, "tex_coord");
+                shader_prog.bind_attribute(model.normal_attrib, "normal");
             },
             |shader_prog| {
                 location_transformation_matrix = shader_prog.get_uniform_location("transform");
                 location_projection_matrix = shader_prog.get_uniform_location("projection_matrix");
                 location_view_matrix = shader_prog.get_uniform_location("view_matrix");
+                location_light_pos = shader_prog.get_uniform_location("light_pos");
+                location_light_color = shader_prog.get_uniform_location("light_color");
         });
 
         StaticShader {
@@ -43,6 +54,8 @@ impl StaticShader {
             location_transformation_matrix,
             location_projection_matrix,
             location_view_matrix,
+            location_light_pos,
+            location_light_color,
         }
     }
 
@@ -52,6 +65,11 @@ impl StaticShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn load_light(&mut self, light: &Light) {
+        ShaderProgram::load_vector(self.location_light_pos, &light.position);
+        ShaderProgram::load_vector(self.location_light_color, &light.color);
     }
 
     pub fn load_transformation_matrix(&mut self, transform_matrix: &Matrix4f) {

@@ -1,5 +1,5 @@
-use super::math::Vector3f;
-use super::loader::TexturedModel;
+use super::super::math::Vector3f;
+use super::super::loader::TexturedModel;
 
 pub struct Entity {
     pub model: TexturedModel,

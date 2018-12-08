@@ -65,18 +65,18 @@ pub fn load_obj_model(file_name: &str, loader: &mut ModelLoader) -> std::io::Res
     let flat_textures = textures_sorted.expect(ERROR_MSG).into_iter()
                                        .flat_map(|v| v.into_iter())
                                        .collect::<Vec<f32>>();
-    let _flat_normals = normals_sorted.expect(ERROR_MSG).into_iter()
+    let flat_normals = normals_sorted.expect(ERROR_MSG).into_iter()
                                      .flat_map(|v| v.into_iter())
                                      .collect::<Vec<f32>>();
     
-    Ok(loader.load_to_vao(&flat_vertices, &flat_textures, &indices))
+    Ok(loader.load_to_vao(&flat_vertices, &flat_textures, &indices, &flat_normals))
 }
 
 fn process_token(token: &str, textures_to_sort: &mut Vec<Vector2f>, normals_to_sort: &mut Vec<Vector3f>, indices: &mut Vec<u32>, textures: &Vec<Vector2f>, normals: &Vec<Vector3f>) {
     let idx: Vec<_> = token.split("/").collect();
-    let vertex_index = idx[0].parse::<usize>().unwrap() - 1;
-    let texture_index = idx[1].parse::<usize>().unwrap() - 1;
-    let normal_index = idx[2].parse::<usize>().unwrap() - 1;
+    let vertex_index = idx[0].parse::<usize>().expect(".obj didn't contain vertices") - 1;
+    let texture_index = idx[1].parse::<usize>().expect(".obj didn't contain vt texture coords") - 1;
+    let normal_index = idx[2].parse::<usize>().expect(".obj didn't contain normals") - 1;
     textures_to_sort[vertex_index] = textures[texture_index].clone();
     normals_to_sort[vertex_index] = normals[normal_index].clone();
     indices.push(vertex_index as u32);

@@ -1,5 +1,5 @@
-use super::math::Vector3f;
-use super::display::{Keyboard, Key};
+use super::super::math::Vector3f;
+use super::super::display::{Keyboard, Key};
 
 #[derive(Default)]
 pub struct Camera {
@@ -10,7 +10,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    const CAMERA_SPEED: f32 = 0.02;
+    const CAMERA_SPEED: f32 = 0.2;
 
     pub fn move_camera(&mut self, keyboard: &Keyboard) {
         if keyboard.is_pressed(Key::W) {
@@ -21,6 +21,10 @@ impl Camera {
             self.position.x -= Camera::CAMERA_SPEED;
         } else if keyboard.is_pressed(Key::D) {
             self.position.x += Camera::CAMERA_SPEED;
+        } else if keyboard.is_pressed(Key::Space) {
+            self.position.y += Camera::CAMERA_SPEED;
+        } else if keyboard.is_pressed(Key::C) {
+            self.position.y -= Camera::CAMERA_SPEED;
         }
     }
 }

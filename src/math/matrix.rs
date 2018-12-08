@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 use super::Vector3f;
 use std::f32;
-use super::super::camera::Camera;
+use super::super::entities::Camera;
 
 #[derive(Debug)]
 pub struct Matrix4f {

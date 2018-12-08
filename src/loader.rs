@@ -16,15 +16,17 @@ impl ModelLoader {
         <ModelLoader as Default>::default()        
     }
 
-    pub fn load_to_vao(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32]) -> RawModel {
+    pub fn load_to_vao(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32]) -> RawModel {
         let vao_id = self.create_vao();
         let pos_attrib = 0;
         let tex_coord_attrib = 1;
+        let normal_attrib = 2;
         self.bind_indices_buffer(indices);
         self.store_data_in_attribute_list(pos_attrib, 3, positions);
         self.store_data_in_attribute_list(tex_coord_attrib, 2, texture_coords);
+        self.store_data_in_attribute_list(normal_attrib, 3, normals);
         self.unbind_vao();
-        RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib)
+        RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib, normal_attrib)
     }
 
     pub fn load_texture(&mut self, file_name: &str, reverse: bool) -> ModelTexture {
@@ -90,15 +92,17 @@ pub struct RawModel {
     pub vertex_count: usize,
     pub pos_attrib: u32,
     pub tex_coord_attrib: u32,
+    pub normal_attrib: u32,
 }
 
 impl RawModel {
-    pub fn new(vao_id: u32, vertex_count: usize, pos_attrib: u32, tex_coord_attrib: u32) -> RawModel {
+    pub fn new(vao_id: u32, vertex_count: usize, pos_attrib: u32, tex_coord_attrib: u32, normal_attrib: u32) -> RawModel {
         RawModel {
             vao_id,
             vertex_count,
             pos_attrib,
             tex_coord_attrib,
+            normal_attrib,
         }
     }
 }
