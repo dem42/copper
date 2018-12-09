@@ -1,15 +1,15 @@
 use super::super::math::Vector3f;
 use super::super::loader::TexturedModel;
 
-pub struct Entity {
-    pub model: TexturedModel,
+pub struct Entity<'a> {
+    pub model: &'a TexturedModel,
     pub position: Vector3f,
     pub rotation_deg: Vector3f,
     pub scale: f32,
 }
 
-impl Entity {
-    pub fn new(model: TexturedModel, position: Vector3f, rotation_deg: Vector3f, scale: f32) -> Entity {
+impl<'a> Entity<'a> {
+    pub fn new(model: &'a TexturedModel, position: Vector3f, rotation_deg: Vector3f, scale: f32) -> Entity<'a> {
         Entity {
             model,
             position,

@@ -49,6 +49,12 @@ pub fn enable(capability: types::GLenum) {
     }
 }
 
+pub fn cull_face(type_: types::GLenum) {
+    unsafe {
+        CullFace(type_);
+    }
+}
+
 ///////////
 // gl 1.3
 ///////////

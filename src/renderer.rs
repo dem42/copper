@@ -25,6 +25,8 @@ impl Renderer {
     }
 
     pub fn prepare(&self) {
+        gl::enable(gl::CULL_FACE);
+        gl::cull_face(gl::BACK);
         gl::enable(gl::DEPTH_TEST);
         gl::clear_color((1.0, 0.0, 0.0, 1.0));
         gl::clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);

@@ -23,7 +23,7 @@ void main(void) {
     vec3 unit_light = normalize(light_direction);
     
     float dotNormToLight = dot(unit_normal, unit_light);
-    float brightness = max(dotNormToLight, 0.0); // clamp to [0, 1]
+    float brightness = max(dotNormToLight, 0.2); // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
     vec4 diffuse_color = vec4(brightness * light_color, 1.0); // add alpha of 1
     
     vec3 unit_camera = normalize(to_camera_dir);
