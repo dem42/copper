@@ -3,6 +3,7 @@ name = "copper"
 version = "0.1.0"
 authors = ["martin <martin.papanek@gmail.com>"]
 build = "build.rs"
+edition = "2018"
 
 [dependencies]
 libc = "0.2.0"
