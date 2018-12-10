@@ -4,7 +4,10 @@ use super::super::entities::{
     Light,
 };
 use super::super::loader::RawModel;
-use super::super::math::Matrix4f;
+use super::super::math::{
+    Matrix4f,
+    Vector3f,
+};
 
 pub struct StaticShader {
     program: ShaderProgram,
@@ -16,6 +19,7 @@ pub struct StaticShader {
     location_shine_damper: i32,
     location_reflectivity: i32,
     location_uses_fake_lighting: i32,
+    location_sky_color: i32,
 }
 
 impl StaticShader {
@@ -29,6 +33,7 @@ impl StaticShader {
             mut location_shine_damper,
             mut location_reflectivity,
             mut location_uses_fake_lighting,
+            mut location_sky_color,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -51,6 +56,8 @@ impl StaticShader {
                 location_reflectivity = shader_prog.get_uniform_location("reflectivity");
                 // bad grass model hack
                 location_uses_fake_lighting = shader_prog.get_uniform_location("uses_fake_lighting");
+                // fog unfirom
+                location_sky_color = shader_prog.get_uniform_location("sky_color");
         });
 
         StaticShader {
@@ -63,6 +70,7 @@ impl StaticShader {
             location_shine_damper,
             location_reflectivity,
             location_uses_fake_lighting,
+            location_sky_color,
         }
     }
 
@@ -72,6 +80,10 @@ impl StaticShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn load_sky_color(&mut self, sky_color: &Vector3f) {
+        ShaderProgram::load_vector(self.location_sky_color, sky_color);
     }
 
     pub fn load_uses_fake_lighting(&mut self, uses_fake: bool) {

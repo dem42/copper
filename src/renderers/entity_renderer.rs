@@ -5,7 +5,10 @@ use crate::entities::{
     Light,
 };
 use crate::shaders::StaticShader;
-use crate::math::Matrix4f;
+use crate::math::{
+    Matrix4f,
+    Vector3f
+};
 use crate::loader::{
     TexturedModel,
     RawModel,
@@ -27,13 +30,14 @@ impl EntityRenderer {
         }
     }
     
-    pub fn start_render(&mut self, light: &Light, camera: &Camera) {
+    pub fn start_render(&mut self, light: &Light, camera: &Camera, sky_color: &Vector3f) {
         self.shader.start();
         self.shader.load_light(light);
-        self.shader.load_view_matrix(camera);  
+        self.shader.load_view_matrix(camera);
+        self.shader.load_sky_color(sky_color);
     }
 
-    pub fn stop_render(&mut self) {        
+    pub fn stop_render(&mut self) {
         self.shader.stop();
     }
 

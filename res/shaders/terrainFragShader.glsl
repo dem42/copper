@@ -6,6 +6,8 @@ in vec3 light_direction;
 
 in vec3 to_camera_dir;
 in vec3 specular_reflection_dir;
+// fog stuff
+in float visibility;
 
 // rgba
 out vec4 out_Color;
@@ -15,6 +17,8 @@ uniform vec3 light_color;
 
 uniform float shine_damper;
 uniform float reflectivity;
+// fog
+uniform vec3 sky_color;
 
 void main(void) {
     
@@ -31,6 +35,7 @@ void main(void) {
     float dotSpecToCamera = dot(unit_camera, unit_specular_reflection);
     float spec_brightness = max(dotSpecToCamera, 0.0);
     vec4 specular_color = vec4(pow(spec_brightness, shine_damper) * reflectivity * light_color, 1.0);
-
-    out_Color = diffuse_color * texture(texture_sampler, pass_tex_coord) + specular_color; 
+    
+    vec4 light_based_out_color = diffuse_color * texture(texture_sampler, pass_tex_coord) + specular_color;
+    out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
 }

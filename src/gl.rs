@@ -12,7 +12,7 @@ use std::io::{
 ///////////
 // gl 1.1
 ///////////
-pub fn clear_color((r, g, b, a): (f32, f32, f32, f32)) {
+pub fn clear_color(r: f32, g: f32, b: f32, a: f32) {
     unsafe {
         ClearColor(r, g, b, a);
     }

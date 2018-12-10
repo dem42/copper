@@ -61,9 +61,9 @@ fn terrain_cells<'a>(grass_tex: &'a ModelTexture, loader: &mut ModelLoader) -> V
 fn create_world<'a>(tree_model: &'a TexturedModel, fern_model: &'a TexturedModel, grass_model: &'a TexturedModel) -> Vec<Entity<'a>> {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
-    const X_WIDTH: f32 = 120.0;
-    const Z_WIDTH: f32 = -300.0;
-    for _ in 0..200 {
+    const X_WIDTH: f32 = 250.0;
+    const Z_WIDTH: f32 = -500.0;
+    for _ in 0..100 {
         let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, 0.0, 0.0);
         entities.push(Entity::new(&tree_model, r_pos, r_rot, 3.0));

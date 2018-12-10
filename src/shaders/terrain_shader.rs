@@ -4,7 +4,10 @@ use super::super::entities::{
     Light,
 };
 use super::super::loader::RawModel;
-use super::super::math::Matrix4f;
+use super::super::math::{
+    Matrix4f,
+    Vector3f,
+};
 
 pub struct TerrainShader {
     program: ShaderProgram,
@@ -15,6 +18,7 @@ pub struct TerrainShader {
     location_light_color: i32,
     location_shine_damper: i32,
     location_reflectivity: i32,
+    location_sky_color: i32,
 }
 
 impl TerrainShader {
@@ -27,6 +31,7 @@ impl TerrainShader {
             mut location_light_color,
             mut location_shine_damper,
             mut location_reflectivity,
+            mut location_sky_color,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -47,6 +52,8 @@ impl TerrainShader {
                 // specular lighting
                 location_shine_damper = shader_prog.get_uniform_location("shine_damper");
                 location_reflectivity = shader_prog.get_uniform_location("reflectivity");
+                // fog unfirom
+                location_sky_color = shader_prog.get_uniform_location("sky_color");
         });
 
         TerrainShader {
@@ -58,6 +65,7 @@ impl TerrainShader {
             location_light_color,
             location_shine_damper,
             location_reflectivity,
+            location_sky_color,
         }
     }
 
@@ -67,6 +75,10 @@ impl TerrainShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn load_sky_color(&mut self, sky_color: &Vector3f) {
+        ShaderProgram::load_vector(self.location_sky_color, sky_color);
     }
 
     pub fn load_shine_variables(&mut self, shine_damper: f32, reflectivity: f32) {

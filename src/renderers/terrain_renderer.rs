@@ -29,10 +29,11 @@ impl TerrainRenderer {
         }
     }
 
-    pub fn start_render(&mut self, light: &Light, camera: &Camera) {
+    pub fn start_render(&mut self, light: &Light, camera: &Camera, sky_color: &Vector3f) {
         self.shader.start();
         self.shader.load_light(light);
         self.shader.load_view_matrix(camera);  
+        self.shader.load_sky_color(sky_color);  
     }
 
     pub fn stop_render(&mut self) {        
