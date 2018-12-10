@@ -21,21 +21,23 @@ use copper::entities::{
 use copper::math::Vector3f;
 use copper::obj_loader::load_obj_model;
 
-fn test_engine() {
+fn main() {
     let mut display = Display::create();    
     let mut loader = ModelLoader::new();
 
-    let textured_model = tree_model(&mut loader);
-    let entities = trees(&textured_model);
+    let tree_model = tree_model(&mut loader);
+    let fern_model = fern_model(&mut loader);
+    let grass_model = grass_model(&mut loader);
+    let entities = create_world(&tree_model, &fern_model, &grass_model);
 
     let mut batch_renderer = BatchRenderer::new(&display);
     
     let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
 
     let mut camera = Camera::default();
-    camera.position.y = 10.0;
+    camera.position.y = 5.0;
 
-    let grass_tex = loader.load_texture("res/textures/grass.png", 1.0, 0.0, false);
+    let grass_tex = loader.load_texture("res/textures/grass.png", false);
     let terrains = terrain_cells(&grass_tex, &mut loader);
 
     while !display.is_close_requested() {
@@ -56,21 +58,45 @@ fn terrain_cells<'a>(grass_tex: &'a ModelTexture, loader: &mut ModelLoader) -> V
     terrains
 }
 
-fn trees<'a>(textured_model: &'a TexturedModel) -> Vec<Entity<'a>> {
+fn create_world<'a>(tree_model: &'a TexturedModel, fern_model: &'a TexturedModel, grass_model: &'a TexturedModel) -> Vec<Entity<'a>> {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
+    const X_WIDTH: f32 = 120.0;
+    const Z_WIDTH: f32 = -300.0;
     for _ in 0..200 {
-        let r_pos = Vector3f::new(rng.gen::<f32>() * 100.0 - 50.0, 0.0, rng.gen::<f32>() * -300.0);
+        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, 0.0, 0.0);
-        entities.push(Entity::new(&textured_model, r_pos, r_rot, 1.0));
+        entities.push(Entity::new(&tree_model, r_pos, r_rot, 3.0));
+
+        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        entities.push(Entity::new(&fern_model, r_pos, r_rot, 0.6));
+
+        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        entities.push(Entity::new(&grass_model, r_pos, r_rot, 1.0));
     }
     entities
 }
 
-
 fn tree_model(loader: &mut ModelLoader) -> TexturedModel {
     let raw_model = load_obj_model("res/models/tree.obj", loader).expect("Unable to load tree.obj");
-    let texture = loader.load_texture("res/textures/tree.png", 1.0, 0.1, false);
+    let texture = loader.load_texture("res/textures/tree.png", false);
+    TexturedModel { raw_model, texture }
+}
+
+fn fern_model(loader: &mut ModelLoader) -> TexturedModel {
+    let raw_model = load_obj_model("res/models/fern.obj", loader).expect("Unable to load fern.obj");
+    let mut texture = loader.load_texture("res/textures/fern.png", false);
+    texture.has_transparency = true;    
+    TexturedModel { raw_model, texture }
+}
+
+fn grass_model(loader: &mut ModelLoader) -> TexturedModel {
+    let raw_model = load_obj_model("res/models/grassModel.obj", loader).expect("Unable to load grassModel.obj");
+    let mut texture = loader.load_texture("res/textures/grassTexture.png", false);
+    texture.has_transparency = true;
+    texture.uses_fake_lighting = true;
     TexturedModel { raw_model, texture }
 }
 
@@ -109,7 +135,3 @@ fn tree_model(loader: &mut ModelLoader) -> TexturedModel {
 //     let texture = loader.load_texture("res/textures/stallTexture.png", 1.0, 0.0, false);
 //     TexturedModel { raw_model, texture }
 // }
-
-fn main() {
-    test_engine();    
-}

@@ -1,6 +1,6 @@
 use super::gl;
 use texture_lib::texture_loader::{
-    load_rgb_2d_texture
+    load_rgba_2d_texture
 };
 use std::hash::{Hash, Hasher};
 
@@ -27,9 +27,9 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len())
     }
 
-    pub fn load_texture(&mut self, file_name: &str, shine_damper: f32, reflectivity: f32, reverse: bool) -> ModelTexture {
-        let texture = load_rgb_2d_texture(file_name, reverse).expect("Failed to load texture");
-        println!("got rgb vec with {} elements", texture);
+    pub fn load_texture(&mut self, file_name: &str, reverse: bool) -> ModelTexture {
+        let texture = load_rgba_2d_texture(file_name, reverse).expect("Failed to load texture");
+        println!("got rgba vec with {} elements", texture);
 
         let tex_id = gl::gen_texture();
         self.tex_list.push(tex_id);
@@ -40,12 +40,11 @@ impl ModelLoader {
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
 
-        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGB, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
         gl::bind_texture(0, gl::TEXTURE_2D);
         ModelTexture {
             tex_id,
-            shine_damper,
-            reflectivity,
+            ..Default::default()
         }
     }
 
@@ -109,6 +108,8 @@ pub struct ModelTexture {
     pub tex_id: u32,
     pub shine_damper: f32,
     pub reflectivity: f32,
+    pub has_transparency: bool,
+    pub uses_fake_lighting: bool,
 }
 
 impl Default for ModelTexture {
@@ -117,6 +118,8 @@ impl Default for ModelTexture {
             tex_id: 0,
             shine_damper: 1.0,
             reflectivity: 0.0,
+            has_transparency: false,
+            uses_fake_lighting: false,
         }
     }
 }

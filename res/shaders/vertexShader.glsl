@@ -15,15 +15,21 @@ uniform mat4 projection_matrix;
 uniform mat4 view_matrix;
 
 uniform vec3 light_pos;
+uniform float uses_fake_lighting;
 
 void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
     gl_Position = projection_matrix * view_matrix * world_position;
     pass_tex_coord = tex_coord; // get linearly interpolated as we pass them to frag shader
 
-    // this i think is incorrect you need to transform by the transpose of the inverse of the transformation matrix
+    vec3 actual_normal = normal;
+    if (uses_fake_lighting > 0.5) {
+        actual_normal = vec3(0.0, 0.1, 0.0); // use a fake normal that points up (hack for bad grass model)
+    }
+
+    // this i think is correct: you need to transform normals by the transpose of the inverse of the transformation matrix
     mat4 normal_transform = transpose(inverse(transform));
-    surface_normal = (normal_transform * vec4(normal, 0.0)).xyz;
+    surface_normal = (normal_transform * vec4(actual_normal, 0.0)).xyz;
     light_direction = light_pos - world_position.xyz;
 
     // extract camera position from view matrix

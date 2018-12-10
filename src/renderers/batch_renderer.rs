@@ -15,7 +15,6 @@ use super::entity_renderer::EntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
 
 pub struct BatchRenderer {    
-    projection_matrix: Matrix4f,
     entity_renderer: EntityRenderer,
     terrain_renderer: TerrainRenderer,
 }
@@ -33,7 +32,6 @@ impl BatchRenderer {
         let terrain_renderer = TerrainRenderer::new(&projection_matrix);
         
         BatchRenderer {
-            projection_matrix,
             entity_renderer,
             terrain_renderer,
         }
@@ -52,7 +50,7 @@ impl BatchRenderer {
                 // load transform matrix into shader
                 self.entity_renderer.render(entity);
             }
-            self.entity_renderer.unprepare_textured_model();
+            self.entity_renderer.unprepare_textured_model(textured_model);
         }        
         self.entity_renderer.stop_render();
 
@@ -67,8 +65,7 @@ impl BatchRenderer {
     }
     
     fn prepare(&self) {
-        gl::enable(gl::CULL_FACE);
-        gl::cull_face(gl::BACK);
+        gl::helper::enable_backface_culling();
         gl::enable(gl::DEPTH_TEST);
         gl::clear_color((1.0, 0.0, 0.0, 1.0));
         gl::clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);

@@ -15,6 +15,7 @@ pub struct StaticShader {
     location_light_color: i32,
     location_shine_damper: i32,
     location_reflectivity: i32,
+    location_uses_fake_lighting: i32,
 }
 
 impl StaticShader {
@@ -27,6 +28,7 @@ impl StaticShader {
             mut location_light_color,
             mut location_shine_damper,
             mut location_reflectivity,
+            mut location_uses_fake_lighting,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -47,6 +49,8 @@ impl StaticShader {
                 // specular lighting
                 location_shine_damper = shader_prog.get_uniform_location("shine_damper");
                 location_reflectivity = shader_prog.get_uniform_location("reflectivity");
+                // bad grass model hack
+                location_uses_fake_lighting = shader_prog.get_uniform_location("uses_fake_lighting");
         });
 
         StaticShader {
@@ -58,6 +62,7 @@ impl StaticShader {
             location_light_color,
             location_shine_damper,
             location_reflectivity,
+            location_uses_fake_lighting,
         }
     }
 
@@ -67,6 +72,10 @@ impl StaticShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn load_uses_fake_lighting(&mut self, uses_fake: bool) {
+        ShaderProgram::load_bool(self.location_uses_fake_lighting, uses_fake);
     }
 
     pub fn load_shine_variables(&mut self, shine_damper: f32, reflectivity: f32) {

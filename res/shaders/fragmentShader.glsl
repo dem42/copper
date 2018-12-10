@@ -18,6 +18,11 @@ uniform float reflectivity;
 
 void main(void) {
     
+    vec4 texture_color = texture(texture_sampler, pass_tex_coord);
+    if (texture_color.a < 0.5) {
+        discard; // do not render transparency (hack)
+    }
+
     // we have to normalize after interpolation
     vec3 unit_normal = normalize(surface_normal);
     vec3 unit_light = normalize(light_direction);
@@ -32,5 +37,5 @@ void main(void) {
     float spec_brightness = max(dotSpecToCamera, 0.0);
     vec4 specular_color = vec4(pow(spec_brightness, shine_damper) * reflectivity * light_color, 1.0);
 
-    out_Color = diffuse_color * texture(texture_sampler, pass_tex_coord) + specular_color; 
+    out_Color = diffuse_color * texture_color + specular_color; 
 }

@@ -49,6 +49,12 @@ pub fn enable(capability: types::GLenum) {
     }
 }
 
+pub fn disable(capability: types::GLenum) {
+    unsafe {
+        Disable(capability);
+    }
+}
+
 pub fn cull_face(type_: types::GLenum) {
     unsafe {
         CullFace(type_);
@@ -364,12 +370,25 @@ pub fn delete_texture(tex_ids: &[u32]) {
     }
 }
 
-///////////
-// gl 4.3
-///////////
 pub mod helper {
     use super::*;
 
+    pub fn enable_backface_culling() {
+        enable_culling(BACK);
+    }
+
+    fn enable_culling(cull_type: types::GLenum) {        
+        enable(CULL_FACE);
+        cull_face(cull_type);
+    }
+
+    pub fn disable_culling() {        
+        disable(CULL_FACE);        
+    }
+
+    ///////////
+    // gl 4.3
+    ///////////
     pub fn register_error_callback() {
         unsafe {
             enable(DEBUG_OUTPUT);

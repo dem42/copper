@@ -35,3 +35,27 @@ pub fn load_rgb_2d_texture(file_name: &str, reverse: bool) -> Result<Texture2DRG
         data: result,
     })
 }
+
+pub struct RGBA<T> {
+    pub r: T,
+    pub g: T,
+    pub b: T,
+    pub a: T,
+}
+
+pub type Texture2DRGBA = Texture<RGBA<u8>>;
+
+pub fn load_rgba_2d_texture(file_name: &str, reverse: bool) -> Result<Texture2DRGBA, Error> {
+    let bitmap = lodepng::decode32_file(file_name)?;
+    let mut result: Vec<_> = bitmap.buffer.iter().map(|&rgba| RGBA {r: rgba.r, g: rgba.g, b: rgba.b, a: rgba.a}).collect();    
+    if reverse {
+        // lodepng loads from top to bottom
+        // based on how we setup the coordinates for our model we may need to reverse
+        result.reverse();
+    }
+    Ok(Texture{
+        width: bitmap.width,
+        height: bitmap.height,
+        data: result,
+    })
+}
