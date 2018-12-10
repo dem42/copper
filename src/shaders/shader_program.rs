@@ -8,102 +8,9 @@ use std::io::{
     BufReader,
 }; 
 use super::super::gl;
-use super::super::loader::RawModel;
 use super::super::math::{Vector3f, Matrix4f};
-use super::super::entities::{
-    Camera,
-    Light,
-};
 
-pub struct StaticShader {
-    program: ShaderProgram,
-    location_transformation_matrix: i32,
-    location_projection_matrix: i32,
-    location_view_matrix: i32,
-    location_light_pos: i32,
-    location_light_color: i32,
-    location_shine_damper: i32,
-    location_reflectivity: i32,
-}
-
-impl StaticShader {
-    pub fn new(model: &RawModel) -> StaticShader {
-
-        let (
-            mut location_transformation_matrix, 
-            mut location_projection_matrix,
-            mut location_view_matrix,
-            mut location_light_pos,
-            mut location_light_color,
-            mut location_shine_damper,
-            mut location_reflectivity,
-        ) = Default::default();
-        
-        let shader_program = ShaderProgram::new(
-            String::from("src/shaders/vertexShader.glsl"), 
-            String::from("src/shaders/fragmentShader.glsl"), 
-            |shader_prog| {
-                shader_prog.bind_attribute(model.pos_attrib, "pos");
-                shader_prog.bind_attribute(model.tex_coord_attrib, "tex_coord");
-                shader_prog.bind_attribute(model.normal_attrib, "normal");
-            },
-            |shader_prog| {                
-                location_transformation_matrix = shader_prog.get_uniform_location("transform");
-                location_projection_matrix = shader_prog.get_uniform_location("projection_matrix");
-                location_view_matrix = shader_prog.get_uniform_location("view_matrix");
-                // diffuse lighting
-                location_light_pos = shader_prog.get_uniform_location("light_pos");
-                location_light_color = shader_prog.get_uniform_location("light_color");
-                // specular lighting
-                location_shine_damper = shader_prog.get_uniform_location("shine_damper");
-                location_reflectivity = shader_prog.get_uniform_location("reflectivity");
-        });
-
-        StaticShader {
-            program: shader_program,
-            location_transformation_matrix,
-            location_projection_matrix,
-            location_view_matrix,
-            location_light_pos,
-            location_light_color,
-            location_shine_damper,
-            location_reflectivity,
-        }
-    }
-
-    pub fn start(&mut self) {
-        self.program.start();
-    }
-
-    pub fn stop(&mut self) {
-        self.program.stop();
-    }
-
-    pub fn load_shine_variables(&mut self, shine_damper: f32, reflectivity: f32) {
-        ShaderProgram::load_float(self.location_shine_damper, shine_damper);
-        ShaderProgram::load_float(self.location_reflectivity, reflectivity);
-    }
-
-    pub fn load_light(&mut self, light: &Light) {
-        ShaderProgram::load_vector(self.location_light_pos, &light.position);
-        ShaderProgram::load_vector(self.location_light_color, &light.color);
-    }
-
-    pub fn load_transformation_matrix(&mut self, transform_matrix: &Matrix4f) {
-        ShaderProgram::load_matrix(self.location_transformation_matrix, transform_matrix);
-    }
-
-    pub fn load_projection_matrix(&mut self, projection_matrix: &Matrix4f) {
-        ShaderProgram::load_matrix(self.location_projection_matrix, projection_matrix);
-    }
-
-    pub fn load_view_matrix(&mut self, camera: &Camera) {
-        let view_matrix = Matrix4f::create_view_matrix(camera);
-        ShaderProgram::load_matrix(self.location_view_matrix, &view_matrix);
-    }
-}
-
-struct ShaderProgram {
+pub struct ShaderProgram {
     program_id: u32,
     vertex_shader_id: u32,
     fragment_shader_id: u32,
@@ -144,15 +51,15 @@ impl ShaderProgram {
         shader_prog
     }
 
-    fn start(&self) {
+    pub fn start(&self) {
         gl::use_program(self.program_id);
     }
 
-    fn stop(&self) {
+    pub fn stop(&self) {
         gl::use_program(0);
     }
 
-    fn load_shader(filename: String, type_: u32) -> std::io::Result<u32> {
+    pub fn load_shader(filename: String, type_: u32) -> std::io::Result<u32> {
         let shader_file = File::open(filename)?;
         let mut buf_reader = BufReader::new(shader_file);
         let mut contents = String::new();
@@ -170,15 +77,15 @@ impl ShaderProgram {
         }
     }
 
-    fn bind_attribute(&self, attribute: u32, variable_name: &str) {
+    pub fn bind_attribute(&self, attribute: u32, variable_name: &str) {
         gl::bind_attrib_location(self.program_id, attribute, variable_name).expect("Variable name invalid");
     }
     
-    fn get_uniform_location(&self, uniform_name: &str) -> i32 {
+    pub fn get_uniform_location(&self, uniform_name: &str) -> i32 {
         gl::get_uniform_location(self.program_id, uniform_name).expect("Couldn't get uniform location")
     }
 
-    fn load_float(location_id: i32, value: f32) {
+    pub fn load_float(location_id: i32, value: f32) {
         gl::uniform1f(location_id, value);
     }
 
@@ -186,11 +93,11 @@ impl ShaderProgram {
         gl::uniform1f(location_id, if value { 1.0 } else { 0.0 });
     }
 
-    fn load_vector(location_id: i32, value: &Vector3f) {
+    pub fn load_vector(location_id: i32, value: &Vector3f) {
         gl::uniform3f(location_id, value.x, value.y, value.z);
     }
 
-    fn load_matrix(location_id: i32, value: &Matrix4f) {
+    pub fn load_matrix(location_id: i32, value: &Matrix4f) {
         gl::uniform_matrix4f(location_id, value.data());
     } 
 }

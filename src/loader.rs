@@ -2,6 +2,7 @@ use super::gl;
 use texture_lib::texture_loader::{
     load_rgb_2d_texture
 };
+use std::hash::{Hash, Hasher};
 
 #[derive(Default)]
 pub struct ModelLoader {    
@@ -18,15 +19,12 @@ impl ModelLoader {
 
     pub fn load_to_vao(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32]) -> RawModel {
         let vao_id = self.create_vao();
-        let pos_attrib = 0;
-        let tex_coord_attrib = 1;
-        let normal_attrib = 2;
         self.bind_indices_buffer(indices);
-        self.store_data_in_attribute_list(pos_attrib, 3, positions);
-        self.store_data_in_attribute_list(tex_coord_attrib, 2, texture_coords);
-        self.store_data_in_attribute_list(normal_attrib, 3, normals);
+        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 3, positions);
+        self.store_data_in_attribute_list(RawModel::TEX_COORD_ATTRIB, 2, texture_coords);
+        self.store_data_in_attribute_list(RawModel::NORMAL_ATTRIB, 3, normals);
         self.unbind_vao();
-        RawModel::new(vao_id, indices.len(), pos_attrib, tex_coord_attrib, normal_attrib)
+        RawModel::new(vao_id, indices.len())
     }
 
     pub fn load_texture(&mut self, file_name: &str, shine_damper: f32, reflectivity: f32, reverse: bool) -> ModelTexture {
@@ -92,19 +90,17 @@ impl Drop for ModelLoader {
 pub struct RawModel {
     pub vao_id: u32,
     pub vertex_count: usize,
-    pub pos_attrib: u32,
-    pub tex_coord_attrib: u32,
-    pub normal_attrib: u32,
 }
 
 impl RawModel {
-    pub fn new(vao_id: u32, vertex_count: usize, pos_attrib: u32, tex_coord_attrib: u32, normal_attrib: u32) -> RawModel {
+    pub const POS_ATTRIB: u32 = 0;
+    pub const TEX_COORD_ATTRIB: u32 = 1;
+    pub const NORMAL_ATTRIB: u32 = 2;
+
+    pub fn new(vao_id: u32, vertex_count: usize) -> RawModel {
         RawModel {
             vao_id,
             vertex_count,
-            pos_attrib,
-            tex_coord_attrib,
-            normal_attrib,
         }
     }
 }
@@ -128,4 +124,19 @@ impl Default for ModelTexture {
 pub struct TexturedModel {
     pub raw_model: RawModel,
     pub texture: ModelTexture,
+}
+
+impl PartialEq for TexturedModel {
+    fn eq(&self, other: &TexturedModel) -> bool {
+        self.texture.tex_id == other.texture.tex_id && self.raw_model.vao_id == other.raw_model.vao_id
+    }
+}
+
+impl Eq for TexturedModel {}
+
+impl Hash for TexturedModel {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.texture.tex_id.hash(state);
+        self.raw_model.vao_id.hash(state);
+    }
 }
