@@ -19,6 +19,11 @@ pub struct TerrainShader {
     location_shine_damper: i32,
     location_reflectivity: i32,
     location_sky_color: i32,
+    location_background_sampler: i32,
+    location_r_sampler: i32,
+    location_g_sampler: i32,
+    location_b_sampler: i32,
+    location_blend_map_sampler: i32,
 }
 
 impl TerrainShader {
@@ -31,7 +36,15 @@ impl TerrainShader {
             mut location_light_color,
             mut location_shine_damper,
             mut location_reflectivity,
-            mut location_sky_color,
+            mut location_sky_color,            
+        ) = Default::default();
+
+        let (
+            mut location_background_sampler,
+            mut location_r_sampler,
+            mut location_g_sampler,
+            mut location_b_sampler,
+            mut location_blend_map_sampler,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -54,6 +67,12 @@ impl TerrainShader {
                 location_reflectivity = shader_prog.get_uniform_location("reflectivity");
                 // fog unfirom
                 location_sky_color = shader_prog.get_uniform_location("sky_color");
+                // texture samplers
+                location_background_sampler = shader_prog.get_uniform_location("background_sampler");
+                location_r_sampler = shader_prog.get_uniform_location("r_sampler");
+                location_g_sampler = shader_prog.get_uniform_location("g_sampler");
+                location_b_sampler = shader_prog.get_uniform_location("b_sampler");
+                location_blend_map_sampler = shader_prog.get_uniform_location("blend_map_sampler");
         });
 
         TerrainShader {
@@ -66,6 +85,11 @@ impl TerrainShader {
             location_shine_damper,
             location_reflectivity,
             location_sky_color,
+            location_background_sampler,
+            location_r_sampler,
+            location_g_sampler,
+            location_b_sampler,
+            location_blend_map_sampler,
         }
     }
 
@@ -75,6 +99,14 @@ impl TerrainShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn connect_texture_units(&mut self) {
+        ShaderProgram::load_int(self.location_background_sampler, 0);
+        ShaderProgram::load_int(self.location_r_sampler, 1);
+        ShaderProgram::load_int(self.location_g_sampler, 2);
+        ShaderProgram::load_int(self.location_b_sampler, 3);
+        ShaderProgram::load_int(self.location_blend_map_sampler, 4);
     }
 
     pub fn load_sky_color(&mut self, sky_color: &Vector3f) {

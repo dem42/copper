@@ -11,6 +11,8 @@ use copper::loader::{
     ModelLoader,
     TexturedModel,
     ModelTexture,  
+    TerrainTexture,  
+    TerrainTexturePack,  
 };
 use copper::entities::{
     Entity,
@@ -37,8 +39,13 @@ fn main() {
     let mut camera = Camera::default();
     camera.position.y = 5.0;
 
-    let grass_tex = loader.load_texture("res/textures/grass.png", false);
-    let terrains = terrain_cells(&grass_tex, &mut loader);
+    let background_texture = loader.load_terrain_texture("res/textures/terrain/grassy2.png", false);
+    let r_texture = loader.load_terrain_texture("res/textures/terrain/mud.png", false);
+    let g_texture = loader.load_terrain_texture("res/textures/terrain/grassFlowers.png", false);
+    let b_texture = loader.load_terrain_texture("res/textures/terrain/path.png", false);
+    let blend_map_tex = loader.load_terrain_texture("res/textures/terrain/blendMap.png", false);
+    let texture_pack = TerrainTexturePack { background_texture, r_texture, g_texture, b_texture, };
+    let terrains = terrain_cells(&texture_pack, &blend_map_tex, &mut loader);
 
     while !display.is_close_requested() {
         camera.move_camera(&display);        
@@ -47,11 +54,11 @@ fn main() {
     }
 }
 
-fn terrain_cells<'a>(grass_tex: &'a ModelTexture, loader: &mut ModelLoader) -> Vec<Terrain<'a>> {
+fn terrain_cells<'a>(terrain_texture_pack: &'a TerrainTexturePack, blend_texture: &'a TerrainTexture, loader: &mut ModelLoader) -> Vec<Terrain<'a>> {
     let mut terrains = Vec::new();
     for i in -2..2 {
         for j in -2..2 {
-            let terrain = Terrain::new(i, j, grass_tex, loader);
+            let terrain = Terrain::new(i, j, terrain_texture_pack, blend_texture, loader);
             terrains.push(terrain);
         }
     }

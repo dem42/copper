@@ -89,6 +89,10 @@ impl ShaderProgram {
         gl::uniform1f(location_id, value);
     }
 
+    pub fn load_int(location_id: i32, value: i32) {
+        gl::uniform1i(location_id, value);
+    }
+
     pub fn load_bool(location_id: i32, value: bool) {
         gl::uniform1f(location_id, if value { 1.0 } else { 0.0 });
     }

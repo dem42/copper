@@ -106,8 +106,7 @@ fn process_token(token: &str, textures_to_sort: &mut Vec<Vector2f>, normals_to_s
         textures_to_sort[vertex_index] = textures[texture_index].clone();
         normals_to_sort[vertex_index] = normals[normal_index].clone();
     }
-    else {
-        println!("There is a dupe? ({}, {}, {}) with tex_normals: {:?} in {}", texture_index, normal_index, vertex_index, tex_norm_tups, file_name);        
+    else {        
         vertices.push(vertices[vertex_index].clone());
         vertex_index = *extra_vertex_id_gen;
         tex_norm_tups.push((texture_index, normal_index, vertex_index));

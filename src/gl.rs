@@ -131,6 +131,12 @@ pub fn uniform1f(location_id: i32, value: f32) {
     }
 }
 
+pub fn uniform1i(location_id: i32, value: i32) {
+    unsafe {
+        Uniform1i(location_id, value);
+    }
+}
+
 pub fn uniform3f(location_id: i32, x: f32, y: f32, z: f32) {
     unsafe {
         Uniform3f(location_id, x, y, z);

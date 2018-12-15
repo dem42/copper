@@ -28,23 +28,41 @@ impl ModelLoader {
     }
 
     pub fn load_texture(&mut self, file_name: &str, reverse: bool) -> ModelTexture {
-        let texture = load_rgba_2d_texture(file_name, reverse).expect("Failed to load texture");
-        println!("got rgba vec with {} elements", texture);
-
+        let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
+        
         let tex_id = gl::gen_texture();
         self.tex_list.push(tex_id);
         gl::bind_texture(tex_id, gl::TEXTURE_2D);
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
 
         gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
         gl::bind_texture(0, gl::TEXTURE_2D);
         ModelTexture {
             tex_id,
             ..Default::default()
+        }
+    }
+
+    pub fn load_terrain_texture(&mut self, file_name: &str, reverse: bool) -> TerrainTexture {
+        let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load terrain texture: {}", file_name));
+        
+        let tex_id = gl::gen_texture();
+        self.tex_list.push(tex_id);
+        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+
+        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+        gl::bind_texture(0, gl::TEXTURE_2D);
+        TerrainTexture {
+            tex_id,
         }
     }
 
@@ -102,6 +120,17 @@ impl RawModel {
             vertex_count,
         }
     }
+}
+
+pub struct TerrainTexture {
+    pub tex_id: u32,
+}
+
+pub struct TerrainTexturePack {
+    pub background_texture: TerrainTexture,
+    pub r_texture: TerrainTexture,
+    pub g_texture: TerrainTexture,
+    pub b_texture: TerrainTexture,
 }
 
 pub struct ModelTexture {

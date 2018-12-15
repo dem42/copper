@@ -1,6 +1,7 @@
 use crate::loader::{
     RawModel,
-    ModelTexture,
+    TerrainTexture,
+	TerrainTexturePack,
     ModelLoader,
 };
 
@@ -8,20 +9,22 @@ pub struct Terrain<'a> {
     pub x: f32,
     pub z: f32,
     pub raw_model: RawModel,
-    pub texture: &'a ModelTexture,
+    pub blend_texture: &'a TerrainTexture,
+    pub texture_pack: &'a TerrainTexturePack,
 }
 
 impl<'a> Terrain<'a> {
     const SIZE: f32 = 800.0;
     const VERTEX_COUNT: usize = 128;
 
-    pub fn new(grid_x: i32, grid_z: i32, texture: &'a ModelTexture, loader: &mut ModelLoader) -> Terrain<'a> {
+    pub fn new(grid_x: i32, grid_z: i32, texture_pack: &'a TerrainTexturePack, blend_texture: &'a TerrainTexture, loader: &mut ModelLoader) -> Terrain<'a> {
         let model = Terrain::generate_terrain(loader);
         Terrain {
             x: grid_x as f32 * Terrain::SIZE,
             z: grid_z as f32 * Terrain::SIZE,
-            texture,
+            blend_texture,
             raw_model: model,
+			texture_pack,
         }
     }
 

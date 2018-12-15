@@ -25,7 +25,7 @@ void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
     vec4 eye_space_position = view_matrix * world_position;
     gl_Position = projection_matrix * eye_space_position;
-    pass_tex_coord = tex_coord * 40.0; // our texture isnt large enough for so many vertices -> so let's force it to repeat
+    pass_tex_coord = tex_coord;
 
     // this i think is incorrect you need to transform by the transpose of the inverse of the transformation matrix
     mat4 normal_transform = transpose(inverse(transform));

@@ -23,6 +23,7 @@ impl TerrainRenderer {
         let mut shader = TerrainShader::new();
         shader.start();
         shader.load_projection_matrix(projection_matrix);
+        shader.connect_texture_units();
         shader.stop();
         TerrainRenderer {
             shader,
@@ -31,6 +32,8 @@ impl TerrainRenderer {
 
     pub fn start_render(&mut self, light: &Light, camera: &Camera, sky_color: &Vector3f) {
         self.shader.start();
+        // we do this more than once because we may want to change the light, view, sky color
+        // but we do them once per model type, because the type has one shader
         self.shader.load_light(light);
         self.shader.load_view_matrix(camera);  
         self.shader.load_sky_color(sky_color);  
@@ -46,10 +49,19 @@ impl TerrainRenderer {
         gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
 
-        self.shader.load_shine_variables(terrain.texture.shine_damper, terrain.texture.reflectivity);
+        self.shader.load_shine_variables(1.0, 0.0);
 
-        gl::active_texture(gl::TEXTURE0); // activate bank 0
-        gl::bind_texture(terrain.texture.tex_id, gl::TEXTURE_2D);
+        // configure texture units
+        gl::active_texture(gl::TEXTURE0); 
+        gl::bind_texture(terrain.texture_pack.background_texture.tex_id, gl::TEXTURE_2D);
+        gl::active_texture(gl::TEXTURE1); 
+        gl::bind_texture(terrain.texture_pack.r_texture.tex_id, gl::TEXTURE_2D);
+        gl::active_texture(gl::TEXTURE2); 
+        gl::bind_texture(terrain.texture_pack.g_texture.tex_id, gl::TEXTURE_2D);
+        gl::active_texture(gl::TEXTURE3); 
+        gl::bind_texture(terrain.texture_pack.b_texture.tex_id, gl::TEXTURE_2D);
+        gl::active_texture(gl::TEXTURE4); 
+        gl::bind_texture(terrain.blend_texture.tex_id, gl::TEXTURE_2D);
     }
 
     pub fn render(&mut self, terrain: &Terrain) {        
