@@ -9,4 +9,4 @@ pub mod renderers;
 pub mod shaders;
 pub mod math;
 pub mod entities;
-pub mod obj_loader;
+pub mod obj_converter;

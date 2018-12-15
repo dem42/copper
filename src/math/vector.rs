@@ -1,5 +1,6 @@
 use std::ops::Neg;
 use std::iter::IntoIterator;
+use std::f32;
 
 #[derive(Debug, Default, Clone)]
 pub struct Vector3f {
@@ -11,6 +12,11 @@ pub struct Vector3f {
 impl Vector3f {
     pub fn new(x: f32, y: f32, z: f32) -> Vector3f {
         Vector3f { x, y, z}
+    }
+
+    pub fn length(&self) -> f32 {
+        let sq_sum = self.x * self.x + self.y * self.y + self.z * self.z;
+        sq_sum.sqrt()
     }
 }
 
@@ -55,6 +61,10 @@ pub struct Vector2f {
 impl Vector2f {
     pub fn new(x: f32, y: f32) -> Vector2f {
         Vector2f { x, y, }
+    }
+    pub fn length(&self) -> f32 {
+        let sq_sum = self.x * self.x + self.y * self.y;
+        sq_sum.sqrt()
     }
 }
 

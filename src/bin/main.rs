@@ -19,7 +19,7 @@ use copper::entities::{
     Terrain,
 };
 use copper::math::Vector3f;
-use copper::obj_loader::load_obj_model;
+use copper::obj_converter::load_obj_model;
 
 fn main() {
     let mut display = Display::create();    
@@ -80,20 +80,23 @@ fn create_world<'a>(tree_model: &'a TexturedModel, fern_model: &'a TexturedModel
 }
 
 fn tree_model(loader: &mut ModelLoader) -> TexturedModel {
-    let raw_model = load_obj_model("res/models/tree.obj", loader).expect("Unable to load tree.obj");
+    let model_data = load_obj_model("res/models/tree.obj").expect("Unable to load tree.obj");
+    let raw_model = loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
     let texture = loader.load_texture("res/textures/tree.png", false);
     TexturedModel { raw_model, texture }
 }
 
 fn fern_model(loader: &mut ModelLoader) -> TexturedModel {
-    let raw_model = load_obj_model("res/models/fern.obj", loader).expect("Unable to load fern.obj");
+    let model_data = load_obj_model("res/models/fern.obj").expect("Unable to load fern.obj");
+    let raw_model = loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
     let mut texture = loader.load_texture("res/textures/fern.png", false);
     texture.has_transparency = true;    
     TexturedModel { raw_model, texture }
 }
 
 fn grass_model(loader: &mut ModelLoader) -> TexturedModel {
-    let raw_model = load_obj_model("res/models/grassModel.obj", loader).expect("Unable to load grassModel.obj");
+    let model_data = load_obj_model("res/models/grassModel.obj").expect("Unable to load grassModel.obj");
+    let raw_model = loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
     let mut texture = loader.load_texture("res/textures/grassTexture.png", false);
     texture.has_transparency = true;
     texture.uses_fake_lighting = true;
