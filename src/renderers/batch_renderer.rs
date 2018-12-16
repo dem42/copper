@@ -11,7 +11,7 @@ use crate::math::{
     Matrix4f,
     Vector3f
 };
-use crate::loader::{
+use crate::models::{
     TexturedModel,    
 };
 use super::entity_renderer::EntityRenderer;

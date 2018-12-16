@@ -9,7 +9,7 @@ use crate::math::{
     Matrix4f,
     Vector3f
 };
-use crate::loader::{
+use crate::models::{
     TexturedModel,
     RawModel,
 };

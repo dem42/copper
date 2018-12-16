@@ -1,4 +1,4 @@
-use crate::loader::{
+use crate::models::{
     RawModel,
     TerrainTexture,
 	TerrainTexturePack,
@@ -8,7 +8,7 @@ use crate::loader::{
 pub struct Terrain<'a> {
     pub x: f32,
     pub z: f32,
-    pub raw_model: RawModel,
+    pub raw_model: &'a RawModel,
     pub blend_texture: &'a TerrainTexture,
     pub texture_pack: &'a TerrainTexturePack,
 }
@@ -17,18 +17,17 @@ impl<'a> Terrain<'a> {
     const SIZE: f32 = 800.0;
     const VERTEX_COUNT: usize = 128;
 
-    pub fn new(grid_x: i32, grid_z: i32, texture_pack: &'a TerrainTexturePack, blend_texture: &'a TerrainTexture, loader: &mut ModelLoader) -> Terrain<'a> {
-        let model = Terrain::generate_terrain(loader);
+    pub fn new(grid_x: i32, grid_z: i32, texture_pack: &'a TerrainTexturePack, blend_texture: &'a TerrainTexture, terrain_model: &'a RawModel) -> Terrain<'a> {        
         Terrain {
             x: grid_x as f32 * Terrain::SIZE,
             z: grid_z as f32 * Terrain::SIZE,
             blend_texture,
-            raw_model: model,
+            raw_model: terrain_model,
 			texture_pack,
         }
     }
-
-    fn generate_terrain(loader: &mut ModelLoader) -> RawModel {
+    
+    pub fn generate_terrain(loader: &mut ModelLoader) -> RawModel {
 		const COUNT: usize = Terrain::VERTEX_COUNT * Terrain::VERTEX_COUNT;
 		let mut vertices = [0.0f32; COUNT * 3];
 		let mut normals = [0.0f32; COUNT * 3];
@@ -71,5 +70,4 @@ impl<'a> Terrain<'a> {
 		}
 		loader.load_to_vao(&vertices, &texture_coords, &indices, &normals)
 	}
-
 }

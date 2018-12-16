@@ -3,7 +3,7 @@ extern crate libc;
 extern crate texture_lib;
 
 pub mod display;
-pub mod loader;
+pub mod models;
 pub mod gl;
 pub mod renderers;
 pub mod shaders;

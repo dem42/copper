@@ -89,7 +89,7 @@ pub fn load_obj_model(file_name: &str) -> std::io::Result<ModelData> {
 
 fn process_token(token: &str, textures_to_sort: &mut Vec<Vector2f>, normals_to_sort: &mut Vec<Vector3f>, indices: &mut Vec<u32>, 
                 textures: &Vec<Vector2f>, normals: &Vec<Vector3f>, vertex_dupes: &mut HashMap<usize, Vec<(usize, usize, usize)>>,
-                extra_vertex_id_gen: &mut usize, vertices: &mut Vec<Vector3f>, file_name: &str) {
+                extra_vertex_id_gen: &mut usize, vertices: &mut Vec<Vector3f>, _file_name: &str) {
     let idx: Vec<_> = token.split("/").collect();
     let mut vertex_index = idx[0].parse::<usize>().expect(".obj didn't contain vertices") - 1;
     let texture_index = idx[1].parse::<usize>().expect(".obj didn't contain vt texture coords") - 1;

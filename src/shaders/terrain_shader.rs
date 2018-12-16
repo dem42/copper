@@ -1,10 +1,10 @@
 use super::shader_program::ShaderProgram;
-use super::super::entities::{
+use crate::entities::{
     Camera,
     Light,
 };
-use super::super::loader::RawModel;
-use super::super::math::{
+use crate::models::RawModel;
+use crate::math::{
     Matrix4f,
     Vector3f,
 };
