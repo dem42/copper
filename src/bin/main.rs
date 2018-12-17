@@ -15,6 +15,7 @@ use copper::entities::{
     Camera,
     Light,
     Terrain,
+    Player,
 };
 use copper::math::Vector3f;
 
@@ -22,23 +23,24 @@ fn main() {
     let mut display = Display::create();
     let mut resource_manager = ResourceManager::default();
     
-    let (entities, terrains) = create_world(&mut resource_manager);
+    let (entities, terrains, mut player) = create_world(&mut resource_manager);
 
     let mut batch_renderer = BatchRenderer::new(&display);
     
     let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
 
     let mut camera = Camera::default();
-    camera.position.y = 5.0;
+    camera.position = Vector3f::new(100.0, 10.0, 5.0);    
     
     while !display.is_close_requested() {
-        camera.move_camera(&display);        
-        batch_renderer.render(&light, &camera, &entities, &terrains);
+        camera.move_camera(&display);
+        player.move_player(&display);     
+        batch_renderer.render(&light, &camera, &entities, &terrains, &player);
         display.update_display();
     }
 }
 
-fn create_world<'a>(resource_manager: &'a mut ResourceManager) -> (Vec<Entity<'a>>, Vec<Terrain<'a>>) {
+fn create_world<'a>(resource_manager: &'a mut ResourceManager) -> (Vec<Entity<'a>>, Vec<Terrain<'a>>, Player<'a>) {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;
@@ -50,6 +52,8 @@ fn create_world<'a>(resource_manager: &'a mut ResourceManager) -> (Vec<Entity<'a
     resource_manager.init_low_poly_tree_model();
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
+    resource_manager.init_player_model();
+
     for _ in 0..100 {
         let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, 0.0, 0.0);
@@ -80,7 +84,11 @@ fn create_world<'a>(resource_manager: &'a mut ResourceManager) -> (Vec<Entity<'a
             terrains.push(terrain);
         }
     }
-    (entities, terrains)
+
+    let player_entity = Entity::new(resource_manager.player_model(), Vector3f::new(100.0, 0.0, -50.0), Vector3f::new(0.0, 0.0, 0.0), 1.0);
+    let player = Player::new(player_entity);
+
+    (entities, terrains, player)
 }
 
 // fn create_world<'a>(tree_model: &'a TexturedModel, fern_model: &'a TexturedModel, grass_model: &'a TexturedModel) -> Vec<Entity<'a>> {

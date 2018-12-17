@@ -6,6 +6,7 @@ use crate::entities::{
     Camera,
     Light,
     Terrain,
+    Player,
 };
 use crate::math::{
     Matrix4f,
@@ -41,7 +42,7 @@ impl BatchRenderer {
         }
     }
     
-    pub fn render<'a, 'b>(&mut self, light: &Light, camera: &Camera, entities: &Vec<Entity<'a>>, terrains: &Vec<Terrain<'b>>) {
+    pub fn render<'a>(&mut self, light: &Light, camera: &Camera, entities: &Vec<Entity<'a>>, terrains: &Vec<Terrain<'a>>, player: &Player<'a>) {
 
         self.prepare();
 
@@ -56,6 +57,11 @@ impl BatchRenderer {
             }
             self.entity_renderer.unprepare_textured_model(textured_model);
         }        
+        // render player
+        self.entity_renderer.prepare_textured_model(player.entity.model);        
+        self.entity_renderer.render(&player.entity);
+        self.entity_renderer.unprepare_textured_model(player.entity.model);
+
         self.entity_renderer.stop_render();
 
         // render terrain

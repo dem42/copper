@@ -17,12 +17,26 @@ pub struct ResourceManager {
     grass_model: Option<TexturedModel>,
     flowers_model: Option<TexturedModel>,
     low_poly_tree_model: Option<TexturedModel>,
+    player_model: Option<TexturedModel>,
     texture_pack: Option<TerrainTexturePack>,
     blend_texture: Option<TerrainTexture>,
     terrain_model: Option<RawModel>,
 }
 
 impl ResourceManager {
+
+    pub fn init_player_model(&mut self) {    
+        if let None = self.player_model {
+            let model_data = load_obj_model("res/models/stanfordBunny.obj").expect("Unable to load stanfordBunny.obj");
+            let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
+            let texture = self.loader.load_texture("res/textures/brown.png", false);
+            self.player_model = Some(TexturedModel { raw_model, texture });
+        } 
+    }
+
+    pub fn player_model(&self) -> &TexturedModel {
+        self.player_model.as_ref().expect("Need to call init_player_model before accessing the model")
+    }
 
     pub fn init_tree_model(&mut self) {    
         if let None = self.tree_model {

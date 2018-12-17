@@ -1,6 +1,10 @@
 
 use glfw::Context;
-use super::gl;
+use std::time::{
+    SystemTime,
+    Duration,
+};
+use crate::gl;
 
 pub use glfw::Key;
 
@@ -18,6 +22,8 @@ pub trait Keyboard {
 pub struct Display {
     glfw: glfw::Glfw,
     window: glfw::Window,
+    last_frame_sys_time: SystemTime,
+    pub frame_time_sec: f32,
 }
 
 impl Keyboard for Display {
@@ -49,7 +55,9 @@ impl Display {
 
         Display {
             glfw,
-            window
+            window,
+            last_frame_sys_time: SystemTime::now(),
+            frame_time_sec: 0.0,
         }
     }
 
@@ -80,6 +88,8 @@ impl Display {
 
         self.glfw.poll_events();
 
+        self.update_frame_time_measurement();
+
         // for (_, event) in glfw::flush_messages(&events) {
         //     handle_window_event(&mut window, event);
         // }    
@@ -87,6 +97,16 @@ impl Display {
 
     pub fn is_close_requested(&self) -> bool {  
         self.window.should_close()
+    }
+
+    fn update_frame_time_measurement(&mut self) {
+        let current_time = SystemTime::now();
+        let elapsed = current_time.duration_since(self.last_frame_sys_time);
+        self.frame_time_sec = match elapsed {
+            Ok(elapsed) => (elapsed.as_secs() as f32 + elapsed.subsec_micros() as f32 / 1_000_000.0),
+            Err(_) => self.frame_time_sec,
+        };
+        self.last_frame_sys_time = current_time;
     }
 
     // fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
