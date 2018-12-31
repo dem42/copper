@@ -1,9 +1,14 @@
 
-use glfw::Context;
-use std::time::{
-    SystemTime,
-    Duration,
+use glfw::{
+    Action,
+    Context,
+    WindowEvent,
 };
+use std::time::{
+    Duration,
+    SystemTime,
+};
+use std::sync::mpsc::Receiver;
 use crate::gl;
 
 pub use glfw::Key;
@@ -19,11 +24,24 @@ pub trait Keyboard {
     fn is_pressed(&self, key: Key) -> bool;
 }
 
+#[derive(Default)]
+pub struct MousePosData {
+    pub cur_x: f64,
+    pub cur_y: f64,
+    pub dx: f64,
+    pub dy: f64,    
+    pub is_left_pressed: bool,
+    pub is_right_pressed: bool,
+    pub is_middle_pressed: bool,
+}
+
 pub struct Display {
     glfw: glfw::Glfw,
     window: glfw::Window,
+    events: Receiver<(f64, WindowEvent)>,
     last_frame_sys_time: SystemTime,
     pub frame_time_sec: f32,
+    pub mouse_pos: MousePosData,
 }
 
 impl Keyboard for Display {
@@ -42,10 +60,12 @@ impl Display {
         glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
 
-        let (mut window, _events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", glfw::WindowMode::Windowed)
+        let (mut window, events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         window.make_current();
+        window.set_cursor_pos_polling(true);
+        window.set_mouse_button_polling(true);
 
         Display::print_opengl_info(&window);
 
@@ -56,8 +76,10 @@ impl Display {
         Display {
             glfw,
             window,
+            events,
             last_frame_sys_time: SystemTime::now(),
             frame_time_sec: 0.0,
+            mouse_pos: MousePosData::default(),
         }
     }
 
@@ -90,9 +112,9 @@ impl Display {
 
         self.update_frame_time_measurement();
 
-        // for (_, event) in glfw::flush_messages(&events) {
-        //     handle_window_event(&mut window, event);
-        // }    
+        for (_, event) in glfw::flush_messages(&self.events) {
+            Display::handle_window_event(&mut self.mouse_pos, event);
+        }    
     }
 
     pub fn is_close_requested(&self) -> bool {  
@@ -109,13 +131,27 @@ impl Display {
         self.last_frame_sys_time = current_time;
     }
 
-    // fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
-    //     match event {
-    //         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
-    //             window.set_should_close(true)
-    //         }
-    //         _ => {}
-    //     }
-    // }
+    fn handle_window_event(mouse_pos: &mut MousePosData, event: WindowEvent) {
+        match event {
+            WindowEvent::CursorPos(x, y) => {
+                mouse_pos.dx = x - mouse_pos.cur_x;
+                mouse_pos.dy = y - mouse_pos.cur_y;
+                mouse_pos.cur_x = x;
+                mouse_pos.cur_y = y;
+            },
+            WindowEvent::MouseButton(button, action, _) => {
+                match (button, action) {
+                    (glfw::MouseButtonLeft, Action::Press) => { mouse_pos.is_left_pressed = true; },
+                    (glfw::MouseButtonLeft, Action::Release) => { mouse_pos.is_left_pressed = false; },
+                    (glfw::MouseButtonRight, Action::Press) => { mouse_pos.is_right_pressed = true; },
+                    (glfw::MouseButtonRight, Action::Release) => { mouse_pos.is_right_pressed = false; },
+                    (glfw::MouseButtonMiddle, Action::Press) => { mouse_pos.is_middle_pressed = true; },
+                    (glfw::MouseButtonMiddle, Action::Release) => { mouse_pos.is_middle_pressed = false; },
+                    _ => {}
+                }
+            },
+            _ => {}
+        }
+    }
 }
 

@@ -29,18 +29,30 @@ fn main() {
     
     let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
 
-    let mut camera = Camera::default();
+    let mut camera = Camera::new();
     camera.position = Vector3f::new(100.0, 10.0, 5.0);    
     
+    let mut timeout_to_print_mouse_info = 0.0;
+
     while !display.is_close_requested() {
         camera.move_camera(&display);
         player.move_player(&display);     
         batch_renderer.render(&light, &camera, &entities, &terrains, &player);
         display.update_display();
+
+        timeout_to_print_mouse_info += display.frame_time_sec;
+        if timeout_to_print_mouse_info >= 2.0 {
+            println!("Mouse pos is: ({},{}). It moved by dx={}, dy={}. The button press states are ({},{},{})", 
+                display.mouse_pos.cur_x, display.mouse_pos.cur_y,
+                display.mouse_pos.dx, display.mouse_pos.dy,
+                display.mouse_pos.is_left_pressed,
+                display.mouse_pos.is_middle_pressed,
+                display.mouse_pos.is_right_pressed);
+        }
     }
 }
 
-fn create_world<'a>(resource_manager: &'a mut ResourceManager) -> (Vec<Entity<'a>>, Vec<Terrain<'a>>, Player<'a>) {
+fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Terrain>, Player) {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;
