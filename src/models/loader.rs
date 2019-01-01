@@ -36,10 +36,17 @@ impl ModelLoader {
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
 
         gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+
+        // turn on mipmapping
+        gl::generate_mipmap(gl::TEXTURE_2D);
+        gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
+        // set texture detail level (more negative means nicer)
+        gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, 0.0);
+
         gl::bind_texture(0, gl::TEXTURE_2D);
         ModelTexture {
             tex_id,
@@ -56,10 +63,17 @@ impl ModelLoader {
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR); -> using mipmaps instead
+        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
 
         gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+
+        // turn on mipmapping
+        gl::generate_mipmap(gl::TEXTURE_2D);
+        gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
+        // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
+        gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, -0.4);
+
         gl::bind_texture(0, gl::TEXTURE_2D);
         TerrainTexture {
             tex_id,

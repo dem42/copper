@@ -346,6 +346,24 @@ pub fn tex_parameter_iv(target: types::GLenum, pname: types::GLenum, value: u32)
     }
 }
 
+pub fn generate_mipmap(target: types::GLenum) {
+    unsafe {        
+        GenerateMipmap(target);
+    }
+}
+
+pub fn tex_parameteri(target: types::GLenum, pname: types::GLenum, value: u32) {
+    unsafe {        
+        TexParameteri(target, pname, value as i32);
+    }
+}
+
+pub fn tex_parameterf(target: types::GLenum, pname: types::GLenum, value: f32) {
+    unsafe {        
+        TexParameterf(target, pname, value);
+    }
+}
+
 ///////////
 // gl 3.0
 ///////////
