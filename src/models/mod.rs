@@ -7,6 +7,10 @@ pub use self::loader::{
     TexturedModel,
     ModelTexture,  
     TerrainTexture,  
-    TerrainTexturePack,  
+    TerrainTexturePack,
 };
-pub use self::resource_manager::ResourceManager;
+pub use self::resource_manager::{
+    ResourceManager,
+    Models,
+    ModelType,
+};
