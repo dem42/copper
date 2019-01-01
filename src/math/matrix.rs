@@ -43,7 +43,8 @@ impl Matrix4f {
 
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
         let translation = &camera.position;
-        let rotation_xyz_degrees = Vector3f::new(camera.roll, camera.pitch, camera.yaw);
+        // since our up direction is y not z we need to swap yaw and pitch
+        let rotation_xyz_degrees = Vector3f::new(camera.roll, camera.yaw, camera.pitch);
         let mut view_mat = Matrix4f::identity(); 
         // inverse to transform matrix -> first rotate around xyz (not zyx like normal), then translate by negative translation       
         view_mat.rotate_tait_bryan_xyz(&rotation_xyz_degrees);

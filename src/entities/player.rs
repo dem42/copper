@@ -59,9 +59,9 @@ impl<'a> Player<'a> {
         }
         
         if keyboard.is_pressed(Key::A) {
-            self.current_turn_speed = -Player::TURN_SPEED;
-        } else if keyboard.is_pressed(Key::D) {
             self.current_turn_speed = Player::TURN_SPEED;
+        } else if keyboard.is_pressed(Key::D) {
+            self.current_turn_speed = -Player::TURN_SPEED;
         } else {
             self.current_turn_speed = 0.0;
         }

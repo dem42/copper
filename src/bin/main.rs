@@ -30,25 +30,13 @@ fn main() {
     let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
 
     let mut camera = Camera::new();
-    camera.position = Vector3f::new(100.0, 10.0, 5.0);    
+    camera.position = Vector3f::new(0.0, 10.0, 5.0);
     
-    let mut timeout_to_print_mouse_info = 0.0;
-
     while !display.is_close_requested() {
-        camera.move_camera(&display);
+        camera.move_camera(&display, &player);
         player.move_player(&display);     
         batch_renderer.render(&light, &camera, &entities, &terrains, &player);
         display.update_display();
-
-        timeout_to_print_mouse_info += display.frame_time_sec;
-        if timeout_to_print_mouse_info >= 2.0 {
-            println!("Mouse pos is: ({},{}). It moved by dx={}, dy={}. The button press states are ({},{},{})", 
-                display.mouse_pos.cur_x, display.mouse_pos.cur_y,
-                display.mouse_pos.dx, display.mouse_pos.dy,
-                display.mouse_pos.is_left_pressed,
-                display.mouse_pos.is_middle_pressed,
-                display.mouse_pos.is_right_pressed);
-        }
     }
 }
 
@@ -97,65 +85,8 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Ter
         }
     }
 
-    let player_entity = Entity::new(resource_manager.player_model(), Vector3f::new(100.0, 0.0, -50.0), Vector3f::new(0.0, 0.0, 0.0), 1.0);
+    let player_entity = Entity::new(resource_manager.player_model(), Vector3f::new(0.0, 0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 1.0);
     let player = Player::new(player_entity);
 
     (entities, terrains, player)
 }
-
-// fn create_world<'a>(tree_model: &'a TexturedModel, fern_model: &'a TexturedModel, grass_model: &'a TexturedModel) -> Vec<Entity<'a>> {
-//     let mut entities = Vec::new();    
-//     let mut rng = rand::thread_rng();
-//     const X_WIDTH: f32 = 1000.0;
-//     const Z_WIDTH: f32 = -1000.0;
-//     for _ in 0..100 {
-//         let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-//         let r_rot = Vector3f::new(0.0, 0.0, 0.0);
-//         entities.push(Entity::new(&tree_model, r_pos, r_rot, 3.0));
-
-//         let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-//         let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-//         entities.push(Entity::new(&fern_model, r_pos, r_rot, 0.6));
-
-//         let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-//         let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-//         entities.push(Entity::new(&grass_model, r_pos, r_rot, 1.0));
-//     }
-//     entities
-// }
-
-
-// fn cubes<'a>(textured_model: &'a TexturedModel) -> Vec<Entity<'a>> {
-//     let mut entities = Vec::new();
-//     let mut rng = rand::thread_rng();
-//     for _ in 0..200 {
-//         let r_pos = Vector3f::new(rng.gen::<f32>() * 100.0 - 50.0, rng.gen::<f32>() * 100.0 - 50.0, rng.gen::<f32>() * -300.0);
-//         let r_rot = Vector3f::new(rng.gen::<f32>() * 180.0, rng.gen::<f32>() * 180.0, 0.0);
-//         entities.push(Entity::new(&textured_model, r_pos, r_rot, 1.0));
-//     }
-//     entities
-// }
-
-// fn cube_model(loader: &mut ModelLoader) -> TexturedModel {
-//     let raw_model = load_obj_model("res/models/cube.obj", loader).expect("Unable to load cube.obj");
-//     let texture = loader.load_texture("res/textures/rainbow512.png", 1.0, 0.1, false);
-//     TexturedModel { raw_model, texture }
-// }
-
-// fn blue_dragon(loader: &mut ModelLoader) -> TexturedModel {
-//     let raw_model = load_obj_model("res/models/DragonBlender.obj", loader).expect("Unable to load dragon .obj");
-//     let texture = loader.load_texture("res/textures/dragon_texture.png", 10.0, 1.0, false);
-//     TexturedModel { raw_model, texture }
-// }
-
-// fn dragon(loader: &mut ModelLoader) -> TexturedModel {
-//     let raw_model = load_obj_model("res/models/dragon.obj", loader).expect("Unable to load dragon .obj");
-//     let texture = loader.load_texture("res/textures/white.png", 10.0, 1.0, false);
-//     TexturedModel { raw_model, texture }
-// }
-
-// fn stall_model(loader: &mut ModelLoader) -> TexturedModel {
-//     let raw_model = load_obj_model("res/models/stall_textured.obj", loader).expect("Failed to load stall.obj model");
-//     let texture = loader.load_texture("res/textures/stallTexture.png", 1.0, 0.0, false);
-//     TexturedModel { raw_model, texture }
-// }

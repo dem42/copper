@@ -70,9 +70,9 @@ impl ResourceManager {
 
     pub fn init_player_model(&mut self) {    
         if let None = self.player_model {
-            let model_data = load_obj_model("res/models/stanfordBunny.obj").expect("Unable to load stanfordBunny.obj");
+            let model_data = load_obj_model("res/models/person.obj").expect("Unable to load person.obj");
             let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
-            let texture = self.loader.load_texture("res/textures/brown.png", false);
+            let texture = self.loader.load_texture("res/textures/playerTexture.png", false);
             self.player_model = Some(TexturedModel { raw_model, texture });
         } 
     }

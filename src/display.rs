@@ -9,6 +9,7 @@ use std::time::{
     SystemTime,
 };
 use std::sync::mpsc::Receiver;
+use std::fmt;
 use crate::gl;
 
 pub use glfw::Key;
@@ -26,13 +27,43 @@ pub trait Keyboard {
 
 #[derive(Default)]
 pub struct MousePosData {
+    pub prev_x: f64,
+    pub prev_y: f64,
     pub cur_x: f64,
-    pub cur_y: f64,
-    pub dx: f64,
-    pub dy: f64,    
+    pub cur_y: f64,   
+    pub cur_scroll: f64,    
     pub is_left_pressed: bool,
     pub is_right_pressed: bool,
     pub is_middle_pressed: bool,
+}
+
+impl MousePosData {
+    pub fn dx(&self) -> f64 {
+        self.cur_x - self.prev_x
+    }
+    pub fn dy(&self) -> f64 {
+        self.cur_y - self.prev_y
+    }
+    pub fn d_scroll(&self) -> f64 {
+        self.cur_scroll
+    }
+    pub fn set_prev_to_cur(&mut self) {
+        self.prev_x = self.cur_x;
+        self.prev_y = self.cur_y;
+        self.cur_scroll = 0.0;
+    }
+}
+
+impl fmt::Display for MousePosData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {        
+        write!(f, "Mouse pos is: ({},{}). It moved by dx={}, dy={}. The button press states are ({},{},{}). Scroll is {}", 
+            self.cur_x, self.cur_y,
+            self.dx(), self.dy(),
+            self.is_left_pressed,
+            self.is_middle_pressed,
+            self.is_right_pressed,
+            self.d_scroll())        
+    }
 }
 
 pub struct Display {
@@ -66,6 +97,7 @@ impl Display {
         window.make_current();
         window.set_cursor_pos_polling(true);
         window.set_mouse_button_polling(true);
+        window.set_scroll_polling(true);
 
         Display::print_opengl_info(&window);
 
@@ -112,6 +144,8 @@ impl Display {
 
         self.update_frame_time_measurement();
 
+        self.mouse_pos.set_prev_to_cur();
+
         for (_, event) in glfw::flush_messages(&self.events) {
             Display::handle_window_event(&mut self.mouse_pos, event);
         }    
@@ -134,8 +168,8 @@ impl Display {
     fn handle_window_event(mouse_pos: &mut MousePosData, event: WindowEvent) {
         match event {
             WindowEvent::CursorPos(x, y) => {
-                mouse_pos.dx = x - mouse_pos.cur_x;
-                mouse_pos.dy = y - mouse_pos.cur_y;
+                mouse_pos.prev_x = mouse_pos.cur_x;
+                mouse_pos.prev_y = mouse_pos.cur_y;
                 mouse_pos.cur_x = x;
                 mouse_pos.cur_y = y;
             },
@@ -149,6 +183,9 @@ impl Display {
                     (glfw::MouseButtonMiddle, Action::Release) => { mouse_pos.is_middle_pressed = false; },
                     _ => {}
                 }
+            },
+            WindowEvent::Scroll(_x_scroll, y_scroll) => {                
+                mouse_pos.cur_scroll = y_scroll;
             },
             _ => {}
         }
