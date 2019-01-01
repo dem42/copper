@@ -1,8 +1,7 @@
 use std::f32;
 use crate::math::Vector3f;
 use crate::display::{
-    Display, 
-    MousePosData,
+    Display,
 };
 use crate::entities::Player;
 
@@ -16,7 +15,6 @@ pub struct Camera {
 }
 
 impl Camera {
-    const CAMERA_SPEED: f32 = 0.2;
 
     pub fn new() -> Camera {
         Camera {

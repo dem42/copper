@@ -5,7 +5,6 @@ use glfw::{
     WindowEvent,
 };
 use std::time::{
-    Duration,
     SystemTime,
 };
 use std::sync::mpsc::Receiver;

@@ -8,9 +8,10 @@ pub use self::loader::{
     ModelTexture,  
     TerrainTexture,  
     TerrainTexturePack,
+    TextureFlags,
 };
 pub use self::resource_manager::{
     ResourceManager,
     Models,
-    ModelType,
+    ModelType,    
 };

@@ -7,6 +7,12 @@ pub struct Texture<PixelType> {
     pub data: Vec<PixelType>,
 }
 
+impl<PixelType> Texture<PixelType> {
+    pub fn get_color(&self, i: usize, j: usize) -> &PixelType {
+        &self.data[i*self.width + j]
+    }
+}
+
 impl<PixelType> fmt::Display for Texture<PixelType> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "(width:{}, height: {}, bytes: {})", self.width, self.height, self.data.len())

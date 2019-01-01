@@ -55,6 +55,7 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Ter
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
     resource_manager.init(&Models::PLAYER);
+    resource_manager.init(&Models::CRATE);
 
     for _ in 0..100 {
         let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
@@ -87,8 +88,11 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Ter
         }
     }
 
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 1.0);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player = Player::new(player_entity);
+
+    let box_entity = Entity::new(resource_manager.model(ModelType::Crate), Vector3f::new(0.0, 4.0, -150.0), Vector3f::new(0.0, 0.0, 0.0), 5.0);
+    entities.push(box_entity);
 
     (entities, terrains, player)
 }

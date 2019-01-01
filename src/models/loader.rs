@@ -11,6 +11,20 @@ pub struct ModelLoader {
     tex_list: Vec<u32>,
 }
 
+#[repr(u8)]
+pub enum TextureFlags {
+    REVERSE = 1,
+    MIPMAP = 2,
+}
+
+impl TextureFlags {
+    fn parse(flags_mask: u8) -> (bool, bool) {        
+        let is_reverse = (flags_mask & (TextureFlags::REVERSE as u8)) == (TextureFlags::REVERSE as u8);
+        let uses_mipmaps = (flags_mask & (TextureFlags::MIPMAP as u8)) == (TextureFlags::MIPMAP as u8);
+        (is_reverse, uses_mipmaps)
+    }
+}
+
 impl ModelLoader {
     pub fn new() -> ModelLoader {
         // some fancy disambiguation syntax here equivalnet to Default::default() and here also to RawModel::default since no multiple functions with same name
@@ -27,7 +41,8 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len())
     }
 
-    pub fn load_texture(&mut self, file_name: &str, reverse: bool) -> ModelTexture {
+    pub fn load_texture(&mut self, file_name: &str, flags: u8) -> ModelTexture {
+        let (reverse, mipmap) = TextureFlags::parse(flags);
         let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
         
         let tex_id = gl::gen_texture();
@@ -35,17 +50,19 @@ impl ModelLoader {
         gl::bind_texture(tex_id, gl::TEXTURE_2D);
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);
-        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
-        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
 
         gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
-
-        // turn on mipmapping
-        gl::generate_mipmap(gl::TEXTURE_2D);
-        gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
-        // set texture detail level (more negative means nicer)
-        gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, 0.0);
+        if mipmap {
+             // turn on mipmapping, has to be called after loading the texture data 
+            gl::generate_mipmap(gl::TEXTURE_2D);
+            gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
+            // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
+            gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, -0.4);
+        } else {        
+            gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+            gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        }
 
         gl::bind_texture(0, gl::TEXTURE_2D);
         ModelTexture {
@@ -54,7 +71,8 @@ impl ModelLoader {
         }
     }
 
-    pub fn load_terrain_texture(&mut self, file_name: &str, reverse: bool) -> TerrainTexture {
+    pub fn load_terrain_texture(&mut self, file_name: &str, flags: u8) -> TerrainTexture {
+        let (reverse, mipmap) = TextureFlags::parse(flags);
         let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load terrain texture: {}", file_name));
         
         let tex_id = gl::gen_texture();
@@ -62,17 +80,18 @@ impl ModelLoader {
         gl::bind_texture(tex_id, gl::TEXTURE_2D);
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);
-        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR); -> using mipmaps instead
-        // gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
-
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
         gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
-
-        // turn on mipmapping
-        gl::generate_mipmap(gl::TEXTURE_2D);
-        gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
-        // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
-        gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, -0.4);
+        if mipmap {
+             // turn on mipmapping
+            gl::generate_mipmap(gl::TEXTURE_2D);
+            gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
+            // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
+            gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, -0.4);
+        } else {        
+            gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+            gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        }
 
         gl::bind_texture(0, gl::TEXTURE_2D);
         TerrainTexture {

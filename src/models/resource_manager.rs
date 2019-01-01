@@ -4,6 +4,7 @@ use super::loader::{
     TerrainTexture,  
     TerrainTexturePack,
     RawModel,
+    TextureFlags,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::load_obj_model;
@@ -27,23 +28,41 @@ pub enum ModelType {
     Tree,
     LowPolyTree,
     Flowers,
+    Crate,
 }
 #[derive(Default)]
 pub struct ModelProps {
     pub has_transparency: bool,
     pub uses_fake_lighting: bool,
+    pub uses_mipmaps: bool,
 }
-pub struct Model(ModelType, &'static str, &'static str, ModelProps);
+impl ModelProps {
+    fn get_texture_flags(&self) -> u8 {
+        let mut res = 0;
+        if self.uses_mipmaps {
+            res |= TextureFlags::MIPMAP as u8;
+        }
+        res
+    }
+}
+
+pub struct Model(ModelType, &'static str, &'static str, &'static ModelProps);
 
 pub struct Models;
 
 impl Models {
-    pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", ModelProps{has_transparency: false, uses_fake_lighting: false});
-    pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", ModelProps{has_transparency: false, uses_fake_lighting: false});
-    pub const LOW_POLY_TREE: Model = Model(ModelType::LowPolyTree, "res/models/lowPolyTree.obj", "res/textures/lowPolyTree.png", ModelProps{has_transparency: false, uses_fake_lighting: false});
-    pub const FERN: Model = Model(ModelType::Fern, "res/models/fern.obj", "res/textures/fern.png", ModelProps{has_transparency: true, uses_fake_lighting: false});
-    pub const GRASS: Model = Model(ModelType::Grass, "res/models/grassModel.obj", "res/textures/grassTexture.png", ModelProps{has_transparency: true, uses_fake_lighting: true});
-    pub const FLOWERS: Model = Model(ModelType::Flowers, "res/models/grassModel.obj", "res/textures/flower.png", ModelProps{has_transparency: true, uses_fake_lighting: true});
+    pub const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true};
+    //pub const NO_MIPMAP_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: false};
+    pub const TRANSPARENCY_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true};
+    pub const GRASS_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true};
+    
+    pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
+    pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
+    pub const LOW_POLY_TREE: Model = Model(ModelType::LowPolyTree, "res/models/lowPolyTree.obj", "res/textures/lowPolyTree.png", &Models::COMMON_PROPS);
+    pub const FERN: Model = Model(ModelType::Fern, "res/models/fern.obj", "res/textures/fern.png", &Models::TRANSPARENCY_PROPS);
+    pub const GRASS: Model = Model(ModelType::Grass, "res/models/grassModel.obj", "res/textures/grassTexture.png", &Models::GRASS_PROPS);
+    pub const FLOWERS: Model = Model(ModelType::Flowers, "res/models/grassModel.obj", "res/textures/flower.png", &Models::GRASS_PROPS);
+    pub const CRATE: Model = Model(ModelType::Crate, "res/models/box.obj", "res/textures/box.png", &Models::COMMON_PROPS);
 }
 
 
@@ -56,7 +75,7 @@ impl ResourceManager {
         }
         let model_data = load_obj_model(obj_file).expect(&format!("Unable to load {}", obj_file));
         let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
-        let mut texture = self.loader.load_texture(texture_file, false);
+        let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
         texture.has_transparency = model_props.has_transparency;
         texture.uses_fake_lighting = model_props.uses_fake_lighting;
         let model = TexturedModel { raw_model, texture };
@@ -69,15 +88,16 @@ impl ResourceManager {
     }
     
     pub fn init_terrain_textures(&mut self) {
+        let texture_flags = TextureFlags::MIPMAP as u8;
         if let None = self.texture_pack {
-            let background_texture = self.loader.load_terrain_texture("res/textures/terrain/grassy2.png", false);
-            let r_texture = self.loader.load_terrain_texture("res/textures/terrain/mud.png", false);
-            let g_texture = self.loader.load_terrain_texture("res/textures/terrain/grassFlowers.png", false);
-            let b_texture = self.loader.load_terrain_texture("res/textures/terrain/path.png", false);
+            let background_texture = self.loader.load_terrain_texture("res/textures/terrain/grassy2.png", texture_flags);
+            let r_texture = self.loader.load_terrain_texture("res/textures/terrain/mud.png", texture_flags);
+            let g_texture = self.loader.load_terrain_texture("res/textures/terrain/grassFlowers.png", texture_flags);
+            let b_texture = self.loader.load_terrain_texture("res/textures/terrain/path.png", texture_flags);
             self.texture_pack = Some(TerrainTexturePack { background_texture, r_texture, g_texture, b_texture, });
         }
         if let None = self.blend_texture {
-            self.blend_texture = Some(self.loader.load_terrain_texture("res/textures/terrain/blendMap.png", false));
+            self.blend_texture = Some(self.loader.load_terrain_texture("res/textures/terrain/blendMap.png", texture_flags));
         }
     }
 
@@ -91,7 +111,7 @@ impl ResourceManager {
 
     pub fn init_terrain_model(&mut self) {
         if let None = self.terrain_model {
-            let model = Terrain::generate_terrain(&mut self.loader);
+            let model = Terrain::generate_terrain(&mut self.loader, "res/textures/terrain/heightmap.png");
             self.terrain_model = Some(model);
         }
     }
