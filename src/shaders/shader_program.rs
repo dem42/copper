@@ -3,12 +3,16 @@ use std::fs::File;
 // we need io traits which are exported in bulk in prelude
 use std::io::{
     prelude::*,
+    BufReader,
     Error,
     ErrorKind,
-    BufReader,
 }; 
 use super::super::gl;
-use super::super::math::{Vector3f, Matrix4f};
+use super::super::math::{
+    Matrix4f,
+    Vector2f, 
+    Vector3f, 
+};
 
 pub struct ShaderProgram {
     program_id: u32,
@@ -97,8 +101,12 @@ impl ShaderProgram {
         gl::uniform1f(location_id, if value { 1.0 } else { 0.0 });
     }
 
-    pub fn load_vector(location_id: i32, value: &Vector3f) {
+    pub fn load_vector3d(location_id: i32, value: &Vector3f) {
         gl::uniform3f(location_id, value.x, value.y, value.z);
+    }
+
+    pub fn load_vector2d(location_id: i32, value: &Vector2f) {
+        gl::uniform2f(location_id, value.x, value.y);
     }
 
     pub fn load_matrix(location_id: i32, value: &Matrix4f) {

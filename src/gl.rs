@@ -143,6 +143,12 @@ pub fn uniform3f(location_id: i32, x: f32, y: f32, z: f32) {
     }
 }
 
+pub fn uniform2f(location_id: i32, x: f32, y: f32) {
+    unsafe {
+        Uniform2f(location_id, x, y);
+    }
+}
+
 pub fn uniform_matrix4f(location_id: i32, matrix: &[[f32; 4]; 4]) {
     unsafe {        
         // hope this cast is ok .. in memory the 4x4 array should be just a block of 16 floats

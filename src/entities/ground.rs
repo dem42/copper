@@ -5,6 +5,7 @@ use crate::math::{
     BarycentricCoords,
 };
 use std::f32;
+use std::cmp;
 
 pub struct Ground<'a> {
     pub terrains: Vec<Terrain<'a>>,
@@ -26,6 +27,9 @@ impl Ground<'_> {
                 let grid_width = Terrain::SIZE / ((grid_cell_count - 1) as f32);
                 let grid_x = (mx / grid_width).floor() as usize;
                 let grid_z = (mz / grid_width).floor() as usize;
+                // clamp due to floating point imprecision?
+                let grid_x = cmp::max(0, cmp::min(grid_x, grid_cell_count - 2));
+                let grid_z = cmp::max(0, cmp::min(grid_z, grid_cell_count - 2));
 
                 // now find the coords in the rectangle as fraction in [0,1]
                 let r_x = (mx % grid_width) / grid_width;

@@ -18,6 +18,10 @@ uniform mat4 view_matrix;
 uniform vec3 light_pos;
 uniform float uses_fake_lighting;
 
+// atlas scaling stuff
+uniform float number_of_rows;
+uniform vec2 texture_offset;
+
 // fog stuff
 const float fog_density = 0.007;
 const float fog_gradient = 1.5;
@@ -26,7 +30,8 @@ void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
     vec4 eye_space_position = view_matrix * world_position;
     gl_Position = projection_matrix * eye_space_position;
-    pass_tex_coord = tex_coord; // get linearly interpolated as we pass them to frag shader
+    pass_tex_coord = (tex_coord / number_of_rows) + texture_offset; // rescale original tex_coords down to section of atlas where texture is located
+    // tex coords will get linearly interpolated as we pass them to frag shader
 
     vec3 actual_normal = normal;
     if (uses_fake_lighting > 0.5) {

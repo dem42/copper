@@ -6,6 +6,7 @@ use crate::entities::{
 use crate::models::RawModel;
 use crate::math::{
     Matrix4f,
+    Vector2f,
     Vector3f,
 };
 
@@ -20,6 +21,8 @@ pub struct StaticShader {
     location_reflectivity: i32,
     location_uses_fake_lighting: i32,
     location_sky_color: i32,
+    location_number_of_rows: i32,
+    location_texture_offset: i32,
 }
 
 impl StaticShader {
@@ -34,6 +37,11 @@ impl StaticShader {
             mut location_reflectivity,
             mut location_uses_fake_lighting,
             mut location_sky_color,
+        ) = Default::default();
+
+        let (
+            mut location_number_of_rows, 
+            mut location_texture_offset,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -58,6 +66,9 @@ impl StaticShader {
                 location_uses_fake_lighting = shader_prog.get_uniform_location("uses_fake_lighting");
                 // fog unfirom
                 location_sky_color = shader_prog.get_uniform_location("sky_color");
+                // atlas uniforms
+                location_number_of_rows = shader_prog.get_uniform_location("number_of_rows");
+                location_texture_offset = shader_prog.get_uniform_location("texture_offset");
         });
 
         StaticShader {
@@ -71,6 +82,8 @@ impl StaticShader {
             location_reflectivity,
             location_uses_fake_lighting,
             location_sky_color,
+            location_number_of_rows,
+            location_texture_offset,
         }
     }
 
@@ -82,8 +95,16 @@ impl StaticShader {
         self.program.stop();
     }
 
+    pub fn load_atlas_number_of_rows(&mut self, number_of_rows: usize) {
+        ShaderProgram::load_float(self.location_number_of_rows, number_of_rows as f32);
+    }
+
+    pub fn load_atlas_offset(&mut self, offset: &Vector2f) {
+        ShaderProgram::load_vector2d(self.location_texture_offset, offset);
+    }
+
     pub fn load_sky_color(&mut self, sky_color: &Vector3f) {
-        ShaderProgram::load_vector(self.location_sky_color, sky_color);
+        ShaderProgram::load_vector3d(self.location_sky_color, sky_color);
     }
 
     pub fn load_uses_fake_lighting(&mut self, uses_fake: bool) {
@@ -96,8 +117,8 @@ impl StaticShader {
     }
 
     pub fn load_light(&mut self, light: &Light) {
-        ShaderProgram::load_vector(self.location_light_pos, &light.position);
-        ShaderProgram::load_vector(self.location_light_color, &light.color);
+        ShaderProgram::load_vector3d(self.location_light_pos, &light.position);
+        ShaderProgram::load_vector3d(self.location_light_color, &light.color);
     }
 
     pub fn load_transformation_matrix(&mut self, transform_matrix: &Matrix4f) {

@@ -3,7 +3,6 @@ use super::loader::{
     TexturedModel,
     TerrainTexture,  
     TerrainTexturePack,
-    RawModel,
     TextureFlags,
     TerrainModel,
 };
@@ -31,11 +30,14 @@ pub enum ModelType {
     Flowers,
     Crate,
 }
-#[derive(Default)]
+
+pub struct AtlasProps(usize);
+
 pub struct ModelProps {
     pub has_transparency: bool,
     pub uses_fake_lighting: bool,
     pub uses_mipmaps: bool,
+    pub atlas_props: AtlasProps,
 }
 impl ModelProps {
     fn get_texture_flags(&self) -> u8 {
@@ -52,15 +54,14 @@ pub struct Model(ModelType, &'static str, &'static str, &'static ModelProps);
 pub struct Models;
 
 impl Models {
-    pub const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true};
-    //pub const NO_MIPMAP_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: false};
-    pub const TRANSPARENCY_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true};
-    pub const GRASS_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true};
+    pub const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(1)};
+    pub const FERN_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(2)};    
+    pub const GRASS_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
     pub const LOW_POLY_TREE: Model = Model(ModelType::LowPolyTree, "res/models/lowPolyTree.obj", "res/textures/lowPolyTree.png", &Models::COMMON_PROPS);
-    pub const FERN: Model = Model(ModelType::Fern, "res/models/fern.obj", "res/textures/fern.png", &Models::TRANSPARENCY_PROPS);
+    pub const FERN: Model = Model(ModelType::Fern, "res/models/fern.obj", "res/textures/atlases/fern.png", &Models::FERN_PROPS);
     pub const GRASS: Model = Model(ModelType::Grass, "res/models/grassModel.obj", "res/textures/grassTexture.png", &Models::GRASS_PROPS);
     pub const FLOWERS: Model = Model(ModelType::Flowers, "res/models/grassModel.obj", "res/textures/flower.png", &Models::GRASS_PROPS);
     pub const CRATE: Model = Model(ModelType::Crate, "res/models/box.obj", "res/textures/box.png", &Models::COMMON_PROPS);
@@ -79,6 +80,7 @@ impl ResourceManager {
         let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
         texture.has_transparency = model_props.has_transparency;
         texture.uses_fake_lighting = model_props.uses_fake_lighting;
+        texture.number_of_rows_in_atlas = model_props.atlas_props.0;
         let model = TexturedModel { raw_model, texture };
 
         self.models.insert(model_type.clone(), model);

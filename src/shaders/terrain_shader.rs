@@ -110,7 +110,7 @@ impl TerrainShader {
     }
 
     pub fn load_sky_color(&mut self, sky_color: &Vector3f) {
-        ShaderProgram::load_vector(self.location_sky_color, sky_color);
+        ShaderProgram::load_vector3d(self.location_sky_color, sky_color);
     }
 
     pub fn load_shine_variables(&mut self, shine_damper: f32, reflectivity: f32) {
@@ -119,8 +119,8 @@ impl TerrainShader {
     }
 
     pub fn load_light(&mut self, light: &Light) {
-        ShaderProgram::load_vector(self.location_light_pos, &light.position);
-        ShaderProgram::load_vector(self.location_light_color, &light.color);
+        ShaderProgram::load_vector3d(self.location_light_pos, &light.position);
+        ShaderProgram::load_vector3d(self.location_light_color, &light.color);
     }
 
     pub fn load_transformation_matrix(&mut self, transform_matrix: &Matrix4f) {

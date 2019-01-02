@@ -172,6 +172,9 @@ pub struct ModelTexture {
     pub reflectivity: f32,
     pub has_transparency: bool,
     pub uses_fake_lighting: bool,
+    // if this is 1 then the texture is not an atlas
+    // also rows == columns since textures are power of two squares and so are textures
+    pub number_of_rows_in_atlas: usize,
 }
 
 impl Default for ModelTexture {
@@ -182,6 +185,7 @@ impl Default for ModelTexture {
             reflectivity: 0.0,
             has_transparency: false,
             uses_fake_lighting: false,
+            number_of_rows_in_atlas: 1,
         }
     }
 }

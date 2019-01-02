@@ -78,7 +78,9 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground,
 
         let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Fern), r_pos, r_rot, 0.6));
+        let fern_model = resource_manager.model(ModelType::Fern);
+        let atlas_texture_index: usize = rng.gen_range(0, fern_model.texture.number_of_rows_in_atlas * fern_model.texture.number_of_rows_in_atlas);
+        entities.push(Entity::new_with_texture_atlas(fern_model, r_pos, r_rot, 0.6, atlas_texture_index));
 
         let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
@@ -89,10 +91,12 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground,
         entities.push(Entity::new(resource_manager.model(ModelType::Flowers), r_pos, r_rot, 1.0));
     }    
 
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player = Player::new(player_entity);
 
-    let box_entity = Entity::new(resource_manager.model(ModelType::Crate), Vector3f::new(0.0, 4.0, -150.0), Vector3f::new(0.0, 0.0, 0.0), 5.0);
+    let mut box_pos = ground.create_pos_on_terrain(0.0, -150.0);
+    box_pos.y += 4.0;
+    let box_entity = Entity::new(resource_manager.model(ModelType::Crate), box_pos, Vector3f::new(0.0, 0.0, 0.0), 5.0);
     entities.push(box_entity);
 
     (entities, ground, player)

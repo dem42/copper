@@ -53,15 +53,17 @@ impl EntityRenderer {
 
         self.shader.load_shine_variables(textured_model.texture.shine_damper, textured_model.texture.reflectivity);
         self.shader.load_uses_fake_lighting(textured_model.texture.uses_fake_lighting);
+        self.shader.load_atlas_number_of_rows(textured_model.texture.number_of_rows_in_atlas);
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
         gl::bind_texture(textured_model.texture.tex_id, gl::TEXTURE_2D);
     }
 
-    pub fn render(&mut self, entity: &Entity) {        
+    pub fn render(&mut self, entity: &Entity) {
         // load transform matrix into shader
         let transform_mat = Matrix4f::create_transform_matrix(&entity.position, &entity.rotation_deg, entity.scale);
         self.shader.load_transformation_matrix(&transform_mat);
+        self.shader.load_atlas_offset(&entity.get_atlas_offset());
         
         gl::draw_elements(gl::TRIANGLES, entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);
     }
