@@ -3,6 +3,7 @@ pub mod camera;
 pub mod light;
 pub mod terrain;
 pub mod player;
+pub mod ground;
 pub mod entity_traits;
 
 pub use self::entity::Entity;
@@ -10,3 +11,4 @@ pub use self::camera::Camera;
 pub use self::light::Light;
 pub use self::terrain::Terrain;
 pub use self::player::Player;
+pub use self::ground::Ground;

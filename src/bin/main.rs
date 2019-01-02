@@ -18,6 +18,7 @@ use copper::entities::{
     Light,
     Terrain,
     Player,
+    Ground,
 };
 use copper::math::Vector3f;
 
@@ -25,7 +26,7 @@ fn main() {
     let mut display = Display::create();
     let mut resource_manager = ResourceManager::default();
     
-    let (entities, terrains, mut player) = create_world(&mut resource_manager);
+    let (entities, ground, mut player) = create_world(&mut resource_manager);
 
     let mut batch_renderer = BatchRenderer::new(&display);
     
@@ -36,13 +37,13 @@ fn main() {
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
-        player.move_player(&display);     
-        batch_renderer.render(&light, &camera, &entities, &terrains, &player);
+        player.move_player(&display, &ground);     
+        batch_renderer.render(&light, &camera, &entities, &ground.terrains, &player);
         display.update_display();
     }
 }
 
-fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Terrain>, Player) {
+fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground, Player) {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;
@@ -56,37 +57,37 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Ter
     resource_manager.init_terrain_model();
     resource_manager.init(&Models::PLAYER);
     resource_manager.init(&Models::CRATE);
-
-    for _ in 0..100 {
-        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-        let r_rot = Vector3f::new(0.0, 0.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Tree), r_pos, r_rot, 3.0));
-
-        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-        let r_rot = Vector3f::new(0.0, 0.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::LowPolyTree), r_pos, r_rot, 0.5));
-
-        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Fern), r_pos, r_rot, 0.6));
-
-        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Grass), r_pos, r_rot, 1.0));
-
-        let r_pos = Vector3f::new(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, 0.0, rng.gen::<f32>() * Z_WIDTH);
-        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Flowers), r_pos, r_rot, 1.0));
-    }    
-
-    let mut terrains = Vec::new();
     
+    let mut terrains = Vec::new();    
     for i in -2..2 {
         for j in -2..2 {            
             let terrain = Terrain::new(i, j, resource_manager.terrain_pack(), resource_manager.blend_texture(), resource_manager.terrain_model());
             terrains.push(terrain);
         }
     }
+    let ground = Ground { terrains };
+
+    for _ in 0..100 {
+        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, 0.0, 0.0);
+        entities.push(Entity::new(resource_manager.model(ModelType::Tree), r_pos, r_rot, 3.0));
+
+        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, 0.0, 0.0);
+        entities.push(Entity::new(resource_manager.model(ModelType::LowPolyTree), r_pos, r_rot, 0.5));
+
+        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        entities.push(Entity::new(resource_manager.model(ModelType::Fern), r_pos, r_rot, 0.6));
+
+        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        entities.push(Entity::new(resource_manager.model(ModelType::Grass), r_pos, r_rot, 1.0));
+
+        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        entities.push(Entity::new(resource_manager.model(ModelType::Flowers), r_pos, r_rot, 1.0));
+    }    
 
     let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player = Player::new(player_entity);
@@ -94,5 +95,5 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Vec<Ter
     let box_entity = Entity::new(resource_manager.model(ModelType::Crate), Vector3f::new(0.0, 4.0, -150.0), Vector3f::new(0.0, 0.0, 0.0), 5.0);
     entities.push(box_entity);
 
-    (entities, terrains, player)
+    (entities, ground, player)
 }

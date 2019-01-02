@@ -205,3 +205,8 @@ impl Hash for TexturedModel {
         self.raw_model.vao_id.hash(state);
     }
 }
+
+pub struct TerrainModel {
+    pub raw_model: RawModel,
+    pub height_map: Vec<Vec<f32>>,
+}

@@ -44,7 +44,7 @@ impl TerrainRenderer {
     }
 
     pub fn prepare_terrain(&mut self, terrain: &Terrain) {
-        gl::bind_vertex_array(terrain.raw_model.vao_id);
+        gl::bind_vertex_array(terrain.model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
@@ -71,7 +71,7 @@ impl TerrainRenderer {
         let transform_mat = Matrix4f::create_transform_matrix(&terrain_pos, &terrain_rot, 1.0);
         self.shader.load_transformation_matrix(&transform_mat);
         
-        gl::draw_elements(gl::TRIANGLES, terrain.raw_model.vertex_count, gl::UNSIGNED_INT);
+        gl::draw_elements(gl::TRIANGLES, terrain.model.raw_model.vertex_count, gl::UNSIGNED_INT);
     }
 
     pub fn unprepare_terrain(&self) {

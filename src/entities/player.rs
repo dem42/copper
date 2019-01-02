@@ -4,7 +4,10 @@ use crate::display::{
     Display,
     Key,
 };
-use crate::entities::Entity;
+use crate::entities::{
+    Entity,
+    Ground,
+};
 
 pub struct Player<'a> {
     pub entity: Entity<'a>,
@@ -20,8 +23,6 @@ impl<'a> Player<'a> {
     const GRAVITY: f32 = -50.0;
     const JUMP_POWER: f32 = 30.0;
 
-    const TERRAIN_HEIGHT: f32 = 0.0;
-
     pub fn new(entity: Entity<'a>) -> Player<'a> {
         Player {
             entity,
@@ -32,7 +33,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn move_player(&mut self, display: &Display) {
+    pub fn move_player(&mut self, display: &Display, ground: &Ground) {
         self.check_inputs(display);
         self.entity.increase_rotation(0.0, self.current_turn_speed * display.frame_time_sec, 0.0);
         let distance = self.current_speed * display.frame_time_sec;
@@ -42,8 +43,10 @@ impl<'a> Player<'a> {
         self.upwards_speed += Player::GRAVITY * display.frame_time_sec;
         let upwards_dist = self.upwards_speed * display.frame_time_sec;
         self.entity.increase_position(dx, upwards_dist, dz);
-        if self.entity.position.y <= Player::TERRAIN_HEIGHT {
-            self.entity.position.y = 0.0;
+
+        let terrain_height_at_xz = ground.height_at_xz(self.entity.position.x, self.entity.position.z);
+        if self.entity.position.y <= terrain_height_at_xz {
+            self.entity.position.y = terrain_height_at_xz;
             self.is_in_air = false;
             self.upwards_speed = 0.0;
         }        

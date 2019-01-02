@@ -5,6 +5,7 @@ use super::loader::{
     TerrainTexturePack,
     RawModel,
     TextureFlags,
+    TerrainModel,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::load_obj_model;
@@ -15,7 +16,7 @@ pub struct ResourceManager {
     loader: ModelLoader,
     texture_pack: Option<TerrainTexturePack>,
     blend_texture: Option<TerrainTexture>,
-    terrain_model: Option<RawModel>,
+    terrain_model: Option<TerrainModel>,
 
     models: HashMap<ModelType, TexturedModel>,
 }
@@ -116,7 +117,7 @@ impl ResourceManager {
         }
     }
 
-    pub fn terrain_model(&self) -> &RawModel {
+    pub fn terrain_model(&self) -> &TerrainModel {
         self.terrain_model.as_ref().expect("Need to call init_terrain_model before accessing the model")
     }
 }
