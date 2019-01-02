@@ -4,13 +4,16 @@ extern crate rand;
 use rand::Rng;
 
 use copper::display::Display;
+use copper::guis::Gui;
 use copper::renderers::{
     BatchRenderer,
+    GuiRenderer,
 };
 use copper::models::{
     ResourceManager,
     Models,
     ModelType,
+    GuiModel,
 };
 use copper::entities::{
     Entity,
@@ -20,15 +23,28 @@ use copper::entities::{
     Player,
     Ground,
 };
-use copper::math::Vector3f;
+use copper::math::{
+    Vector2f,
+    Vector3f,
+};
 
 fn main() {
     let mut display = Display::create();
     let mut resource_manager = ResourceManager::default();
     
-    let (entities, ground, mut player) = create_world(&mut resource_manager);
+    resource_manager.init_gui_textures();
+    // hmm odd that this is ok. doesnt seem to count as a borrow for primitives
+    let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
+    let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
+
+    let (entities, ground, mut player, gui_model) = create_world(&mut resource_manager);
+    let guis = vec!{
+        Gui::new(gui_background, Vector2f::new(-0.8, -0.9), Vector2f::new(0.4, 0.4)),
+        Gui::new(healthbar, Vector2f::new(-0.75, -0.9), Vector2f::new(0.3, 0.3)),
+    };
 
     let mut batch_renderer = BatchRenderer::new(&display);
+    let mut gui_renderer = GuiRenderer::new();
     
     let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
 
@@ -39,11 +55,12 @@ fn main() {
         camera.move_camera(&display, &player);
         player.move_player(&display, &ground);     
         batch_renderer.render(&light, &camera, &entities, &ground.terrains, &player);
+        gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }
 }
 
-fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground, Player) {
+fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel) {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;
@@ -57,6 +74,7 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground,
     resource_manager.init_terrain_model();
     resource_manager.init(&Models::PLAYER);
     resource_manager.init(&Models::CRATE);
+    resource_manager.init_gui_model();
     
     let mut terrains = Vec::new();    
     for i in -2..2 {
@@ -99,5 +117,5 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground,
     let box_entity = Entity::new(resource_manager.model(ModelType::Crate), box_pos, Vector3f::new(0.0, 0.0, 0.0), 5.0);
     entities.push(box_entity);
 
-    (entities, ground, player)
+    (entities, ground, player, resource_manager.gui_model())
 }

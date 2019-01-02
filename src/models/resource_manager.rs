@@ -5,6 +5,7 @@ use super::loader::{
     TerrainTexturePack,
     TextureFlags,
     TerrainModel,
+    GuiModel,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::load_obj_model;
@@ -16,8 +17,10 @@ pub struct ResourceManager {
     texture_pack: Option<TerrainTexturePack>,
     blend_texture: Option<TerrainTexture>,
     terrain_model: Option<TerrainModel>,
+    gui_model: Option<GuiModel>,
 
     models: HashMap<ModelType, TexturedModel>,
+    gui_textures: HashMap<&'static str, u32>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -69,6 +72,9 @@ impl Models {
 
 
 impl ResourceManager {
+
+    pub const HEALTHBAR_TEXTURE: &'static str = "res/textures/health.png";
+    pub const GUI_BACKGROUND_TEXTURE: &'static str = "res/textures/gui_background.png";
     
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
@@ -121,5 +127,43 @@ impl ResourceManager {
 
     pub fn terrain_model(&self) -> &TerrainModel {
         self.terrain_model.as_ref().expect("Need to call init_terrain_model before accessing the model")
+    }
+
+    pub fn init_gui_textures(&mut self) {        
+        let props = Models::COMMON_PROPS;
+        if !self.gui_textures.contains_key(ResourceManager::HEALTHBAR_TEXTURE) {
+            let texture_id = self.loader.load_gui_texture(ResourceManager::HEALTHBAR_TEXTURE, props.get_texture_flags());
+            self.gui_textures.insert(ResourceManager::HEALTHBAR_TEXTURE, texture_id);
+        }
+
+        if !self.gui_textures.contains_key(ResourceManager::GUI_BACKGROUND_TEXTURE) {
+            let texture_id = self.loader.load_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE, props.get_texture_flags());
+            self.gui_textures.insert(ResourceManager::GUI_BACKGROUND_TEXTURE, texture_id);
+        }
+    }
+
+    pub fn get_gui_texture(&self, texture_name: &str) -> u32 {
+         let tex_id = self.gui_textures.get(texture_name).expect("Must call init_gui_textures first");
+         *tex_id
+    }
+
+    pub fn init_gui_model(&mut self) {
+        if let None = self.gui_model {
+            // create quad that covers full screen -> we will scale it to create guis
+            let positions = vec!{
+                -1.0, 1.0,
+                -1.0, -1.0,
+                1.0, 1.0,
+                1.0, -1.0,
+            };
+            let raw_model = self.loader.load_gui_model_to_vao(&positions);
+            self.gui_model = Some(GuiModel {
+                raw_model,
+            });
+        }
+    }
+
+    pub fn gui_model(&self) -> &GuiModel {
+        self.gui_model.as_ref().expect("Need to call init_gui_model before accessing gui model")
     }
 }

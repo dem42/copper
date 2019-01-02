@@ -41,6 +41,32 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len())
     }
 
+    pub fn load_gui_model_to_vao(&mut self, positions: &[f32]) -> RawModel {
+        let vao_id = self.create_vao();        
+        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 2, positions);        
+        self.unbind_vao();
+        RawModel::new(vao_id, positions.len() / 2)
+    }
+
+     pub fn load_gui_texture(&mut self, file_name: &str, flags: u8) -> u32 {
+        let (reverse, _) = TextureFlags::parse(flags);
+        let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
+
+        let tex_id = gl::gen_texture();
+        self.tex_list.push(tex_id);
+        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
+
+        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+        
+        gl::bind_texture(0, gl::TEXTURE_2D);
+        tex_id
+     }
+
     pub fn load_texture(&mut self, file_name: &str, flags: u8) -> ModelTexture {
         let (reverse, mipmap) = TextureFlags::parse(flags);
         let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
@@ -213,4 +239,8 @@ impl Hash for TexturedModel {
 pub struct TerrainModel {
     pub raw_model: RawModel,
     pub height_map: Vec<Vec<f32>>,
+}
+
+pub struct GuiModel {
+    pub raw_model: RawModel,
 }

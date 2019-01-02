@@ -61,6 +61,12 @@ pub fn cull_face(type_: types::GLenum) {
     }
 }
 
+pub fn blend_func(sfactor: types::GLenum, dfactor: types::GLenum) {
+    unsafe {
+        BlendFunc(sfactor, dfactor);
+    }
+}
+
 ///////////
 // gl 1.3
 ///////////

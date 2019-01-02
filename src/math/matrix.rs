@@ -1,5 +1,8 @@
 use std::ops::{Index, IndexMut};
-use super::Vector3f;
+use super::{
+    Vector2f,
+    Vector3f,
+};
 use std::f32;
 use super::super::entities::Camera;
 
@@ -17,6 +20,13 @@ impl Matrix4f {
         Matrix4f {
             data,
         }
+    }
+
+    pub fn create_gui_transform_matrix(translation: &Vector2f, scale: &Vector2f) -> Matrix4f {        
+        let mut transform_mat = Matrix4f::identity();
+        transform_mat.translate(&Vector3f::new(translation.x, translation.y, 0.0));        
+        transform_mat.scale(&Vector3f::new(scale.x, scale.y, 1.0));
+        transform_mat
     }
 
     pub fn create_transform_matrix(translation: &Vector3f, rot_xyz_degrees: &Vector3f, scale: f32) -> Matrix4f {        
