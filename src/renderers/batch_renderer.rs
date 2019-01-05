@@ -42,12 +42,12 @@ impl BatchRenderer {
         }
     }
     
-    pub fn render<'a>(&mut self, light: &Light, camera: &Camera, entities: &Vec<Entity<'a>>, terrains: &Vec<Terrain<'a>>, player: &Player<'a>) {
+    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player) {
 
         self.prepare();
 
         // render entites
-        self.entity_renderer.start_render(light, camera, &BatchRenderer::SKY_COLOR);
+        self.entity_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
         let groups_by_tex = BatchRenderer::group_entities_by_tex(entities);
         for (textured_model, entity_vec) in groups_by_tex.iter() {
             self.entity_renderer.prepare_textured_model(textured_model);
@@ -65,7 +65,7 @@ impl BatchRenderer {
         self.entity_renderer.stop_render();
 
         // render terrain
-        self.terrain_renderer.start_render(light, camera, &BatchRenderer::SKY_COLOR);
+        self.terrain_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
         for terrain in terrains.iter() {
             self.terrain_renderer.prepare_terrain(terrain);
             self.terrain_renderer.render(terrain);

@@ -39,14 +39,19 @@ fn main() {
 
     let (entities, ground, mut player, gui_model) = create_world(&mut resource_manager);
     let guis = vec!{
-        Gui::new(gui_background, Vector2f::new(-0.8, -0.9), Vector2f::new(0.4, 0.4)),
-        Gui::new(healthbar, Vector2f::new(-0.75, -0.9), Vector2f::new(0.3, 0.3)),
+        Gui::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
+        Gui::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
     };
 
     let mut batch_renderer = BatchRenderer::new(&display);
     let mut gui_renderer = GuiRenderer::new();
     
-    let light = Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(1.0, 1.0, 1.0));
+    let lights = vec!{
+        Light::new(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(1.0, 1.0, 1.0)),
+        Light::new(Vector3f::new(-200.0,10.0,-200.0), Vector3f::new(10.0, 0.0, 0.0)),
+        Light::new(Vector3f::new(200.0,10.0,200.0), Vector3f::new(0.0, 0.0, 10.0)),
+        //Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(0.0, 10.0, 0.0)),
+    };
 
     let mut camera = Camera::new();
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
@@ -54,7 +59,7 @@ fn main() {
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
         player.move_player(&display, &ground);     
-        batch_renderer.render(&light, &camera, &entities, &ground.terrains, &player);
+        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player);
         gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }

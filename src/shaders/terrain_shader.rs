@@ -9,13 +9,15 @@ use crate::math::{
     Vector3f,
 };
 
+const NUM_LIGHTS: usize = 3;
+
 pub struct TerrainShader {
     program: ShaderProgram,
     location_transformation_matrix: i32,
     location_projection_matrix: i32,
     location_view_matrix: i32,
-    location_light_pos: i32,
-    location_light_color: i32,
+    location_light_pos: [i32; NUM_LIGHTS],
+    location_light_color: [i32; NUM_LIGHTS],
     location_shine_damper: i32,
     location_reflectivity: i32,
     location_sky_color: i32,
@@ -60,8 +62,12 @@ impl TerrainShader {
                 location_projection_matrix = shader_prog.get_uniform_location("projection_matrix");
                 location_view_matrix = shader_prog.get_uniform_location("view_matrix");
                 // diffuse lighting
-                location_light_pos = shader_prog.get_uniform_location("light_pos");
-                location_light_color = shader_prog.get_uniform_location("light_color");
+                location_light_pos = [0i32; NUM_LIGHTS];
+                location_light_color = [0i32; NUM_LIGHTS];
+                for i in 0..NUM_LIGHTS {
+                    location_light_pos[i] = shader_prog.get_uniform_location(&format!("light_pos[{}]", i));
+                    location_light_color[i] = shader_prog.get_uniform_location(&format!("light_color[{}]", i));
+                }
                 // specular lighting
                 location_shine_damper = shader_prog.get_uniform_location("shine_damper");
                 location_reflectivity = shader_prog.get_uniform_location("reflectivity");
@@ -118,9 +124,17 @@ impl TerrainShader {
         ShaderProgram::load_float(self.location_reflectivity, reflectivity);
     }
 
-    pub fn load_light(&mut self, light: &Light) {
-        ShaderProgram::load_vector3d(self.location_light_pos, &light.position);
-        ShaderProgram::load_vector3d(self.location_light_color, &light.color);
+    pub fn load_lights(&mut self, lights: &Vec<Light>) {        
+        for i in 0..NUM_LIGHTS {
+            if i < lights.len() {
+                ShaderProgram::load_vector3d(self.location_light_pos[i], &lights[i].position);
+                ShaderProgram::load_vector3d(self.location_light_color[i], &lights[i].color);
+            } else {
+                // no light data means fewer than NUM_LIGHTS affect object
+                ShaderProgram::load_vector3d(self.location_light_pos[i], &Vector3f::new(0.0, 0.0, 0.0));
+                ShaderProgram::load_vector3d(self.location_light_color[i], &Vector3f::new(0.0, 0.0, 0.0));
+            }
+        } 
     }
 
     pub fn load_transformation_matrix(&mut self, transform_matrix: &Matrix4f) {
