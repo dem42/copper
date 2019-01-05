@@ -31,13 +31,11 @@ use copper::math::{
 fn main() {
     let mut display = Display::create();
     let mut resource_manager = ResourceManager::default();
-    
-    resource_manager.init_gui_textures();
-    // hmm odd that this is ok. doesnt seem to count as a borrow for primitives
+
+    init_resources(&mut resource_manager);
+    let (mut entities, ground, mut player, gui_model) = create_world(&resource_manager);
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
-
-    let (entities, ground, mut player, gui_model) = create_world(&mut resource_manager);
     let guis = vec!{
         Gui::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         Gui::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
@@ -46,12 +44,17 @@ fn main() {
     let mut batch_renderer = BatchRenderer::new(&display);
     let mut gui_renderer = GuiRenderer::new();
     
+
     let lights = vec!{
-        Light::new(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(1.0, 1.0, 1.0)),
-        Light::new(Vector3f::new(-200.0,10.0,-200.0), Vector3f::new(10.0, 0.0, 0.0)),
-        Light::new(Vector3f::new(200.0,10.0,200.0), Vector3f::new(0.0, 0.0, 10.0)),
-        //Light::new(Vector3f::new(200.0,200.0,100.0), Vector3f::new(0.0, 10.0, 0.0)),
+        Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.4, 0.4, 0.4)), // sunlight, no attenuation
+        Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
+        Light::new_point(ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
+        Light::new_point(ground.create_pos_above_terrain(293.0,14.0,-305.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        
     };
+    // add lamps 
+    entities.push(Entity::new(resource_manager.model(ModelType::Lamp), ground.create_pos_on_terrain(185.0, -293.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
+    entities.push(Entity::new(resource_manager.model(ModelType::Lamp), ground.create_pos_on_terrain(370.0, -300.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
+    entities.push(Entity::new(resource_manager.model(ModelType::Lamp), ground.create_pos_on_terrain(293.0, -305.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
 
     let mut camera = Camera::new();
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
@@ -65,11 +68,7 @@ fn main() {
     }
 }
 
-fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel) {
-    let mut entities = Vec::new();    
-    let mut rng = rand::thread_rng();
-    const X_WIDTH: f32 = 1000.0;
-    const Z_WIDTH: f32 = -1000.0;
+fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::TREE);
     resource_manager.init(&Models::FERN);
     resource_manager.init(&Models::GRASS);
@@ -79,7 +78,16 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground,
     resource_manager.init_terrain_model();
     resource_manager.init(&Models::PLAYER);
     resource_manager.init(&Models::CRATE);
+    resource_manager.init(&Models::LAMP);
     resource_manager.init_gui_model();
+    resource_manager.init_gui_textures();
+}
+
+fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel) {
+    let mut entities = Vec::new();    
+    let mut rng = rand::thread_rng();
+    const X_WIDTH: f32 = 1000.0;
+    const Z_WIDTH: f32 = -1000.0;    
     
     let mut terrains = Vec::new();    
     for i in -2..2 {
@@ -114,7 +122,7 @@ fn create_world(resource_manager: &mut ResourceManager) -> (Vec<Entity>, Ground,
         entities.push(Entity::new(resource_manager.model(ModelType::Flowers), r_pos, r_rot, 1.0));
     }    
 
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player = Player::new(player_entity);
 
     let mut box_pos = ground.create_pos_on_terrain(0.0, -150.0);

@@ -13,6 +13,11 @@ pub struct Ground<'a> {
 
 impl Ground<'_> {
     
+    pub fn create_pos_above_terrain(&self, x: f32, y: f32, z: f32) -> Vector3f {
+        let height = self.height_at_xz(x, z);
+		Vector3f::new(x, height + y, z)
+	}
+
 	pub fn create_pos_on_terrain(&self, x: f32, z: f32) -> Vector3f {
         let y = self.height_at_xz(x, z);
 		Vector3f::new(x, y, z)

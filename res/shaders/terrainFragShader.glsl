@@ -1,6 +1,6 @@
 #version 400 core
 
-const int NUM_LIGHTS = 3;
+const int NUM_LIGHTS = 4;
 
 in vec2 pass_tex_coord;
 in vec3 surface_normal;
@@ -25,6 +25,8 @@ uniform float shine_damper;
 uniform float reflectivity;
 // fog
 uniform vec3 sky_color;
+// point light attenuation
+uniform vec3 attenuation[NUM_LIGHTS];
 
 void main(void) {
 
@@ -49,6 +51,9 @@ void main(void) {
     vec3 total_diffuse = vec3(0.0);
     vec3 total_specular = vec3(0.0);
     for (int i=0; i<NUM_LIGHTS; i++) {
+        float dist = length(light_direction[i]);
+        float attenuation_factor = attenuation[i].x + attenuation[i].y * dist + attenuation[i].z * dist * dist;
+
         vec3 unit_light = normalize(light_direction[i]);    
         float dotNormToLight = dot(unit_normal, unit_light);
         float brightness = max(dotNormToLight, 0.0);
@@ -57,8 +62,8 @@ void main(void) {
         float dotSpecToCamera = dot(unit_camera, unit_specular_reflection);
         float spec_brightness = max(dotSpecToCamera, 0.0);
 
-        total_diffuse += brightness * light_color[i]; // add alpha of 1
-        total_specular += pow(spec_brightness, shine_damper) * reflectivity * light_color[i];
+        total_diffuse += (brightness * light_color[i]) / attenuation_factor; // add alpha of 1
+        total_specular += (pow(spec_brightness, shine_damper) * reflectivity * light_color[i]) / attenuation_factor;
     }
     total_diffuse = max(total_diffuse, 0.2); // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
     

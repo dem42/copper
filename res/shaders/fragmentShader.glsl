@@ -1,6 +1,6 @@
 #version 400 core
 
-const int NUM_LIGHTS = 3;
+const int NUM_LIGHTS = 4;
 
 in vec2 pass_tex_coord;
 in vec3 surface_normal;
@@ -21,6 +21,8 @@ uniform float shine_damper;
 uniform float reflectivity;
 // fog
 uniform vec3 sky_color;
+// point light attenuation
+uniform vec3 attenuation[NUM_LIGHTS];
 
 void main(void) {
     
@@ -36,6 +38,9 @@ void main(void) {
     vec3 total_specular = vec3(0.0);
 
     for (int i=0; i<NUM_LIGHTS; i++) {
+        float distance_to_light_point = length(light_direction[i]);
+        float attenuation_factor = attenuation[i].x + attenuation[i].y * distance_to_light_point + attenuation[i].z * distance_to_light_point * distance_to_light_point;
+        
         vec3 unit_light = normalize(light_direction[i]);    
         float dotNormToLight = dot(unit_normal, unit_light);
         float brightness = max(dotNormToLight, 0.0);
@@ -44,11 +49,11 @@ void main(void) {
         float dotSpecToCamera = dot(unit_camera, unit_specular_reflection);
         float spec_brightness = max(dotSpecToCamera, 0.0);
 
-        total_diffuse += brightness * light_color[i];
-        total_specular = pow(spec_brightness, shine_damper) * reflectivity * light_color[i];
+        total_diffuse += (brightness * light_color[i]) / attenuation_factor;
+        total_specular = (pow(spec_brightness, shine_damper) * reflectivity * light_color[i]) / attenuation_factor;
     }
     total_diffuse = max(total_diffuse, 0.2); // clamp to 0.2 so nothing totally dark -> ambient light
 
-    vec4 light_based_out_color = vec4(total_diffuse * total_diffuse + total_specular, 1.0);
+    vec4 light_based_out_color = vec4(total_diffuse, 1.0) * texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
 }

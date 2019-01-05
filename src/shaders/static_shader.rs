@@ -10,7 +10,7 @@ use crate::math::{
     Vector3f,
 };
 
-const NUM_LIGHTS: usize = 3;
+const NUM_LIGHTS: usize = 4;
 
 pub struct StaticShader {
     program: ShaderProgram,
@@ -25,6 +25,7 @@ pub struct StaticShader {
     location_sky_color: i32,
     location_number_of_rows: i32,
     location_texture_offset: i32,
+    location_attenuation: [i32; NUM_LIGHTS],
 }
 
 impl StaticShader {
@@ -44,6 +45,7 @@ impl StaticShader {
         let (
             mut location_number_of_rows, 
             mut location_texture_offset,
+            mut location_attenuation,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -62,6 +64,7 @@ impl StaticShader {
                 location_light_pos = [0i32; NUM_LIGHTS];
                 location_light_color = [0i32; NUM_LIGHTS];
                 for i in 0..NUM_LIGHTS {
+                    // TODO: maybe we should optimize these string allocations that we keep doing
                     location_light_pos[i] = shader_prog.get_uniform_location(&format!("light_pos[{}]", i));
                     location_light_color[i] = shader_prog.get_uniform_location(&format!("light_color[{}]", i));
                 }
@@ -75,6 +78,11 @@ impl StaticShader {
                 // atlas uniforms
                 location_number_of_rows = shader_prog.get_uniform_location("number_of_rows");
                 location_texture_offset = shader_prog.get_uniform_location("texture_offset");
+                // point light attenuation
+                location_attenuation = [0i32; NUM_LIGHTS];
+                for i in 0..NUM_LIGHTS {
+                    location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));
+                }
         });
 
         StaticShader {
@@ -90,6 +98,7 @@ impl StaticShader {
             location_sky_color,
             location_number_of_rows,
             location_texture_offset,
+            location_attenuation,
         }
     }
 
@@ -127,10 +136,12 @@ impl StaticShader {
             if i < lights.len() {
                 ShaderProgram::load_vector3d(self.location_light_pos[i], &lights[i].position);
                 ShaderProgram::load_vector3d(self.location_light_color[i], &lights[i].color);
+                ShaderProgram::load_vector3d(self.location_attenuation[i], &lights[i].attenuation);
             } else {
                 // no light data means fewer than NUM_LIGHTS affect object
                 ShaderProgram::load_vector3d(self.location_light_pos[i], &Vector3f::new(0.0, 0.0, 0.0));
                 ShaderProgram::load_vector3d(self.location_light_color[i], &Vector3f::new(0.0, 0.0, 0.0));
+                ShaderProgram::load_vector3d(self.location_attenuation[i], &Vector3f::new(1.0, 0.0, 0.0));
             }
         }
     }

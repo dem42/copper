@@ -9,7 +9,7 @@ use crate::math::{
     Vector3f,
 };
 
-const NUM_LIGHTS: usize = 3;
+const NUM_LIGHTS: usize = 4;
 
 pub struct TerrainShader {
     program: ShaderProgram,
@@ -26,6 +26,7 @@ pub struct TerrainShader {
     location_g_sampler: i32,
     location_b_sampler: i32,
     location_blend_map_sampler: i32,
+    location_attenuation: [i32; NUM_LIGHTS],
 }
 
 impl TerrainShader {
@@ -47,6 +48,7 @@ impl TerrainShader {
             mut location_g_sampler,
             mut location_b_sampler,
             mut location_blend_map_sampler,
+            mut location_attenuation,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -79,6 +81,11 @@ impl TerrainShader {
                 location_g_sampler = shader_prog.get_uniform_location("g_sampler");
                 location_b_sampler = shader_prog.get_uniform_location("b_sampler");
                 location_blend_map_sampler = shader_prog.get_uniform_location("blend_map_sampler");
+                // point light attenuation
+                location_attenuation = [0i32; NUM_LIGHTS];
+                for i in 0..NUM_LIGHTS {
+                    location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));
+                }
         });
 
         TerrainShader {
@@ -96,6 +103,7 @@ impl TerrainShader {
             location_g_sampler,
             location_b_sampler,
             location_blend_map_sampler,
+            location_attenuation,
         }
     }
 
@@ -129,10 +137,12 @@ impl TerrainShader {
             if i < lights.len() {
                 ShaderProgram::load_vector3d(self.location_light_pos[i], &lights[i].position);
                 ShaderProgram::load_vector3d(self.location_light_color[i], &lights[i].color);
+                ShaderProgram::load_vector3d(self.location_attenuation[i], &lights[i].attenuation);
             } else {
                 // no light data means fewer than NUM_LIGHTS affect object
                 ShaderProgram::load_vector3d(self.location_light_pos[i], &Vector3f::new(0.0, 0.0, 0.0));
                 ShaderProgram::load_vector3d(self.location_light_color[i], &Vector3f::new(0.0, 0.0, 0.0));
+                ShaderProgram::load_vector3d(self.location_attenuation[i], &Vector3f::new(1.0, 0.0, 0.0));
             }
         } 
     }

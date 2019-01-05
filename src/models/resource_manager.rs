@@ -32,6 +32,7 @@ pub enum ModelType {
     LowPolyTree,
     Flowers,
     Crate,
+    Lamp,
 }
 
 pub struct AtlasProps(usize);
@@ -57,9 +58,11 @@ pub struct Model(ModelType, &'static str, &'static str, &'static ModelProps);
 pub struct Models;
 
 impl Models {
-    pub const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(1)};
-    pub const FERN_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(2)};    
-    pub const GRASS_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
+    const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(1)};
+    const FERN_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(2)};    
+    const GRASS_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
+    // point light is inside the lamp. to get it to light up the outer faces we make the outer faces have a vector that points up
+    const LAMP_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
@@ -68,6 +71,7 @@ impl Models {
     pub const GRASS: Model = Model(ModelType::Grass, "res/models/grassModel.obj", "res/textures/grassTexture.png", &Models::GRASS_PROPS);
     pub const FLOWERS: Model = Model(ModelType::Flowers, "res/models/grassModel.obj", "res/textures/flower.png", &Models::GRASS_PROPS);
     pub const CRATE: Model = Model(ModelType::Crate, "res/models/box.obj", "res/textures/box.png", &Models::COMMON_PROPS);
+    pub const LAMP: Model = Model(ModelType::Lamp, "res/models/lamp.obj", "res/textures/lamp.png", &Models::LAMP_PROPS);
 }
 
 

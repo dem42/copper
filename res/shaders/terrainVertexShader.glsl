@@ -1,6 +1,6 @@
 #version 400 core
 
-const int NUM_LIGHTS = 3;
+const int NUM_LIGHTS = 4;
 
 in vec3 pos;
 in vec2 tex_coord;
