@@ -180,7 +180,8 @@ impl ResourceManager {
 
     pub fn init_skybox(&mut self) {
         if let None = self.skybox_model {
-            let texture_id = self.loader.load_cube_map("res/textures/cube_maps/skybox");
+            let day_texture_id = self.loader.load_cube_map("res/textures/cube_maps/day_skybox");
+            let night_texture_id = self.loader.load_cube_map("res/textures/cube_maps/night_skybox");
             
             const SIZE: f32 = 500.0;
             let positions = vec![
@@ -229,7 +230,8 @@ impl ResourceManager {
             let raw_model = self.loader.load_simple_model_to_vao(&positions, 3);
             self.skybox_model = Some(SkyboxModel {
                 raw_model,
-                texture_id,
+                day_texture_id,
+                night_texture_id,
             });
         }
     }

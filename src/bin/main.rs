@@ -22,6 +22,7 @@ use copper::entities::{
     Terrain,
     Player,
     Ground,
+    Skybox,
 };
 use copper::math::{
     Vector2f,
@@ -59,12 +60,13 @@ fn main() {
     let mut camera = Camera::new();
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
 
-    let skybox = resource_manager.skybox();
+    let mut skybox = Skybox::new(resource_manager.skybox(), 0.0);
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
-        player.move_player(&display, &ground);     
-        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, skybox);
+        player.move_player(&display, &ground);
+        skybox.increase_rotation(&display);
+        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &skybox, &display.wall_clock);
         gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }

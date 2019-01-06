@@ -1,9 +1,14 @@
+use crate::display::{
+    WallClock,
+};
 use crate::entities::{
     Camera,
+    Skybox,
 };
 use crate::gl;
 use crate::math::{
     Matrix4f,
+    Vector3f,
 };
 use crate::models::{
     SkyboxModel,
@@ -26,21 +31,32 @@ impl SkyboxRenderer {
         }
     }
 
-    pub fn render(&mut self, camera: &Camera, skybox_model: &SkyboxModel) {
+    pub fn render(&mut self, camera: &Camera, skybox: &Skybox, sky_color: &Vector3f, wall_clock: &WallClock) {
         self.shader.start();        
-        self.shader.load_view_matrix(camera);
+        self.shader.load_view_matrix(camera, skybox.rotation_yaw_deg);
+        self.shader.load_sky_color(sky_color); // due to day night this color needs to be set every frame        
+        
+        self.bind_textures(skybox, wall_clock);        
 
-        gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(skybox_model.texture_id, gl::TEXTURE_CUBE_MAP);
-
-        gl::bind_vertex_array(skybox_model.raw_model.vao_id);
+        gl::bind_vertex_array(skybox.model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
-        gl::draw_arrays(gl::TRIANGLES, 0, skybox_model.raw_model.vertex_count);
+        gl::draw_arrays(gl::TRIANGLES, 0, skybox.model.raw_model.vertex_count);
         gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::bind_vertex_array(0);
 
         gl::bind_texture(0, gl::TEXTURE_CUBE_MAP);
 
         self.shader.stop();
+    }
+
+    fn bind_textures(&mut self, skybox: &Skybox, wall_clock: &WallClock) {
+        let (day_tex, night_tex, blend_factor) = skybox.get_day_night_textures(wall_clock);
+        gl::active_texture(gl::TEXTURE0);
+        gl::bind_texture(day_tex, gl::TEXTURE_CUBE_MAP);
+        gl::active_texture(gl::TEXTURE1);
+        gl::bind_texture(night_tex, gl::TEXTURE_CUBE_MAP);  
+
+        self.shader.load_blend_factor(blend_factor);
+        self.shader.connect_texture_units();   
     }
 }

@@ -65,6 +65,22 @@ impl fmt::Display for MousePosData {
     }
 }
 
+#[derive(Default)]
+pub struct WallClock {
+    pub time_of_day: f32,
+}
+
+impl WallClock {
+    pub const DAY_LENGTH: f32 = 240.0;
+
+    pub fn update(&mut self, frame_time_sec: f32) {
+        self.time_of_day += frame_time_sec;
+        if self.time_of_day >= WallClock::DAY_LENGTH {
+            self.time_of_day %= WallClock::DAY_LENGTH;
+        }
+    }
+}
+
 pub struct Display {
     glfw: glfw::Glfw,
     window: glfw::Window,
@@ -72,6 +88,7 @@ pub struct Display {
     last_frame_sys_time: SystemTime,
     pub frame_time_sec: f32,
     pub mouse_pos: MousePosData,
+    pub wall_clock: WallClock,
 }
 
 impl Keyboard for Display {
@@ -111,6 +128,7 @@ impl Display {
             last_frame_sys_time: SystemTime::now(),
             frame_time_sec: 0.0,
             mouse_pos: MousePosData::default(),
+            wall_clock: WallClock::default(),
         }
     }
 
@@ -142,6 +160,7 @@ impl Display {
         self.glfw.poll_events();
 
         self.update_frame_time_measurement();
+        self.wall_clock.update(self.frame_time_sec);
 
         self.mouse_pos.set_prev_to_cur();
 

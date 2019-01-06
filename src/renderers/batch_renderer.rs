@@ -1,5 +1,8 @@
 use std::collections::HashMap;
-use crate::display::Display;
+use crate::display::{
+    Display,
+    WallClock,
+};
 use crate::gl;
 use crate::entities::{
     Entity,
@@ -7,14 +10,14 @@ use crate::entities::{
     Light,
     Terrain,
     Player,
+    Skybox,
 };
 use crate::math::{
     Matrix4f,
     Vector3f
 };
 use crate::models::{
-    TexturedModel,    
-    SkyboxModel, 
+    TexturedModel,
 };
 use super::entity_renderer::EntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
@@ -47,7 +50,7 @@ impl BatchRenderer {
         }
     }
     
-    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &SkyboxModel) {
+    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock) {
 
         self.prepare();
 
@@ -78,7 +81,7 @@ impl BatchRenderer {
         }
         self.terrain_renderer.stop_render();
 
-        self.skybox_renderer.render(camera, skybox);
+        self.skybox_renderer.render(camera, skybox, &BatchRenderer::SKY_COLOR, wall_clock);
     }
     
     fn prepare(&self) {

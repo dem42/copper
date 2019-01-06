@@ -236,5 +236,6 @@ pub struct GuiModel {
 
 pub struct SkyboxModel {
     pub raw_model: RawModel,
-    pub texture_id: u32,
+    pub day_texture_id: u32,
+    pub night_texture_id: u32,
 }
