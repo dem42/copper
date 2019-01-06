@@ -4,3 +4,5 @@ glew-sys/target
 glfw-sys/target
 glut-sys/target
 gl-sys/target
+
+texture_lib/target

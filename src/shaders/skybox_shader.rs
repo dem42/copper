@@ -57,9 +57,9 @@ impl SkyboxShader {
         let mut view_matrix = Matrix4f::create_view_matrix(camera);
         // view matrix makes objects move closer to the camera as we move towards them since it includes the negative of the camera translation
         // we dont want the skybox to move as we move around (but we do want it to rotate) so we zero out the translation
-        view_matrix[3][0] = 0.0;
-        view_matrix[3][1] = 0.0;
-        view_matrix[3][2] = 0.0;
+        view_matrix[0][3] = 0.0;
+        view_matrix[1][3] = 0.0;
+        view_matrix[2][3] = 0.0;
         ShaderProgram::load_matrix(self.location_view_matrix, &view_matrix);
     }
 }

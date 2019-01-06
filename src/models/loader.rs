@@ -1,7 +1,6 @@
 use crate::gl;
 use texture_lib::texture_loader::{
     load_rgba_2d_texture,
-    Texture2DRGBA,
 };
 use std::hash::{Hash, Hasher};
 

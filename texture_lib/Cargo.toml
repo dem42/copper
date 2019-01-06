@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["martin <martin.papanek@gmail.com>"]
 
 [dependencies]
-lodepng = "2.4.2"
+png = "0.13.2"

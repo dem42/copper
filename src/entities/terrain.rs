@@ -8,8 +8,8 @@ use crate::math::{
 	Vector3f,
 };
 use texture_lib::texture_loader::{
-	load_rgb_2d_texture,
-	Texture2DRGB,
+	load_rgba_2d_texture,
+	Texture2DRGBA,
 };
 
 pub struct Terrain<'a> {
@@ -38,7 +38,7 @@ impl<'a> Terrain<'a> {
 		self.x <= x && x < self.x + Terrain::SIZE && self.z <= z && z < self.z + Terrain::SIZE 
 	}
 
-	fn get_height_from_heightmap(height_map: &Texture2DRGB, x: isize, z: isize) -> f32 {
+	fn get_height_from_heightmap(height_map: &Texture2DRGBA, x: isize, z: isize) -> f32 {
 		if x < 0 || x >= height_map.height as isize || z < 0 || z >= height_map.width as isize {
 			return 0.0;
 		}
@@ -60,7 +60,7 @@ impl<'a> Terrain<'a> {
 	// 	normal
 	// }
 
-	fn compute_terrain_grid_normal(height_map: &Texture2DRGB, x: isize, z: isize) -> Vector3f {
+	fn compute_terrain_grid_normal(height_map: &Texture2DRGBA, x: isize, z: isize) -> Vector3f {
 		let lh = Terrain::get_height_from_heightmap(height_map, x-1, z);
 		let rh = Terrain::get_height_from_heightmap(height_map, x+1, z);
 		let uh = Terrain::get_height_from_heightmap(height_map, x, z-1);
@@ -74,7 +74,7 @@ impl<'a> Terrain<'a> {
 	}
     
     pub fn generate_terrain(loader: &mut ModelLoader, height_map: &str) -> TerrainModel {
-		let height_data = load_rgb_2d_texture(height_map, false).expect(&format!("Couldn't load height map file: {}", height_map));
+		let height_data = load_rgba_2d_texture(height_map, false).expect(&format!("Couldn't load height map file: {}", height_map));
 		assert_eq!(height_data.width, height_data.height, "Height map must be square");	
 
 		let vertex_count: usize = height_data.width;	
