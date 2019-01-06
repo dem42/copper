@@ -49,8 +49,8 @@ impl StaticShader {
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
-            String::from("res/shaders/vertexShader.glsl"), 
-            String::from("res/shaders/fragmentShader.glsl"), 
+            "res/shaders/vertexShader.glsl", 
+            "res/shaders/fragmentShader.glsl", 
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");
                 shader_prog.bind_attribute(RawModel::TEX_COORD_ATTRIB, "tex_coord");

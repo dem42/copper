@@ -14,13 +14,16 @@ use crate::math::{
 };
 use crate::models::{
     TexturedModel,    
+    SkyboxModel, 
 };
 use super::entity_renderer::EntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
+use super::skybox_renderer::SkyboxRenderer;
 
 pub struct BatchRenderer {    
     entity_renderer: EntityRenderer,
     terrain_renderer: TerrainRenderer,
+    skybox_renderer: SkyboxRenderer,
 }
 
 impl BatchRenderer {
@@ -29,20 +32,22 @@ impl BatchRenderer {
     // here using actual world coords which are RHS coord sys with z axis going into screen (so more negative means further)
     const NEAR: f32 = -0.1;
     const FAR: f32 = -1000.0;
-    const SKY_COLOR: Vector3f = Vector3f{ x: 0.5, y: 0.5, z: 0.5 };
+    const SKY_COLOR: Vector3f = Vector3f{ x: 0.5444, y: 0.62, z: 0.69 };
 
     pub fn new(display: &Display) -> BatchRenderer {
         let projection_matrix = Matrix4f::create_projection_matrix(BatchRenderer::NEAR, BatchRenderer::FAR, BatchRenderer::FOV_HORIZONTAL, display.get_aspect_ration());
         let entity_renderer = EntityRenderer::new(&projection_matrix);
         let terrain_renderer = TerrainRenderer::new(&projection_matrix);
+        let skybox_renderer = SkyboxRenderer::new(&projection_matrix);
         
         BatchRenderer {
             entity_renderer,
             terrain_renderer,
+            skybox_renderer,
         }
     }
     
-    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player) {
+    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &SkyboxModel) {
 
         self.prepare();
 
@@ -72,6 +77,8 @@ impl BatchRenderer {
             self.terrain_renderer.unprepare_terrain();
         }
         self.terrain_renderer.stop_render();
+
+        self.skybox_renderer.render(camera, skybox);
     }
     
     fn prepare(&self) {

@@ -409,6 +409,12 @@ pub fn delete_texture(tex_ids: &[u32]) {
 pub mod helper {
     use super::*;
 
+    pub const CUBEMAP_FACES: [types::GLenum; 6] = [
+        TEXTURE_CUBE_MAP_POSITIVE_X, TEXTURE_CUBE_MAP_NEGATIVE_X, 
+        TEXTURE_CUBE_MAP_POSITIVE_Y, TEXTURE_CUBE_MAP_NEGATIVE_Y, 
+        TEXTURE_CUBE_MAP_POSITIVE_Z, TEXTURE_CUBE_MAP_NEGATIVE_Z
+    ];
+
     pub fn enable_backface_culling() {
         enable_culling(BACK);
     }

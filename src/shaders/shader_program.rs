@@ -22,7 +22,7 @@ pub struct ShaderProgram {
 
 impl ShaderProgram {
 
-    pub fn new<F1, F2>(vertex_file: String, fragment_file: String, attrib_binder_fn: F1, uniform_loader: F2) -> ShaderProgram 
+    pub fn new<F1, F2>(vertex_file: &str, fragment_file: &str, attrib_binder_fn: F1, uniform_loader: F2) -> ShaderProgram 
         where F1: FnOnce(&ShaderProgram) -> (), 
               F2: FnOnce(&ShaderProgram) -> () {
         let vertex_shader_id = ShaderProgram::load_shader(vertex_file, gl::VERTEX_SHADER)
@@ -63,7 +63,7 @@ impl ShaderProgram {
         gl::use_program(0);
     }
 
-    pub fn load_shader(filename: String, type_: u32) -> std::io::Result<u32> {
+    pub fn load_shader(filename: &str, type_: u32) -> std::io::Result<u32> {
         let shader_file = File::open(filename)?;
         let mut buf_reader = BufReader::new(shader_file);
         let mut contents = String::new();

@@ -58,11 +58,13 @@ fn main() {
 
     let mut camera = Camera::new();
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
+
+    let skybox = resource_manager.skybox();
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
         player.move_player(&display, &ground);     
-        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player);
+        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, skybox);
         gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }
@@ -81,6 +83,7 @@ fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::LAMP);
     resource_manager.init_gui_model();
     resource_manager.init_gui_textures();
+    resource_manager.init_skybox();
 }
 
 fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel) {

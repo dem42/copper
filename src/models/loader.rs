@@ -1,6 +1,7 @@
 use crate::gl;
 use texture_lib::texture_loader::{
-    load_rgba_2d_texture
+    load_rgba_2d_texture,
+    Texture2DRGBA,
 };
 use std::hash::{Hash, Hasher};
 
@@ -41,38 +42,41 @@ impl ModelLoader {
         RawModel::new(vao_id, indices.len())
     }
 
-    pub fn load_gui_model_to_vao(&mut self, positions: &[f32]) -> RawModel {
+    pub fn load_simple_model_to_vao(&mut self, positions: &[f32], dimension: u32) -> RawModel {
         let vao_id = self.create_vao();        
-        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 2, positions);        
+        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, dimension, positions);        
         self.unbind_vao();
         RawModel::new(vao_id, positions.len() / 2)
     }
 
-     pub fn load_gui_texture(&mut self, file_name: &str, flags: u8) -> u32 {
-        let (reverse, _) = TextureFlags::parse(flags);
-        let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
+    pub fn load_cube_map(&mut self, cube_map_folder: &str) -> u32 {        
+        let cubemap_id = gl::gen_texture();
+        self.tex_list.push(cubemap_id);
+        gl::active_texture(gl::TEXTURE0);
+        gl::bind_texture(cubemap_id, gl::TEXTURE_CUBE_MAP);
 
-        let tex_id = gl::gen_texture();
-        self.tex_list.push(tex_id);
-        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+        for i in 1..=6 {
+            let filename = format!("{}/{}.png", cube_map_folder, i);
+            let texture = load_rgba_2d_texture(&filename, false).expect(&format!("Failed to load texture: {}", &filename));
 
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
+            gl::tex_image_2d(gl::helper::CUBEMAP_FACES[i-1], 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
 
-        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
-        
-        gl::bind_texture(0, gl::TEXTURE_2D);
-        tex_id
-     }
+            gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+            gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
+            gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE);
+            gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE);            
+        }
+        gl::bind_texture(0, gl::TEXTURE_CUBE_MAP);
+        cubemap_id
+    }
 
-    pub fn load_texture(&mut self, file_name: &str, flags: u8) -> ModelTexture {
+    fn load_texture_internal(&mut self, file_name: &str, flags: u8) -> u32 {
         let (reverse, mipmap) = TextureFlags::parse(flags);
         let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
         
         let tex_id = gl::gen_texture();
         self.tex_list.push(tex_id);
+        gl::active_texture(gl::TEXTURE0); // even though 0 is default i think, just to be explicit let's activate texture unit 0
         gl::bind_texture(tex_id, gl::TEXTURE_2D);
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
@@ -90,38 +94,24 @@ impl ModelLoader {
             gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
         }
 
-        gl::bind_texture(0, gl::TEXTURE_2D);
+        gl::bind_texture(0, gl::TEXTURE_2D);        
+        tex_id        
+    }
+
+     pub fn load_gui_texture(&mut self, file_name: &str, flags: u8) -> u32 {
+        self.load_texture_internal(file_name, flags)
+     }
+
+    pub fn load_texture(&mut self, file_name: &str, flags: u8) -> ModelTexture {        
         ModelTexture {
-            tex_id,
+            tex_id: self.load_texture_internal(file_name, flags),
             ..Default::default()
         }
     }
 
-    pub fn load_terrain_texture(&mut self, file_name: &str, flags: u8) -> TerrainTexture {
-        let (reverse, mipmap) = TextureFlags::parse(flags);
-        let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load terrain texture: {}", file_name));
-        
-        let tex_id = gl::gen_texture();
-        self.tex_list.push(tex_id);
-        gl::bind_texture(tex_id, gl::TEXTURE_2D);
-
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
-        gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
-        gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
-        if mipmap {
-             // turn on mipmapping
-            gl::generate_mipmap(gl::TEXTURE_2D);
-            gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
-            // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
-            gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, -0.4);
-        } else {        
-            gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
-            gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
-        }
-
-        gl::bind_texture(0, gl::TEXTURE_2D);
+    pub fn load_terrain_texture(&mut self, file_name: &str, flags: u8) -> TerrainTexture {        
         TerrainTexture {
-            tex_id,
+            tex_id: self.load_texture_internal(file_name, flags),
         }
     }
 
@@ -243,4 +233,9 @@ pub struct TerrainModel {
 
 pub struct GuiModel {
     pub raw_model: RawModel,
+}
+
+pub struct SkyboxModel {
+    pub raw_model: RawModel,
+    pub texture_id: u32,
 }

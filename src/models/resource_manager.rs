@@ -6,6 +6,7 @@ use super::loader::{
     TextureFlags,
     TerrainModel,
     GuiModel,
+    SkyboxModel,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::load_obj_model;
@@ -18,6 +19,7 @@ pub struct ResourceManager {
     blend_texture: Option<TerrainTexture>,
     terrain_model: Option<TerrainModel>,
     gui_model: Option<GuiModel>,
+    skybox_model: Option<SkyboxModel>,
 
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
@@ -58,6 +60,7 @@ pub struct Model(ModelType, &'static str, &'static str, &'static ModelProps);
 pub struct Models;
 
 impl Models {
+    const GUI_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: false, atlas_props: AtlasProps(1)};
     const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(1)};
     const FERN_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(2)};    
     const GRASS_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
@@ -134,7 +137,7 @@ impl ResourceManager {
     }
 
     pub fn init_gui_textures(&mut self) {        
-        let props = Models::COMMON_PROPS;
+        let props = Models::GUI_PROPS;
         if !self.gui_textures.contains_key(ResourceManager::HEALTHBAR_TEXTURE) {
             let texture_id = self.loader.load_gui_texture(ResourceManager::HEALTHBAR_TEXTURE, props.get_texture_flags());
             self.gui_textures.insert(ResourceManager::HEALTHBAR_TEXTURE, texture_id);
@@ -160,7 +163,7 @@ impl ResourceManager {
                 1.0, 1.0,
                 1.0, -1.0,
             };
-            let raw_model = self.loader.load_gui_model_to_vao(&positions);
+            let raw_model = self.loader.load_simple_model_to_vao(&positions, 2);
             self.gui_model = Some(GuiModel {
                 raw_model,
             });
@@ -169,5 +172,65 @@ impl ResourceManager {
 
     pub fn gui_model(&self) -> &GuiModel {
         self.gui_model.as_ref().expect("Need to call init_gui_model before accessing gui model")
+    }
+
+    pub fn skybox(&self) -> &SkyboxModel {
+        self.skybox_model.as_ref().expect("Need to call init_skybox first")
+    }
+
+    pub fn init_skybox(&mut self) {
+        if let None = self.skybox_model {
+            let texture_id = self.loader.load_cube_map("res/textures/cube_maps/skybox");
+            
+            const SIZE: f32 = 500.0;
+            let positions = vec![
+                -SIZE,  SIZE, -SIZE,
+                -SIZE, -SIZE, -SIZE,
+                SIZE, -SIZE, -SIZE,
+                SIZE, -SIZE, -SIZE,
+                SIZE,  SIZE, -SIZE,
+                -SIZE,  SIZE, -SIZE,
+
+                -SIZE, -SIZE,  SIZE,
+                -SIZE, -SIZE, -SIZE,
+                -SIZE,  SIZE, -SIZE,
+                -SIZE,  SIZE, -SIZE,
+                -SIZE,  SIZE,  SIZE,
+                -SIZE, -SIZE,  SIZE,
+
+                SIZE, -SIZE, -SIZE,
+                SIZE, -SIZE,  SIZE,
+                SIZE,  SIZE,  SIZE,
+                SIZE,  SIZE,  SIZE,
+                SIZE,  SIZE, -SIZE,
+                SIZE, -SIZE, -SIZE,
+
+                -SIZE, -SIZE,  SIZE,
+                -SIZE,  SIZE,  SIZE,
+                SIZE,  SIZE,  SIZE,
+                SIZE,  SIZE,  SIZE,
+                SIZE, -SIZE,  SIZE,
+                -SIZE, -SIZE,  SIZE,
+
+                -SIZE,  SIZE, -SIZE,
+                SIZE,  SIZE, -SIZE,
+                SIZE,  SIZE,  SIZE,
+                SIZE,  SIZE,  SIZE,
+                -SIZE,  SIZE,  SIZE,
+                -SIZE,  SIZE, -SIZE,
+
+                -SIZE, -SIZE, -SIZE,
+                -SIZE, -SIZE,  SIZE,
+                SIZE, -SIZE, -SIZE,
+                SIZE, -SIZE, -SIZE,
+                -SIZE, -SIZE,  SIZE,
+                SIZE, -SIZE,  SIZE
+            ];
+            let raw_model = self.loader.load_simple_model_to_vao(&positions, 3);
+            self.skybox_model = Some(SkyboxModel {
+                raw_model,
+                texture_id,
+            });
+        }
     }
 }

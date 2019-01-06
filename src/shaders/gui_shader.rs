@@ -16,8 +16,8 @@ impl GuiShader {
         ) = Default::default();
      
         let shader_program = ShaderProgram::new(
-            String::from("res/shaders/guiVertexShader.glsl"), 
-            String::from("res/shaders/guiFragmentShader.glsl"), 
+            "res/shaders/guiVertexShader.glsl", 
+            "res/shaders/guiFragmentShader.glsl", 
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");
             },
