@@ -1,6 +1,45 @@
-use std::ops::Neg;
+use std::ops::{Neg, Index, IndexMut};
 use std::iter::IntoIterator;
 use std::f32;
+
+#[derive(Debug, Default, Clone)]
+pub struct Vector4f {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
+}
+
+impl Vector4f {
+    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Vector4f {
+        Vector4f { x, y, z, w}
+    }
+}
+impl Index<usize> for Vector4f {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &f32 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            3 => &self.w,
+            _ => panic!("Cannot index 4 vec with {}", index)
+        }
+    }
+}
+
+impl IndexMut<usize> for Vector4f {
+    fn index_mut(&mut self, index: usize) -> &mut f32 {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
+            3 => &mut self.w,
+            _ => panic!("Cannot index 4 vec with {}", index)
+        }
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct Vector3f {

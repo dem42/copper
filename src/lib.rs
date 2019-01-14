@@ -11,3 +11,4 @@ pub mod math;
 pub mod entities;
 pub mod obj_converter;
 pub mod guis;
+pub mod mouse_picker;

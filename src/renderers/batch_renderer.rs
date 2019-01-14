@@ -27,6 +27,7 @@ pub struct BatchRenderer {
     entity_renderer: EntityRenderer,
     terrain_renderer: TerrainRenderer,
     skybox_renderer: SkyboxRenderer,
+    pub projection_matrix: Matrix4f,
 }
 
 impl BatchRenderer {
@@ -47,6 +48,7 @@ impl BatchRenderer {
             entity_renderer,
             terrain_renderer,
             skybox_renderer,
+            projection_matrix,
         }
     }
     

@@ -28,6 +28,7 @@ use copper::math::{
     Vector2f,
     Vector3f,
 };
+use copper::mouse_picker::MousePicker;
 
 fn main() {
     let mut display = Display::create();
@@ -61,9 +62,13 @@ fn main() {
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
 
     let mut skybox = Skybox::new(resource_manager.skybox(), 0.0);
+
+    let mut mouse_picker = MousePicker::new();
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
+        mouse_picker.update(&display, &batch_renderer.projection_matrix, &camera);
+
         player.move_player(&display, &ground);
         skybox.increase_rotation(&display);
         batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &skybox, &display.wall_clock);

@@ -132,6 +132,11 @@ impl Display {
         }
     }
 
+    pub fn get_size(&self) -> (f32, f32) {
+        let (w, h) = self.window.get_size();
+        (w as f32, h as f32)
+    }
+
     pub fn get_aspect_ration(&self) -> f32 {
         let (width, height) = self.window.get_framebuffer_size();        
         let aspect_ratio = (width as f32) / (height as f32);

@@ -2,6 +2,7 @@ use std::ops::{Index, IndexMut};
 use super::{
     Vector2f,
     Vector3f,
+    Vector4f,
 };
 use std::f32;
 use super::super::entities::Camera;
@@ -144,10 +145,74 @@ impl Matrix4f {
         }
         self.data = res_mat;
     }
+    
+    fn cofactor_mat(&self) -> Matrix4f {
+        let mut data = [[0.0f32; 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                let mat3 = Matrix3f::ij_minor(i, j, self);
+                let sign = if (i + j) % 2 == 0 { 1.0 } else { -1.0 };
+                data[i][j] = sign * self.data[i][j] * mat3.determinant();
+            }
+        }
+        Matrix4f {
+            data,
+        }
+    }
+
+    fn abjugate_mat(&self) -> Matrix4f {
+        let mut cofactor = self.cofactor_mat();
+        cofactor.transpose();
+        cofactor
+    }
+
+    pub fn transform(&self, vec: &Vector4f) -> Vector4f {
+        let mut res = Vector4f::new(0.0, 0.0, 0.0, 0.0);
+        for i in 0..4 {
+            for j in 0..4 {
+                res[i] += self.data[i][j] * vec[j];
+            }
+        }
+        res
+    }
+
+    pub fn transpose(&mut self) {
+        for i in 0..3 {
+            for j in (i+1)..4 {
+                let temp = self.data[i][j];
+                self.data[i][j] = self.data[j][i];
+                self.data[j][i] = temp;
+            }
+        }        
+    }
+
+    pub fn inverse(&self) -> Matrix4f {
+        let mut abjugate = self.abjugate_mat();
+        let determinant = self.determinant();
+        let fac = 1.0 / determinant;
+        for i in 0..4 {
+            for j in 0..4 {
+                abjugate.data[i][j] *= fac;
+            }
+        }
+        abjugate
+    }
+
+    pub fn determinant(&self) -> f32 {
+        let mut res = 0.0;
+        let mut sign = 1.0;
+        for i in 0..4 {
+            let mat3 = Matrix3f::minor(i, self);
+            let det = mat3.determinant();
+            res += sign * self.data[0][i] * det; 
+            sign = -sign;
+        }
+        res  
+    }
 
     pub fn data(&self) -> &[[f32; 4]; 4] {
         &self.data
-    }
+    }    
 }
 
 impl Index<usize> for Matrix4f {
@@ -162,5 +227,58 @@ impl IndexMut<usize> for Matrix4f {
 
     fn index_mut(&mut self, index: usize) -> &mut [f32; 4] {
         &mut self.data[index]
+    }
+}
+
+
+#[derive(Debug)]
+pub struct Matrix3f {
+    data: [[f32; 3]; 3],
+}
+
+impl Matrix3f {
+    pub fn minor(col: usize, mat4: &Matrix4f) -> Matrix3f {
+        Matrix3f::ij_minor(0, col, mat4)
+    }
+
+    pub fn ij_minor(row: usize, col: usize, mat4: &Matrix4f) -> Matrix3f {
+        let mut data = [[0.0f32; 3]; 3];
+        let mut nc = 0;        
+        for j in 0..4 {
+            if j == col {
+                continue
+            }
+            let mut nr = 0;
+            for i in 0..4 {
+                if i == row {
+                    continue
+                }
+                data[nr][nc] = mat4[i][j];
+                nr += 1;
+            }                        
+            nc += 1;
+        }
+        Matrix3f {
+            data,
+        }
+    }
+
+    pub fn determinant(&self) -> f32 {        
+        let minor_a = self.data[0][0] * (self.data[1][1]*self.data[2][2] - self.data[1][2]*self.data[2][1]);
+        let minor_b = self.data[0][1] * (self.data[1][0]*self.data[2][2] - self.data[1][2]*self.data[2][0]);
+        let minor_c = self.data[0][2] * (self.data[1][0]*self.data[2][1] - self.data[1][1]*self.data[2][0]);
+        minor_a - minor_b + minor_c
+    }
+}
+
+#[derive(Debug)]
+pub struct Matrix2f {
+    data: [[f32; 2]; 2],
+}
+
+impl Matrix2f {
+    #[inline]
+    pub fn determinant(&self) -> f32 {
+        self.data[0][0]*self.data[1][1] - self.data[0][1]*self.data[1][0]        
     }
 }
