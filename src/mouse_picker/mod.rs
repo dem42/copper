@@ -19,8 +19,8 @@ impl MousePicker {
     }
 
     pub fn update(&mut self, display: &Display, proj_matrix: &Matrix4f, camera: &Camera) {
-        let _mouse_ray = self.calculate_mouse_ray(display, proj_matrix, camera);
-        //println!("Mouse ray is: {:?}", mouse_ray);
+        let mouse_ray = self.calculate_mouse_ray(display, proj_matrix, camera);
+        println!("Mouse ray is: {:?}. Mouse is at ({},{})", mouse_ray, display.mouse_pos.cur_x, display.mouse_pos.cur_y);
     }
 
     fn calculate_mouse_ray(&self, display: &Display, proj_matrix: &Matrix4f, camera: &Camera) -> Vector3f {
@@ -52,10 +52,10 @@ impl MousePicker {
     }
 
     fn viewport_to_normalized_device_coords(mouse_x: f32, mouse_y: f32, display: &Display) -> Vector2f {
-        // from [(0,0), (width, height)] to [(-1,-1), (1,1)] 
+        // from [(0,height), (width, 0)] to [(-1,-1), (1,1)] 
         // move by half w/h to center then scale by half w/h down
         let (w, h) = display.get_size();
-        Vector2f::new((2.0*mouse_x - w)/w, (2.0*mouse_y - h)/h)
+        Vector2f::new((2.0*mouse_x - w)/w, (h - 2.0*mouse_y)/h)
     }
 }
 

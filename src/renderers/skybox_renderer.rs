@@ -11,7 +11,6 @@ use crate::math::{
     Vector3f,
 };
 use crate::models::{
-    SkyboxModel,
     RawModel,
 };
 use crate::shaders::SkyboxShader;

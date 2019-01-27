@@ -152,7 +152,7 @@ impl Matrix4f {
             for j in 0..4 {
                 let mat3 = Matrix3f::ij_minor(i, j, self);
                 let sign = if (i + j) % 2 == 0 { 1.0 } else { -1.0 };
-                data[i][j] = sign * self.data[i][j] * mat3.determinant();
+                data[i][j] = sign * mat3.determinant();
             }
         }
         Matrix4f {
@@ -263,10 +263,10 @@ impl Matrix3f {
         }
     }
 
-    pub fn determinant(&self) -> f32 {        
-        let minor_a = self.data[0][0] * (self.data[1][1]*self.data[2][2] - self.data[1][2]*self.data[2][1]);
+    pub fn determinant(&self) -> f32 {      
+        let minor_a = self.data[0][0] * (self.data[1][1]*self.data[2][2] - self.data[1][2]*self.data[2][1]);        
         let minor_b = self.data[0][1] * (self.data[1][0]*self.data[2][2] - self.data[1][2]*self.data[2][0]);
-        let minor_c = self.data[0][2] * (self.data[1][0]*self.data[2][1] - self.data[1][1]*self.data[2][0]);
+        let minor_c = self.data[0][2] * (self.data[1][0]*self.data[2][1] - self.data[1][1]*self.data[2][0]);        
         minor_a - minor_b + minor_c
     }
 }
@@ -280,5 +280,99 @@ impl Matrix2f {
     #[inline]
     pub fn determinant(&self) -> f32 {
         self.data[0][0]*self.data[1][1] - self.data[0][1]*self.data[1][0]        
+    }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const EPS_PRECISE: f32 = 1e-6;
+    const EPS_BAD: f32 = 1e-2;
+
+    macro_rules! assert_f32_eq {
+        ($left:expr, $right:expr, $eps:expr) => (assert!(($left - $right).abs() < $eps, format!("Left: {}, Right: {}.", $left, $right)););
+        ($left:expr, $right:expr, $eps:expr, $msg:expr) => (assert!(($left - $right).abs() < $eps, format!("{}. Left: {}, Right: {}.", $msg, $left, $right));)
+    }
+
+    #[test]
+    fn test_determinant_3x3_a() {
+        let data = [[-233.1, 10.0, 2.8], [-12.0, 12.0, -13.0], [-1.4, 4.5, 0.0]];
+        let m1 = Matrix3f { data, };
+        assert_f32_eq!(-13558.51, m1.determinant(), tests::EPS_BAD);
+    }
+
+    #[test]    
+    fn test_determinant_4x4_a() {
+        let data = [[1.0, 2.3, 12.2, 7.0], [-4.3, -233.1, 10.0, 2.8], [12.0, -12.0, 12.0, -13.0], [1.2, -1.4, 4.5, 0.0]];
+        let m1 = Matrix4f { data, };
+        assert_f32_eq!(-33206.8290000003, m1.determinant(), tests::EPS_BAD);              
+    }
+
+    #[test]
+    fn test_transpose_4x4_a() {
+        let data = [[1.0, 2.3, 12.2, 7.0], [-4.3, -233.1, 10.0, 2.8], [12.0, -12.0, 12.0, -13.0], [1.2, -1.4, 4.5, 0.0]];
+        let mut m1 = Matrix4f { data, };
+        m1.transpose();
+        let expected = [[1.0, -4.3, 12.0, 1.2], [2.3, -233.1, -12.0, -1.4], [12.2, 10.0, 12.0, 4.5], [7.0, 2.8, -13.0, 0.0]];
+
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(m1[r][c], expected[r][c], tests::EPS_PRECISE, format!("(r,c)=({},{}) mismatch", r, c));                
+            }
+        }  
+    }
+
+    #[test]
+    fn test_ij_minors() {
+        let data = [[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0], [13.0, 14.0, 15.0, 16.0]];
+        let m4 = Matrix4f { data };
+        let m00 = Matrix3f::ij_minor(0, 0, &m4);        
+        let expected = [[6.0, 7.0, 8.0], [10.0, 11.0, 12.0], [14.0, 15.0, 16.0]];
+        for r in 0..3 {
+            for c in 0..3 {
+                assert_f32_eq!(m00.data[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                 
+            }
+        }  
+    }
+
+    #[test]
+    
+    fn test_cofactor_mat() {
+        let data = [[1.0, 2.3, 12.2, 7.0], [-4.3, -233.1, 10.0, 2.8], [12.0, -12.0, 12.0, -13.0], [1.2, -1.4, 4.5, 0.0]];
+        let m1 = Matrix4f { data, };
+
+        let expected = [[-13558.5100000001,  296.670000000013,  3707.90000000008, -9366.71999999999],
+                    [-96.1899999999441,  145.379999997094,  70.8800000000047, -157.559999999998],
+                    [-7321.45399999992,  191.058000000077,  2011.82800000001, -2523.18299999997],
+                    [ 56496.2600000000, -1636.85999999999, -22954.2100000001, 32472.8399999999]];
+
+        let cof = m1.cofactor_mat();
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(cof[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));              
+            }
+        }  
+    }
+
+    #[test]
+    
+    fn test_inverse_4x4_a() {
+        let data = [[1.0, 2.3, 3.2, 7.0], [-4.3, -2.1, 10.0, 2.8], [4.2, -8.9, 0.04, 10.91], [1.2, -1.4, 1.5, 0.0]];
+        let m1 = Matrix4f { data, };
+        let inv_m1 = m1.inverse();
+
+        let expected: [[f32; 4]; 4] = [[0.0893197126914255, -0.103083965680273, -0.0308526933946114, 0.497500455950639],
+                        [0.125598521500081, -0.0397776211154350, -0.0703769304653849,- 0.000882653618195975],
+                        [0.0457695165802688, 0.0453413928364795, -0.0410029803853367, 0.267842491862506],
+                        [0.0679058906859326, 0.00706857673843424, 0.0462755958140106, -0.193223760941258]];
+
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(inv_m1[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
+            }
+        }                        
     }
 }
