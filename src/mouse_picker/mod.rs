@@ -6,9 +6,11 @@ use crate::math::{
 };
 use crate::entities::{
     Camera,
+    Ground,
 };
 use crate::display::{
     Display,
+    Keyboard,
 };
 
 pub struct MousePicker;
@@ -18,9 +20,48 @@ impl MousePicker {
         MousePicker {}
     }
 
-    pub fn update(&mut self, display: &Display, proj_matrix: &Matrix4f, camera: &Camera) {
-        let mouse_ray = self.calculate_mouse_ray(display, proj_matrix, camera);
-        println!("Mouse ray is: {:?}. Mouse is at ({},{})", mouse_ray, display.mouse_pos.cur_x, display.mouse_pos.cur_y);
+    pub fn update(&mut self, display: &Display, proj_matrix: &Matrix4f, camera: &Camera, ground: &Ground) -> Option<Vector3f> {
+        if display.is_mouse_select_active() {
+            let mouse_ray = self.calculate_mouse_ray(display, proj_matrix, camera);
+            MousePicker::search_ground_intersection(mouse_ray, camera, ground)
+        } else {
+            None
+        }        
+        //println!("Mouse ray is: {:?}. Mouse is at ({},{})", mouse_ray, display.mouse_pos.cur_x, display.mouse_pos.cur_y);
+    }
+
+    fn search_ground_intersection(ray: Vector3f, camera: &Camera, ground: &Ground) -> Option<Vector3f> {
+
+        const IT_LIMIT: u8 = 100;
+        let mut low = 0.0;
+        let mut high = 50_000.0;
+        let mut mid = 0.0;
+        let mut it_cnt = 0;
+        let mut was_below = false;
+        let mut was_above = false;
+        // bin search implementation doesnt let you look up from under terrain (has to do with how low and high is set)
+        // and it may give wrong result if terrain is bumpy and first jump takes you too far
+        while it_cnt < IT_LIMIT {
+            mid = (low + high) / 2.0;
+            let ray_x = ray.x * mid + camera.position.x;
+            let ray_y = ray.y * mid + camera.position.y;
+            let ray_z = ray.z * mid + camera.position.z;
+            let terrain_height = ground.height_at_xz(ray_x, ray_z);
+            if terrain_height < ray_y {
+                low = mid;                
+                was_above = true;
+            } else {                
+                high = mid;
+                was_below = true;
+            }
+            it_cnt += 1;
+        }
+
+        if was_above && was_below {
+            Some(Vector3f::new(ray.x * mid, ray.y * mid, ray.z * mid))
+        } else {
+            None
+        }
     }
 
     fn calculate_mouse_ray(&self, display: &Display, proj_matrix: &Matrix4f, camera: &Camera) -> Vector3f {

@@ -22,6 +22,7 @@ const HEIGHT: u32 = 720;
 
 pub trait Keyboard {
     fn is_pressed(&self, key: Key) -> bool;
+    fn is_mouse_select_active(&self) -> bool;
 }
 
 #[derive(Default)]
@@ -89,6 +90,7 @@ pub struct Display {
     pub frame_time_sec: f32,
     pub mouse_pos: MousePosData,
     pub wall_clock: WallClock,
+    mouse_select_active: bool,
 }
 
 impl Keyboard for Display {
@@ -98,6 +100,10 @@ impl Keyboard for Display {
             _ => false,
         }
     }
+
+    fn is_mouse_select_active(&self) -> bool {
+        self.mouse_select_active
+    }    
 }
 
 impl Display {
@@ -114,6 +120,7 @@ impl Display {
         window.set_cursor_pos_polling(true);
         window.set_mouse_button_polling(true);
         window.set_scroll_polling(true);
+        window.set_key_polling(true);
 
         Display::print_opengl_info(&window);
 
@@ -129,6 +136,7 @@ impl Display {
             frame_time_sec: 0.0,
             mouse_pos: MousePosData::default(),
             wall_clock: WallClock::default(),
+            mouse_select_active: false,
         }
     }
 
@@ -170,7 +178,7 @@ impl Display {
         self.mouse_pos.set_prev_to_cur();
 
         for (_, event) in glfw::flush_messages(&self.events) {
-            Display::handle_window_event(&mut self.mouse_pos, event);
+            Display::handle_window_event(&mut self.mouse_pos, &mut self.mouse_select_active, event);
         }    
     }
 
@@ -188,7 +196,7 @@ impl Display {
         self.last_frame_sys_time = current_time;
     }
 
-    fn handle_window_event(mouse_pos: &mut MousePosData, event: WindowEvent) {
+    fn handle_window_event(mouse_pos: &mut MousePosData, mouse_select_active: &mut bool, event: WindowEvent) {
         match event {
             WindowEvent::CursorPos(x, y) => {
                 mouse_pos.prev_x = mouse_pos.cur_x;
@@ -209,6 +217,12 @@ impl Display {
             },
             WindowEvent::Scroll(_x_scroll, y_scroll) => {                
                 mouse_pos.cur_scroll = y_scroll;
+            },
+            WindowEvent::Key(key, _, action, _) => {
+                if key == Key::M && action == Action::Press {
+                    *mouse_select_active = !*mouse_select_active;
+                    println!("Toggled mouse select: {}", mouse_select_active);
+                }
             },
             _ => {}
         }

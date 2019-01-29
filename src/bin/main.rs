@@ -67,7 +67,11 @@ fn main() {
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
-        mouse_picker.update(&display, &batch_renderer.projection_matrix, &camera);
+        if let Some(selected_pos) = mouse_picker.update(&display, &batch_renderer.projection_matrix, &camera, &ground) {
+            println!("Mouse selected world pos: {:?}", selected_pos);
+            let last_pos = entities.len()-1;
+            entities[last_pos].set_position(&selected_pos);
+        }
 
         player.move_player(&display, &ground);
         skybox.increase_rotation(&display);

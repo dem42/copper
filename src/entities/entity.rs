@@ -33,6 +33,12 @@ impl<'a> Entity<'a> {
         }
     }
 
+    pub fn set_position(&mut self, new_pos: &Vector3f) {
+        self.position.x = new_pos.x;
+        self.position.y = new_pos.y;
+        self.position.z = new_pos.z;
+    }
+
     pub fn increase_position(&mut self, dx: f32, dy: f32, dz: f32) {
         self.position.x += dx;
         self.position.y += dy;
