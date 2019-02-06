@@ -34,7 +34,7 @@ impl MousePicker {
 
         const IT_LIMIT: u8 = 100;
         let mut low = 0.0;
-        let mut high = 50_000.0;
+        let mut high = 5000.0;
         let mut mid = 0.0;
         let mut it_cnt = 0;
         let mut was_below = false;
@@ -58,7 +58,7 @@ impl MousePicker {
         }
 
         if was_above && was_below {
-            Some(Vector3f::new(ray.x * mid, ray.y * mid, ray.z * mid))
+            Some(Vector3f::new(ray.x * mid  + camera.position.x, ray.y * mid + camera.position.y, ray.z * mid + camera.position.z))
         } else {
             None
         }

@@ -47,7 +47,7 @@ fn main() {
     let mut gui_renderer = GuiRenderer::new();
     
 
-    let lights = vec!{
+    let mut lights = vec!{
         Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.4, 0.4, 0.4)), // sunlight, no attenuation
         Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
@@ -67,10 +67,11 @@ fn main() {
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &player);
-        if let Some(selected_pos) = mouse_picker.update(&display, &batch_renderer.projection_matrix, &camera, &ground) {
-            println!("Mouse selected world pos: {:?}", selected_pos);
+        if let Some(selected_pos) = mouse_picker.update(&display, &batch_renderer.projection_matrix, &camera, &ground) {            
             let last_pos = entities.len()-1;
             entities[last_pos].set_position(&selected_pos);
+            lights[3].position = selected_pos;
+            lights[3].position.y += 14.0; 
         }
 
         player.move_player(&display, &ground);
