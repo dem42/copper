@@ -35,6 +35,8 @@ pub enum ModelType {
     Flowers,
     Crate,
     Lamp,
+    ToonRocks,
+    BobbleTree,
 }
 
 pub struct AtlasProps(usize);
@@ -43,6 +45,8 @@ pub struct ModelProps {
     pub has_transparency: bool,
     pub uses_fake_lighting: bool,
     pub uses_mipmaps: bool,
+    pub shine_damper: f32,
+    pub reflectivity: f32,
     pub atlas_props: AtlasProps,
 }
 impl ModelProps {
@@ -60,12 +64,55 @@ pub struct Model(ModelType, &'static str, &'static str, &'static ModelProps);
 pub struct Models;
 
 impl Models {
-    const GUI_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: false, atlas_props: AtlasProps(1)};
-    const COMMON_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(1)};
-    const FERN_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: false, uses_mipmaps: true, atlas_props: AtlasProps(2)};    
-    const GRASS_PROPS: ModelProps = ModelProps{has_transparency: true, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
+    const GUI_PROPS: ModelProps = ModelProps {
+        has_transparency: false, 
+        uses_fake_lighting: false, 
+        uses_mipmaps: false,
+        shine_damper: 1.0,
+        reflectivity: 0.0, 
+        atlas_props: AtlasProps(1)
+    };
+    const COMMON_PROPS: ModelProps = ModelProps {
+        has_transparency: false, 
+        uses_fake_lighting: false, 
+        uses_mipmaps: true,
+        shine_damper: 1.0,
+        reflectivity: 0.0,  
+        atlas_props: AtlasProps(1)
+    };
+    const SHINY_PROPS: ModelProps = ModelProps {
+        has_transparency: false, 
+        uses_fake_lighting: false, 
+        uses_mipmaps: true,
+        shine_damper: 0.2,
+        reflectivity: 1.5,  
+        atlas_props: AtlasProps(1)
+    };
+    const FERN_PROPS: ModelProps = ModelProps { 
+        has_transparency: true, 
+        uses_fake_lighting: false, 
+        uses_mipmaps: true, 
+        shine_damper: 1.0,
+        reflectivity: 0.0, 
+        atlas_props: AtlasProps(2)
+    };    
+    const GRASS_PROPS: ModelProps = ModelProps { 
+        has_transparency: true, 
+        uses_fake_lighting: true, 
+        uses_mipmaps: true, 
+        shine_damper: 1.0,
+        reflectivity: 0.0, 
+        atlas_props: AtlasProps(1)
+    };
     // point light is inside the lamp. to get it to light up the outer faces we make the outer faces have a vector that points up
-    const LAMP_PROPS: ModelProps = ModelProps{has_transparency: false, uses_fake_lighting: true, uses_mipmaps: true, atlas_props: AtlasProps(1)};
+    const LAMP_PROPS: ModelProps = ModelProps { 
+        has_transparency: false, 
+        uses_fake_lighting: true, 
+        uses_mipmaps: true, 
+        shine_damper: 1.0,
+        reflectivity: 0.0, 
+        atlas_props: AtlasProps(1)
+    };
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
@@ -75,6 +122,8 @@ impl Models {
     pub const FLOWERS: Model = Model(ModelType::Flowers, "res/models/grassModel.obj", "res/textures/flower.png", &Models::GRASS_PROPS);
     pub const CRATE: Model = Model(ModelType::Crate, "res/models/box.obj", "res/textures/box.png", &Models::COMMON_PROPS);
     pub const LAMP: Model = Model(ModelType::Lamp, "res/models/lamp.obj", "res/textures/lamp.png", &Models::LAMP_PROPS);
+    pub const TOON_ROCKS: Model = Model(ModelType::ToonRocks, "res/models/toonRocks.obj", "res/textures/toonRocks.png", &Models::SHINY_PROPS);
+    pub const BOBBLE_TREE: Model = Model(ModelType::BobbleTree, "res/models/bobbleTree.obj", "res/textures/bobbleTree.png", &Models::COMMON_PROPS);
 }
 
 
@@ -93,6 +142,8 @@ impl ResourceManager {
         let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
         texture.has_transparency = model_props.has_transparency;
         texture.uses_fake_lighting = model_props.uses_fake_lighting;
+        texture.shine_damper = model_props.shine_damper;
+        texture.reflectivity = model_props.reflectivity;
         texture.number_of_rows_in_atlas = model_props.atlas_props.0;
         let model = TexturedModel { raw_model, texture };
 

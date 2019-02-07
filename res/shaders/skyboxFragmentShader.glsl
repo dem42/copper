@@ -13,6 +13,21 @@ const float lower_limit = 0.0;
 // uper limit is from where we dont mix with fog color at all
 const float upper_limit = 30.0;
 
+const bool uses_cell_shading = true;
+const float brightness_levels = 3.0;
+
+void adjust_brightness(inout vec4 skybox_color) {
+    if (uses_cell_shading) {
+        return;
+    } else {
+        float luma = 0.375 * skybox_color.x + 0.5 * skybox_color.y + 0.125 * skybox_color.z;
+
+        // this assumes that the brightness is in [0,1] interval and so we use it to interpolate
+        float celled_luma = floor(luma * brightness_levels) / brightness_levels;
+        skybox_color = vec4(fog_color, 1.0) * celled_luma;
+    }
+}
+
 void main(void) {
     vec4 day_color = texture(cube_map_sampler1, pass_tex_coords);
     vec4 night_color = texture(cube_map_sampler2, pass_tex_coords);

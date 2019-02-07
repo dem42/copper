@@ -48,7 +48,7 @@ fn main() {
     
 
     let mut lights = vec!{
-        Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.4, 0.4, 0.4)), // sunlight, no attenuation
+        Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.6, 0.6, 0.6)), // sunlight, no attenuation
         Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(293.0,14.0,-305.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        
@@ -83,10 +83,12 @@ fn main() {
 }
 
 fn init_resources(resource_manager: &mut ResourceManager) {
-    resource_manager.init(&Models::TREE);
+    //resource_manager.init(&Models::TREE);
     resource_manager.init(&Models::FERN);
     resource_manager.init(&Models::GRASS);
-    resource_manager.init(&Models::FLOWERS);
+    //resource_manager.init(&Models::FLOWERS);
+    resource_manager.init(&Models::TOON_ROCKS);
+    resource_manager.init(&Models::BOBBLE_TREE);
     resource_manager.init(&Models::LOW_POLY_TREE);
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
@@ -114,9 +116,9 @@ fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Pla
     let ground = Ground { terrains };
 
     for _ in 0..100 {
-        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
-        let r_rot = Vector3f::new(0.0, 0.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Tree), r_pos, r_rot, 3.0));
+        // let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        // let r_rot = Vector3f::new(0.0, 0.0, 0.0);
+        // entities.push(Entity::new(resource_manager.model(ModelType::Tree), r_pos, r_rot, 3.0));
 
         let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, 0.0, 0.0);
@@ -132,9 +134,17 @@ fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Pla
         let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
         entities.push(Entity::new(resource_manager.model(ModelType::Grass), r_pos, r_rot, 1.0));
 
+        // let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        // let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        // entities.push(Entity::new(resource_manager.model(ModelType::Flowers), r_pos, r_rot, 1.0));
+
         let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
         let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
-        entities.push(Entity::new(resource_manager.model(ModelType::Flowers), r_pos, r_rot, 1.0));
+        entities.push(Entity::new(resource_manager.model(ModelType::BobbleTree), r_pos, r_rot, 0.5));
+
+        let r_pos = ground.create_pos_on_terrain(rng.gen::<f32>() * X_WIDTH - X_WIDTH/2.0, rng.gen::<f32>() * Z_WIDTH);
+        let r_rot = Vector3f::new(0.0, rng.gen::<f32>() * 180.0, 0.0);
+        entities.push(Entity::new(resource_manager.model(ModelType::ToonRocks), r_pos, r_rot, 1.0));
     }    
 
     let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);

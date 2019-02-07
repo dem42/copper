@@ -28,6 +28,19 @@ uniform vec3 sky_color;
 // point light attenuation
 uniform vec3 attenuation[NUM_LIGHTS];
 
+const bool uses_cell_shading = true;
+const float brightness_levels = 3.0;
+
+void adjust_brightness(inout float diffuse_brightness, inout float specular_brightness) {
+    if (uses_cell_shading) {
+        return;
+    } else {
+        // this assumes that the brightness is in [0,1] interval and so we use it to interpolate
+        diffuse_brightness = floor(diffuse_brightness * brightness_levels) / brightness_levels;
+        specular_brightness = floor(specular_brightness * brightness_levels) / brightness_levels;                
+    }
+}
+
 void main(void) {
 
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)
@@ -61,6 +74,8 @@ void main(void) {
         vec3 unit_specular_reflection = normalize(specular_reflection_dir[i]);
         float dotSpecToCamera = dot(unit_camera, unit_specular_reflection);
         float spec_brightness = max(dotSpecToCamera, 0.0);
+
+        adjust_brightness(brightness, spec_brightness);
 
         total_diffuse += (brightness * light_color[i]) / attenuation_factor; // add alpha of 1
         total_specular += (pow(spec_brightness, shine_damper) * reflectivity * light_color[i]) / attenuation_factor;
