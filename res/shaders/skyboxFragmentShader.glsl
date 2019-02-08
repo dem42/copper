@@ -14,10 +14,10 @@ const float lower_limit = 0.0;
 const float upper_limit = 30.0;
 
 const bool uses_cell_shading = true;
-const float brightness_levels = 3.0;
+const float brightness_levels = 10.0;
 
 void adjust_brightness(inout vec4 skybox_color) {
-    if (uses_cell_shading) {
+    if (!uses_cell_shading) {
         return;
     } else {
         float luma = 0.375 * skybox_color.x + 0.5 * skybox_color.y + 0.125 * skybox_color.z;

@@ -29,10 +29,10 @@ uniform vec3 sky_color;
 uniform vec3 attenuation[NUM_LIGHTS];
 
 const bool uses_cell_shading = true;
-const float brightness_levels = 3.0;
+const float brightness_levels = 2.0;
 
 void adjust_brightness(inout float diffuse_brightness, inout float specular_brightness) {
-    if (uses_cell_shading) {
+    if (!uses_cell_shading) {
         return;
     } else {
         // this assumes that the brightness is in [0,1] interval and so we use it to interpolate

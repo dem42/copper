@@ -84,8 +84,8 @@ impl Models {
         has_transparency: false, 
         uses_fake_lighting: false, 
         uses_mipmaps: true,
-        shine_damper: 0.2,
-        reflectivity: 1.5,  
+        shine_damper: 2.0,
+        reflectivity: 0.5,  
         atlas_props: AtlasProps(1)
     };
     const FERN_PROPS: ModelProps = ModelProps { 
