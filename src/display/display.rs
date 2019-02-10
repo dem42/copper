@@ -161,12 +161,19 @@ impl Display {
         println!("{}", "*".repeat(10));
     }
 
-    pub fn update_display(&mut self) {
+    pub fn restore_default_framebuffer(&self) {
+        gl::bind_framebuffer(gl::FRAMEBUFFER, 0);        
+        self.update_viewport();
+    }
+
+    fn update_viewport(&self) {
         // set the viewport size (measured in pixels unlike the window size which is in screen coordinates)
-        let (width, height) = self.window.get_framebuffer_size();        
-        let _ratio = (width as f32) / (height as f32);
-        
+        let (width, height) = self.window.get_framebuffer_size();               
         gl::viewport(0, 0, width, height);
+    }
+
+    pub fn update_display(&mut self) {        
+        self.update_viewport();
 
         self.window.swap_buffers();
 

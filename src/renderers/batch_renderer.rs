@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use crate::display::{
     Display,
+    Framebuffers,
+    FramebufferObject,
     WallClock,
 };
 use crate::gl;
@@ -58,10 +60,20 @@ impl BatchRenderer {
     }
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-        player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, wall_clock: &WallClock) {
+        player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &Framebuffers) {
 
         self.prepare();
 
+        framebuffers.reflection_fbo.bind();
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock);
+        display.restore_default_framebuffer();
+
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock);
+        // render water
+        self.water_renderer.render(water_tiles, camera);
+    }
+
+    fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock) {
         // render entites
         self.entity_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
         let groups_by_tex = BatchRenderer::group_entities_by_tex(entities);
@@ -88,9 +100,6 @@ impl BatchRenderer {
             self.terrain_renderer.unprepare_terrain();
         }
         self.terrain_renderer.stop_render();
-
-        // render water
-        self.water_renderer.render(water_tiles, camera);
 
         self.skybox_renderer.render(camera, skybox, &BatchRenderer::SKY_COLOR, wall_clock);
     }

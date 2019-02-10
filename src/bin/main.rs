@@ -3,7 +3,10 @@ extern crate rand;
 
 use rand::Rng;
 
-use copper::display::Display;
+use copper::display::{
+    Display,
+    Framebuffers,
+};
 use copper::guis::Gui;
 use copper::renderers::{
     BatchRenderer,
@@ -33,6 +36,7 @@ use copper::mouse_picker::MousePicker;
 
 fn main() {
     let mut display = Display::create();
+    let framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
     init_resources(&mut resource_manager);
@@ -42,6 +46,7 @@ fn main() {
     let guis = vec!{
         Gui::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         Gui::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
+        Gui::new(framebuffers.reflection_fbo.color_texture, Vector2f::new(-0.5, 0.5), Vector2f::new(0.5, 0.5)),
     };
 
     let mut batch_renderer = BatchRenderer::new(&display);
@@ -76,7 +81,7 @@ fn main() {
 
         player.move_player(&display, &ground);
         skybox.increase_rotation(&display);
-        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &water_tiles, &skybox, &display.wall_clock);
+        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &water_tiles, &skybox, &display, &framebuffers);
         gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }

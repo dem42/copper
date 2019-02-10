@@ -339,16 +339,14 @@ pub fn bind_texture(texture_id: u32, type_: types::GLenum) {
 
 pub fn tex_image_2d<T>(type_: types::GLenum, level_of_detail: i32, format: types::GLenum, width: usize, height: usize, pixel_format: types::GLenum, data: &[T]) {
     unsafe {
-        
-        //TexImage2D(type_, level_of_detail, format as i32, width as i32, height as i32, 0, format, pixel_format, data.as_ptr() as *const _);
-        // let pixels = vec![
-        //     0.0, 0.0, 0.0,
-        //     1.0, 1.0, 1.0,
-        //     1.0, 1.0, 1.0,
-        //     0.0, 0.0, 0.0,
-        // ];
-        // TexImage2D(TEXTURE_2D, 0, RGB as i32, 2, 2, 0, RGB, FLOAT, pixels.as_ptr() as *const _);
         TexImage2D(type_, level_of_detail, format as i32, width as i32, height as i32, 0, format, pixel_format, data.as_ptr() as *const _);
+    }
+}
+
+// use this to allocate memory of width * height that you can later initialize with a subtexture such as from a frame buffer attachment
+pub fn tex_image_2d_uninitialized(type_: types::GLenum, level_of_detail: i32, format: types::GLenum, width: usize, height: usize, pixel_format: types::GLenum) {
+    unsafe {
+        TexImage2D(type_, level_of_detail, format as i32, width as i32, height as i32, 0, format, pixel_format, ptr::null());
     }
 }
 
@@ -400,9 +398,85 @@ pub fn delete_vertex_arrays(array_ids: &[u32]) {
     }
 }
 
-pub fn delete_texture(tex_ids: &[u32]) {
+pub fn delete_texture(tex_id: u32) {
+    unsafe {
+        DeleteTextures(1, &tex_id as *const u32);
+    }
+}
+
+pub fn delete_textures(tex_ids: &[u32]) {
     unsafe {
         DeleteTextures(tex_ids.len() as i32, tex_ids.as_ptr());
+    }
+}
+
+pub fn gen_framebuffer() -> u32 {    
+    unsafe {
+        let mut fbos = [0u32; 1];
+        let fbos_ptr = fbos.as_mut_ptr();
+        GenFramebuffers(1, fbos_ptr);
+        fbos[0]
+    }
+}
+
+pub fn bind_framebuffer(fbo_type: types::GLenum, fbo_id: u32) {
+    unsafe {
+        BindFramebuffer(fbo_type, fbo_id);
+    }
+}
+
+pub fn draw_buffers(color_buffers: &[types::GLenum]) {
+    unsafe {
+        DrawBuffers(color_buffers.len() as i32, color_buffers.as_ptr());
+    }
+}
+
+pub fn gen_renderbuffer() -> u32 {
+    unsafe {
+        let mut render_bufs = [0u32; 1];
+        let render_bufs_ptr = render_bufs.as_mut_ptr();
+        GenRenderbuffers(1, render_bufs_ptr);
+        render_bufs[0]
+    }
+}
+
+pub fn bind_renderbuffer(target: types::GLenum, renderbuffer: u32) {
+    unsafe {
+        BindRenderbuffer(target, renderbuffer);
+    }
+}
+
+pub fn renderbuffer_storage(target: types::GLenum, internalformat: types::GLenum, width: usize, height: usize) {
+    unsafe {
+        RenderbufferStorage(target, internalformat, width as i32, height as i32);
+    }
+}
+
+pub fn framebuffer_renderbuffer(target: types::GLenum, attachment: types::GLenum, renderbuffertarget: types::GLenum, renderbuffer: u32) {
+    unsafe {
+        FramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+    }
+}
+
+pub fn delete_framebuffer(fbo_id: u32) {
+    unsafe {        
+        let ptr: &u32 = &fbo_id;
+        DeleteFramebuffers(1, ptr as *const u32);
+    }
+}
+
+pub fn delete_renderbuffer(render_buffer_id: u32) {
+    unsafe {
+        DeleteRenderbuffers(1, &render_buffer_id as *const u32);
+    }
+}
+
+///////////
+// gl 3.2
+///////////
+pub fn framebuffer_texture(target: types::GLenum, attachment: types::GLenum, texture: u32, level: i32) {
+    unsafe {
+        FramebufferTexture(target, attachment, texture, level);
     }
 }
 

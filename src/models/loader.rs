@@ -148,7 +148,7 @@ impl Drop for ModelLoader {
     fn drop(&mut self) {
         gl::delete_vertex_arrays(&self.vao_list[..]);
         gl::delete_buffers(&self.vbo_list[..]);
-        gl::delete_texture(&self.tex_list);
+        gl::delete_textures(&self.tex_list);
     }
 }
 
