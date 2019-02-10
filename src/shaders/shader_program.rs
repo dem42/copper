@@ -89,6 +89,11 @@ impl ShaderProgram {
         gl::get_uniform_location(self.program_id, uniform_name).expect("Couldn't get uniform location")
     }
 
+    ////////////////////////////////////////////////////////////////////
+    /// The following are associated functions not members
+    /// they don't need the program_id but they do need the program 
+    /// to be started (self.start())
+    ////////////////////////////////////////////////////////////////////
     pub fn load_float(location_id: i32, value: f32) {
         gl::uniform1f(location_id, value);
     }

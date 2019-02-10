@@ -13,7 +13,7 @@ const float lower_limit = 0.0;
 // uper limit is from where we dont mix with fog color at all
 const float upper_limit = 30.0;
 
-const bool uses_cell_shading = true;
+const bool uses_cell_shading = false;
 const float brightness_levels = 10.0;
 
 void adjust_brightness(inout vec4 skybox_color) {

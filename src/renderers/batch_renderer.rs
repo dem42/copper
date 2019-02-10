@@ -11,6 +11,7 @@ use crate::entities::{
     Terrain,
     Player,
     Skybox,
+    WaterTile,
 };
 use crate::math::{
     Matrix4f,
@@ -22,11 +23,13 @@ use crate::models::{
 use super::entity_renderer::EntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
 use super::skybox_renderer::SkyboxRenderer;
+use super::water_renderer::WaterRenderer;
 
 pub struct BatchRenderer {    
     entity_renderer: EntityRenderer,
     terrain_renderer: TerrainRenderer,
     skybox_renderer: SkyboxRenderer,
+    water_renderer: WaterRenderer,
     pub projection_matrix: Matrix4f,
 }
 
@@ -43,16 +46,19 @@ impl BatchRenderer {
         let entity_renderer = EntityRenderer::new(&projection_matrix);
         let terrain_renderer = TerrainRenderer::new(&projection_matrix);
         let skybox_renderer = SkyboxRenderer::new(&projection_matrix);
+        let water_renderer = WaterRenderer::new(&projection_matrix);
         
         BatchRenderer {
             entity_renderer,
             terrain_renderer,
             skybox_renderer,
+            water_renderer,
             projection_matrix,
         }
     }
     
-    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock) {
+    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
+        player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, wall_clock: &WallClock) {
 
         self.prepare();
 
@@ -82,6 +88,9 @@ impl BatchRenderer {
             self.terrain_renderer.unprepare_terrain();
         }
         self.terrain_renderer.stop_render();
+
+        // render water
+        self.water_renderer.render(water_tiles, camera);
 
         self.skybox_renderer.render(camera, skybox, &BatchRenderer::SKY_COLOR, wall_clock);
     }

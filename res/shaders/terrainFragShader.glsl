@@ -28,7 +28,7 @@ uniform vec3 sky_color;
 // point light attenuation
 uniform vec3 attenuation[NUM_LIGHTS];
 
-const bool uses_cell_shading = true;
+const bool uses_cell_shading = false;
 const float brightness_levels = 2.0;
 
 void adjust_brightness(inout float diffuse_brightness, inout float specular_brightness) {

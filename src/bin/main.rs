@@ -23,6 +23,7 @@ use copper::entities::{
     Player,
     Ground,
     Skybox,
+    WaterTile,
 };
 use copper::math::{
     Vector2f,
@@ -35,7 +36,7 @@ fn main() {
     let mut resource_manager = ResourceManager::default();
 
     init_resources(&mut resource_manager);
-    let (mut entities, ground, mut player, gui_model) = create_world(&resource_manager);
+    let (mut entities, ground, mut player, gui_model, water_tiles) = create_world(&resource_manager);
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
     let guis = vec!{
@@ -45,8 +46,7 @@ fn main() {
 
     let mut batch_renderer = BatchRenderer::new(&display);
     let mut gui_renderer = GuiRenderer::new();
-    
-
+        
     let mut lights = vec!{
         Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.6, 0.6, 0.6)), // sunlight, no attenuation
         Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
@@ -76,7 +76,7 @@ fn main() {
 
         player.move_player(&display, &ground);
         skybox.increase_rotation(&display);
-        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &skybox, &display.wall_clock);
+        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &water_tiles, &skybox, &display.wall_clock);
         gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }
@@ -98,9 +98,10 @@ fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_gui_model();
     resource_manager.init_gui_textures();
     resource_manager.init_skybox();
+    resource_manager.init_water();
 }
 
-fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel) {
+fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel, Vec<WaterTile>) {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;
@@ -155,5 +156,10 @@ fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Pla
     let box_entity = Entity::new(resource_manager.model(ModelType::Crate), box_pos, Vector3f::new(0.0, 0.0, 0.0), 5.0);
     entities.push(box_entity);
 
-    (entities, ground, player, resource_manager.gui_model())
+    let water_tiles = vec![
+        // put the water slightly below 0 to reduce z-fighting since a lot of terrain is at 0
+        WaterTile::new(Vector3f::new(150.0, -0.2, -250.0), resource_manager.water_model()),
+    ];
+
+    (entities, ground, player, resource_manager.gui_model(), water_tiles)
 }
