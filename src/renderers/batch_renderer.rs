@@ -62,8 +62,6 @@ impl BatchRenderer {
     pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
         player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &Framebuffers) {
 
-        self.prepare();
-
         framebuffers.reflection_fbo.bind();
         self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock);
         display.restore_default_framebuffer();
@@ -74,6 +72,8 @@ impl BatchRenderer {
     }
 
     fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock) {
+        self.prepare();
+
         // render entites
         self.entity_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
         let groups_by_tex = BatchRenderer::group_entities_by_tex(entities);
