@@ -59,8 +59,9 @@ impl BatchRenderer {
         }
     }
     
-    pub fn render(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-        player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &Framebuffers) {
+    pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &Framebuffers) {
+        // enable clip plane                    
+        gl::enable(gl::CLIP_DISTANCE0); 
 
         framebuffers.reflection_fbo.bind();
         self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock);

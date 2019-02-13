@@ -28,8 +28,18 @@ uniform vec2 texture_offset;
 const float fog_density = 0.007;
 const float fog_gradient = 1.5;
 
+// clipping plane 
+// horizontal plane distance 15 from origin
+const vec4 clip_plane = vec4(0, -1, 0, 15);
+
 void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
+    // set what the distance to clipping plane 0 is from this vertex (negative will get culled, positive won't)
+    // to compute distance of point from plane we substitute the point (or it's vec4 with w=1) into plane equation -> this is the same as taking dot product
+    // because you are basically projecting the vector onto the plane normal and you get the magnitude of this vector in the direction of the normal
+    // then you compare this magnitude to the plane's D (distance from origin)
+    gl_ClipDistance[0] = dot(world_position, clip_plane);
+    
     vec4 eye_space_position = view_matrix * world_position;
     gl_Position = projection_matrix * eye_space_position;
     pass_tex_coord = (tex_coord / number_of_rows) + texture_offset; // rescale original tex_coords down to section of atlas where texture is located

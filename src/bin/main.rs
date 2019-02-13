@@ -81,7 +81,7 @@ fn main() {
 
         player.move_player(&display, &ground);
         skybox.increase_rotation(&display);
-        batch_renderer.render(&lights, &camera, &entities, &ground.terrains, &player, &water_tiles, &skybox, &display, &framebuffers);
+        batch_renderer.render(&lights, &mut camera, &entities, &ground.terrains, &player, &water_tiles, &skybox, &display, &framebuffers);
         gui_renderer.render(&guis, &gui_model.raw_model);
         display.update_display();
     }
