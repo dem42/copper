@@ -8,6 +8,7 @@ use crate::entities::{
 use crate::math::{
     Matrix4f,
     Vector3f,
+    Vector4f,
 };
 
 pub struct SkyboxShader {
@@ -17,7 +18,8 @@ pub struct SkyboxShader {
     location_sky_color: i32,    
     location_cube_map1: i32,    
     location_cube_map2: i32,    
-    location_blend_factor: i32,    
+    location_blend_factor: i32,
+    location_clip_plane: i32,
 }
 
 impl SkyboxShader {
@@ -29,6 +31,7 @@ impl SkyboxShader {
             mut location_cube_map1,
             mut location_cube_map2,
             mut location_blend_factor,
+            mut location_clip_plane,
         ) = Default::default();
 
         let program = ShaderProgram::new(
@@ -44,6 +47,7 @@ impl SkyboxShader {
                 location_cube_map1 = shader_prog.get_uniform_location("cube_map_sampler1");
                 location_cube_map2 = shader_prog.get_uniform_location("cube_map_sampler2");
                 location_blend_factor = shader_prog.get_uniform_location("blend_factor");
+                location_clip_plane = shader_prog.get_uniform_location("clip_plane");
             }
         );        
 
@@ -55,6 +59,7 @@ impl SkyboxShader {
             location_cube_map1,
             location_cube_map2,
             location_blend_factor,
+            location_clip_plane,
         }
     }
 
@@ -86,5 +91,9 @@ impl SkyboxShader {
     pub fn load_view_matrix(&mut self, camera: &Camera, skybox_rotation: f32) {
         let view_matrix = Matrix4f::create_skybox_view_matrix(camera, skybox_rotation);
         ShaderProgram::load_matrix(self.location_view_matrix, &view_matrix);
+    }
+
+    pub fn load_clip_plane(&mut self, clip_plane: &Vector4f) {
+        ShaderProgram::load_vector4d(self.location_clip_plane, clip_plane);
     }
 }

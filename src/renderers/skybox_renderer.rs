@@ -9,6 +9,7 @@ use crate::gl;
 use crate::math::{
     Matrix4f,
     Vector3f,
+    Vector4f,
 };
 use crate::models::{
     RawModel,
@@ -30,10 +31,12 @@ impl SkyboxRenderer {
         }
     }
 
-    pub fn render(&mut self, camera: &Camera, skybox: &Skybox, sky_color: &Vector3f, wall_clock: &WallClock) {
+    pub fn render(&mut self, camera: &Camera, skybox: &Skybox, sky_color: &Vector3f, wall_clock: &WallClock, clip_plane: &Vector4f) {
         self.shader.start();        
         self.shader.load_view_matrix(camera, skybox.rotation_yaw_deg);
-        self.shader.load_sky_color(sky_color); // due to day night this color needs to be set every frame        
+        self.shader.load_sky_color(sky_color); // due to day night this color needs to be set every frame
+        // water stuff (every frame?)
+        self.shader.load_clip_plane(clip_plane);
         
         self.bind_textures(skybox, wall_clock);        
 

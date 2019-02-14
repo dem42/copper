@@ -17,7 +17,8 @@ use crate::entities::{
 };
 use crate::math::{
     Matrix4f,
-    Vector3f
+    Vector3f,
+    Vector4f,
 };
 use crate::models::{
     TexturedModel,
@@ -63,23 +64,31 @@ impl BatchRenderer {
         // enable clip plane                    
         gl::enable(gl::CLIP_DISTANCE0); 
 
-        framebuffers.reflection_fbo.bind();
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock);
-        display.restore_default_framebuffer();
+        let water_height = WaterTile::get_water_height(water_tiles);
+        let above_water_clip_plane = Vector4f::new(0.0, -1.0, 0.0, water_height);
+        let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height);
+        let infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
 
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock);
+        framebuffers.reflection_fbo.bind();
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
+
+        framebuffers.refraction_fbo.bind();
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
+
+        display.restore_default_framebuffer();
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, camera);
     }
 
-    fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock) {
+    fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f) {
         self.prepare();
 
         // render entites
         self.entity_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
         let groups_by_tex = BatchRenderer::group_entities_by_tex(entities);
         for (textured_model, entity_vec) in groups_by_tex.iter() {
-            self.entity_renderer.prepare_textured_model(textured_model);
+            self.entity_renderer.prepare_textured_model(textured_model, clip_plane);
             for entity in entity_vec {
                 // load transform matrix into shader
                 self.entity_renderer.render(entity);
@@ -87,7 +96,7 @@ impl BatchRenderer {
             self.entity_renderer.unprepare_textured_model(textured_model);
         }        
         // render player
-        self.entity_renderer.prepare_textured_model(player.entity.model);        
+        self.entity_renderer.prepare_textured_model(player.entity.model, clip_plane); 
         self.entity_renderer.render(&player.entity);
         self.entity_renderer.unprepare_textured_model(player.entity.model);
 
@@ -96,13 +105,13 @@ impl BatchRenderer {
         // render terrain
         self.terrain_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
         for terrain in terrains.iter() {
-            self.terrain_renderer.prepare_terrain(terrain);
+            self.terrain_renderer.prepare_terrain(terrain, clip_plane);
             self.terrain_renderer.render(terrain);
             self.terrain_renderer.unprepare_terrain();
         }
         self.terrain_renderer.stop_render();
 
-        self.skybox_renderer.render(camera, skybox, &BatchRenderer::SKY_COLOR, wall_clock);
+        self.skybox_renderer.render(camera, skybox, &BatchRenderer::SKY_COLOR, wall_clock, clip_plane);
     }
     
     fn prepare(&self) {

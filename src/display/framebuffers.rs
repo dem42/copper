@@ -6,7 +6,7 @@ use crate::gl;
 pub struct Framebuffers {
     // water framebuffers
     pub reflection_fbo: ReflectionFBO,
-    //pub refraction_fbo: RefractionFBO,
+    pub refraction_fbo: RefractionFBO,
 }
 
 pub struct ReflectionFBO {
@@ -24,11 +24,11 @@ pub struct RefractionFBO {
 impl Framebuffers {
     pub fn new(display: &Display) -> Self {
         let reflection_fbo = ReflectionFBO::new();
-        //let refraction_fbo = RefractionFBO::new();
+        let refraction_fbo = RefractionFBO::new();
         display.restore_default_framebuffer();
         Framebuffers {
             reflection_fbo,
-            //refraction_fbo,
+            refraction_fbo,
         }
     }
 }

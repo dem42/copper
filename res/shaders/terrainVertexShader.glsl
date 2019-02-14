@@ -23,8 +23,13 @@ uniform vec3 light_pos[NUM_LIGHTS];
 const float fog_density = 0.007;
 const float fog_gradient = 1.5;
 
+// clipping plane for water rendering
+uniform vec4 clip_plane;
+
 void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
+    gl_ClipDistance[0] = dot(world_position, clip_plane);
+
     vec4 eye_space_position = view_matrix * world_position;
     gl_Position = projection_matrix * eye_space_position;
     pass_tex_coord = tex_coord;

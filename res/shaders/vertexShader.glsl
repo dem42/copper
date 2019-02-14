@@ -28,9 +28,8 @@ uniform vec2 texture_offset;
 const float fog_density = 0.007;
 const float fog_gradient = 1.5;
 
-// clipping plane 
-// horizontal plane distance 15 from origin
-const vec4 clip_plane = vec4(0, -1, 0, 15);
+// clipping plane for water rendering
+uniform vec4 clip_plane;
 
 void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);

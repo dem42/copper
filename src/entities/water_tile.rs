@@ -1,6 +1,6 @@
 use crate::math::{
-    Vector3f,
     Matrix4f,
+    Vector3f,
 };
 use crate::models::{
     RawModel,
@@ -22,5 +22,9 @@ impl<'a> WaterTile<'a> {
             transform,
             model,
         }
+    }
+
+    pub fn get_water_height(water_tiles: &Vec<WaterTile>) -> f32 {
+        water_tiles[0].position.y
     }
 }

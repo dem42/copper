@@ -6,8 +6,9 @@ use crate::entities::{
 };
 use crate::shaders::TerrainShader;
 use crate::math::{
+    Matrix4f,
     Vector3f,
-    Matrix4f
+    Vector4f,    
 };
 use crate::models::{
     RawModel,
@@ -43,13 +44,14 @@ impl TerrainRenderer {
         self.shader.stop();
     }
 
-    pub fn prepare_terrain(&mut self, terrain: &Terrain) {
+    pub fn prepare_terrain(&mut self, terrain: &Terrain, clip_plane: &Vector4f) {
         gl::bind_vertex_array(terrain.model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
 
         self.shader.load_shine_variables(1.0, 0.0);
+        self.shader.load_clip_plane(clip_plane);
 
         // configure texture units
         gl::active_texture(gl::TEXTURE0); 

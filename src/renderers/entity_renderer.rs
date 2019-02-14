@@ -7,7 +7,8 @@ use crate::entities::{
 use crate::shaders::StaticShader;
 use crate::math::{
     Matrix4f,
-    Vector3f
+    Vector3f,
+    Vector4f,
 };
 use crate::models::{
     TexturedModel,
@@ -41,7 +42,7 @@ impl EntityRenderer {
         self.shader.stop();
     }
 
-    pub fn prepare_textured_model(&mut self, textured_model: &TexturedModel) {
+    pub fn prepare_textured_model(&mut self, textured_model: &TexturedModel, clip_plane: &Vector4f) {
         if textured_model.texture.has_transparency {
             gl::helper::disable_culling();
         }
@@ -54,6 +55,9 @@ impl EntityRenderer {
         self.shader.load_shine_variables(textured_model.texture.shine_damper, textured_model.texture.reflectivity);
         self.shader.load_uses_fake_lighting(textured_model.texture.uses_fake_lighting);
         self.shader.load_atlas_number_of_rows(textured_model.texture.number_of_rows_in_atlas);
+
+        // clip plane for water 
+        self.shader.load_clip_plane(clip_plane);
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
         gl::bind_texture(textured_model.texture.tex_id, gl::TEXTURE_2D);

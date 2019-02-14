@@ -11,7 +11,8 @@ use super::super::gl;
 use super::super::math::{
     Matrix4f,
     Vector2f, 
-    Vector3f, 
+    Vector3f,
+    Vector4f,
 };
 
 pub struct ShaderProgram {
@@ -104,6 +105,10 @@ impl ShaderProgram {
 
     pub fn load_bool(location_id: i32, value: bool) {
         gl::uniform1f(location_id, if value { 1.0 } else { 0.0 });
+    }
+
+    pub fn load_vector4d(location_id: i32, value: &Vector4f) {
+        gl::uniform4f(location_id, value.x, value.y, value.z, value.w);
     }
 
     pub fn load_vector3d(location_id: i32, value: &Vector3f) {

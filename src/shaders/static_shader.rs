@@ -8,6 +8,7 @@ use crate::math::{
     Matrix4f,
     Vector2f,
     Vector3f,
+    Vector4f,
 };
 
 const NUM_LIGHTS: usize = 4;
@@ -26,6 +27,7 @@ pub struct StaticShader {
     location_number_of_rows: i32,
     location_texture_offset: i32,
     location_attenuation: [i32; NUM_LIGHTS],
+    location_clip_plane: i32,
 }
 
 impl StaticShader {
@@ -46,6 +48,7 @@ impl StaticShader {
             mut location_number_of_rows, 
             mut location_texture_offset,
             mut location_attenuation,
+            mut location_clip_plane,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -83,6 +86,7 @@ impl StaticShader {
                 for i in 0..NUM_LIGHTS {
                     location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));
                 }
+                location_clip_plane = shader_prog.get_uniform_location("clip_plane");
         });
 
         StaticShader {
@@ -99,6 +103,7 @@ impl StaticShader {
             location_number_of_rows,
             location_texture_offset,
             location_attenuation,
+            location_clip_plane,
         }
     }
 
@@ -157,5 +162,9 @@ impl StaticShader {
     pub fn load_view_matrix(&mut self, camera: &Camera) {
         let view_matrix = Matrix4f::create_view_matrix(camera);
         ShaderProgram::load_matrix(self.location_view_matrix, &view_matrix);
+    }
+
+    pub fn load_clip_plane(&mut self, clip_plane: &Vector4f) {
+        ShaderProgram::load_vector4d(self.location_clip_plane, clip_plane);
     }
 }
