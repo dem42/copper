@@ -67,16 +67,20 @@ impl BatchRenderer {
         let water_height = WaterTile::get_water_height(water_tiles);
         let above_water_clip_plane = Vector4f::new(0.0, -1.0, 0.0, water_height);
         let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height);
-        let infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
-
+        let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
+        
+        camera.set_to_reflected_ray_camera_origin(water_height);
         framebuffers.reflection_fbo.bind();
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
+        camera.set_to_reflected_ray_camera_origin(water_height);
+
+        // we should also move camera before refraction to account for refracted angle?
+        framebuffers.refraction_fbo.bind();
         self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
 
-        framebuffers.refraction_fbo.bind();
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
-
+        gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?
         display.restore_default_framebuffer();
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &infinity_plane);
+        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, camera);
     }

@@ -34,6 +34,15 @@ impl Camera {
         self.update_camera_pos(player);
     }
 
+    pub fn set_to_reflected_ray_camera_origin(&mut self, reflection_plane_y: f32) {        
+        self.position.y -= 2.0 * (self.position.y - reflection_plane_y);
+        self.pitch = if self.pitch >= 180.0 {
+            self.pitch - 360.0
+        } else {
+            -self.pitch
+        }
+    }
+
     fn update_camera_pos(&mut self, player: &Player) {
         let (s, c) = self.pitch.to_radians().sin_cos();
         let (camera_vertical_offset_to_player, camera_horizontal_offset_to_player) = (self.distance_to_player * s, self.distance_to_player * c);        
