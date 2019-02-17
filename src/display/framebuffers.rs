@@ -45,7 +45,7 @@ pub trait FramebufferObject {
 
     fn create_color_texture_attachment(width: usize, height: usize) -> u32 {
         let tex_id = gl::gen_texture();
-        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, tex_id);
         gl::tex_image_2d_uninitialized(gl::TEXTURE_2D, 0, gl::RGB, width, height, gl::UNSIGNED_BYTE);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
@@ -56,7 +56,7 @@ pub trait FramebufferObject {
 
     fn create_depth_texture_attachment(width: usize, height: usize) -> u32 {
         let tex_id = gl::gen_texture();
-        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, tex_id);
         gl::tex_image_2d_uninitialized(gl::TEXTURE_2D, 0, gl::DEPTH_COMPONENT, width, height, gl::FLOAT);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
@@ -74,7 +74,7 @@ pub trait FramebufferObject {
     }
 
     fn bind_framebuffer(fbo_id: u32, width: usize, height: usize) {
-        gl::bind_texture(0, gl::TEXTURE_2D); // unbind any active texture
+        gl::bind_texture(gl::TEXTURE_2D, 0); // unbind any active texture
         gl::bind_framebuffer(gl::FRAMEBUFFER, fbo_id); // unbind any active texture
         gl::viewport(0, 0, width as i32, height as i32);
     }
@@ -83,8 +83,10 @@ pub trait FramebufferObject {
 }
 
 impl ReflectionFBO {
-    const WIDTH: usize = 320;
-    const HEIGHT: usize = 180;
+    const WIDTH: usize = 1280;
+    const HEIGHT: usize = 720;
+    // const WIDTH: usize = 320;
+    // const HEIGHT: usize = 180;
 
     fn new() -> Self {
         let fbo_id = Self::create_frame_buffer();

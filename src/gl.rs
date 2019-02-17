@@ -337,7 +337,7 @@ pub fn gen_texture() -> u32 {
     }
 }
 
-pub fn bind_texture(texture_id: u32, type_: types::GLenum) {
+pub fn bind_texture(type_: types::GLenum, texture_id: u32) {
     unsafe {
         BindTexture(type_, texture_id);
     }

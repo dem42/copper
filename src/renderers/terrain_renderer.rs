@@ -55,15 +55,15 @@ impl TerrainRenderer {
 
         // configure texture units
         gl::active_texture(gl::TEXTURE0); 
-        gl::bind_texture(terrain.texture_pack.background_texture.tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.background_texture.tex_id);
         gl::active_texture(gl::TEXTURE1); 
-        gl::bind_texture(terrain.texture_pack.r_texture.tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.r_texture.tex_id);
         gl::active_texture(gl::TEXTURE2); 
-        gl::bind_texture(terrain.texture_pack.g_texture.tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.g_texture.tex_id);
         gl::active_texture(gl::TEXTURE3); 
-        gl::bind_texture(terrain.texture_pack.b_texture.tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.b_texture.tex_id);
         gl::active_texture(gl::TEXTURE4); 
-        gl::bind_texture(terrain.blend_texture.tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.blend_texture.tex_id);
     }
 
     pub fn render(&mut self, terrain: &Terrain) {        
@@ -82,6 +82,6 @@ impl TerrainRenderer {
         gl::disable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
 
         gl::bind_vertex_array(0);
-        gl::bind_texture(0, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, 0);
     }
 }

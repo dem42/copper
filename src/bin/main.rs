@@ -46,8 +46,6 @@ fn main() {
     let guis = vec!{
         Gui::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         Gui::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
-        Gui::new(framebuffers.reflection_fbo.color_texture, Vector2f::new(-0.5, 0.25), Vector2f::new(0.25, 0.25)),
-        Gui::new(framebuffers.refraction_fbo.color_texture, Vector2f::new(0.5, 0.25), Vector2f::new(0.25, 0.25)),
     };
 
     let mut batch_renderer = BatchRenderer::new(&display);

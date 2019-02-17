@@ -46,7 +46,7 @@ impl SkyboxRenderer {
         gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::bind_vertex_array(0);
 
-        gl::bind_texture(0, gl::TEXTURE_CUBE_MAP);
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, 0);
 
         self.shader.stop();
     }
@@ -54,9 +54,9 @@ impl SkyboxRenderer {
     fn bind_textures(&mut self, skybox: &Skybox, wall_clock: &WallClock) {
         let (day_tex, night_tex, blend_factor) = skybox.get_day_night_textures(wall_clock);
         gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(day_tex, gl::TEXTURE_CUBE_MAP);
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, day_tex);
         gl::active_texture(gl::TEXTURE1);
-        gl::bind_texture(night_tex, gl::TEXTURE_CUBE_MAP);  
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, night_tex);  
 
         self.shader.load_blend_factor(blend_factor);
         self.shader.connect_texture_units();   

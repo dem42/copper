@@ -53,7 +53,7 @@ impl ModelLoader {
         let cubemap_id = gl::gen_texture();
         self.tex_list.push(cubemap_id);
         gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(cubemap_id, gl::TEXTURE_CUBE_MAP);
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, cubemap_id);
 
         for i in 1..=6 {
             let filename = format!("{}/{}.png", cube_map_folder, i);
@@ -66,7 +66,7 @@ impl ModelLoader {
             gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE);
             gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE);            
         }
-        gl::bind_texture(0, gl::TEXTURE_CUBE_MAP);
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, 0);
         cubemap_id
     }
 
@@ -77,7 +77,7 @@ impl ModelLoader {
         let tex_id = gl::gen_texture();
         self.tex_list.push(tex_id);
         gl::active_texture(gl::TEXTURE0); // even though 0 is default i think, just to be explicit let's activate texture unit 0
-        gl::bind_texture(tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, tex_id);
 
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT);
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
@@ -94,7 +94,7 @@ impl ModelLoader {
             gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
         }
 
-        gl::bind_texture(0, gl::TEXTURE_2D);        
+        gl::bind_texture(gl::TEXTURE_2D, 0);        
         tex_id        
     }
 

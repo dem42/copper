@@ -1,3 +1,6 @@
+use crate::display::{
+    Framebuffers,
+};
 use crate::entities::{
     Camera,
     WaterTile,
@@ -20,13 +23,14 @@ impl WaterRenderer {
         let mut shader = WaterShader::new();
         shader.start();
         shader.load_projection_matrix(projection_mat);
+        shader.connect_texture_units();
         shader.stop();        
         WaterRenderer {
             shader,
         }
     }
 
-    pub fn render(&mut self, water_tiles: &Vec<WaterTile>, camera: &Camera) {
+    pub fn render(&mut self, water_tiles: &Vec<WaterTile>, framebuffers: &Framebuffers, camera: &Camera) {
         self.shader.start();
         let view_matrix = Matrix4f::create_view_matrix(camera);
         self.shader.load_view_matrix(&view_matrix);
@@ -36,8 +40,14 @@ impl WaterRenderer {
             self.shader.load_transform_matrix(transform_matrix);
 
             gl::bind_vertex_array(water_tile.model.vao_id);
-            gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);            
+            gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+            gl::active_texture(gl::TEXTURE0);
+            gl::bind_texture(gl::TEXTURE_2D, framebuffers.reflection_fbo.color_texture);
+            gl::active_texture(gl::TEXTURE1);
+            gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.color_texture);
+
             gl::draw_arrays(gl::TRIANGLE_STRIP, 0, water_tile.model.vertex_count);
+
             gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
             gl::bind_vertex_array(0);
         }

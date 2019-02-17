@@ -60,7 +60,7 @@ impl EntityRenderer {
         self.shader.load_clip_plane(clip_plane);
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
-        gl::bind_texture(textured_model.texture.tex_id, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, textured_model.texture.tex_id);
     }
 
     pub fn render(&mut self, entity: &Entity) {
@@ -81,6 +81,6 @@ impl EntityRenderer {
         gl::disable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
 
         gl::bind_vertex_array(0);
-        gl::bind_texture(0, gl::TEXTURE_2D);
+        gl::bind_texture(gl::TEXTURE_2D, 0);
     }
 }
