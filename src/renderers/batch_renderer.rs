@@ -82,7 +82,7 @@ impl BatchRenderer {
         display.restore_default_framebuffer();
         self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
-        self.water_renderer.render(water_tiles, framebuffers, camera);
+        self.water_renderer.render(water_tiles, framebuffers, camera, display);
     }
 
     fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f) {

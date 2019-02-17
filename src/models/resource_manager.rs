@@ -7,7 +7,7 @@ use super::loader::{
     TerrainModel,
     GuiModel,
     SkyboxModel,
-    RawModel,
+    WaterModel,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::load_obj_model;
@@ -21,7 +21,7 @@ pub struct ResourceManager {
     terrain_model: Option<TerrainModel>,
     gui_model: Option<GuiModel>,
     skybox_model: Option<SkyboxModel>,
-    water_model: Option<RawModel>,
+    water_model: Option<WaterModel>,
 
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
@@ -308,11 +308,15 @@ impl ResourceManager {
                 1.0, 0.0, -1.0, 
             ];
             let raw_model = self.loader.load_simple_model_to_vao(&positions, 3);
-            self.water_model = Some(raw_model);
+            let dudv_tex_id = self.loader.load_terrain_texture("res/textures/water/waterDUDV.png", 0).tex_id;
+            self.water_model = Some(WaterModel {
+                raw_model,
+                dudv_tex_id,
+            });
         }
     }
 
-    pub fn water_model(&self) -> RawModel {
+    pub fn water_model(&self) -> WaterModel {
         self.water_model.clone().expect("Need to call init_water first")
     }
 }

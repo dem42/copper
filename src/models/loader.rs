@@ -248,3 +248,9 @@ pub struct SkyboxModel {
     pub day_texture_id: u32,
     pub night_texture_id: u32,
 }
+
+#[derive(Clone)]
+pub struct WaterModel {
+    pub raw_model: RawModel,
+    pub dudv_tex_id: u32,
+}

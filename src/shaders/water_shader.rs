@@ -13,6 +13,8 @@ pub struct WaterShader {
     location_transform_mat: i32,
     location_reflection_unit: i32,
     location_refraction_unit: i32,
+    location_dudv_unit: i32,
+    location_wave_factor: i32,
 }
 
 impl WaterShader {
@@ -23,6 +25,8 @@ impl WaterShader {
             mut location_transform_mat,
             mut location_reflection_unit,
             mut location_refraction_unit,
+            mut location_dudv_unit,
+            mut location_wave_factor,
         ) = Default::default();
 
         let program = ShaderProgram::new(
@@ -37,6 +41,8 @@ impl WaterShader {
                 location_transform_mat = shader_prog.get_uniform_location("transform_matrix");
                 location_reflection_unit = shader_prog.get_uniform_location("reflection_tex");
                 location_refraction_unit = shader_prog.get_uniform_location("refraction_tex");
+                location_dudv_unit = shader_prog.get_uniform_location("dudv_map");
+                location_wave_factor = shader_prog.get_uniform_location("wave_factor");
             },
         );
         WaterShader {
@@ -46,6 +52,8 @@ impl WaterShader {
             location_transform_mat,
             location_reflection_unit,
             location_refraction_unit,
+            location_dudv_unit,
+            location_wave_factor,
         }
     }
 
@@ -72,5 +80,10 @@ impl WaterShader {
     pub fn connect_texture_units(&mut self) {
         ShaderProgram::load_int(self.location_reflection_unit, 0);
         ShaderProgram::load_int(self.location_refraction_unit, 1);
+        ShaderProgram::load_int(self.location_dudv_unit, 2);
+    }
+
+    pub fn load_wave_factor(&mut self, wave_factor: f32) {
+        ShaderProgram::load_float(self.location_wave_factor, wave_factor);
     }
 }
