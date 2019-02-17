@@ -9,21 +9,21 @@ use crate::entities::{
     Ground,
 };
 
-pub struct Player<'a> {
-    pub entity: Entity<'a>,
+pub struct Player {
+    pub entity: Entity,
     current_speed: f32,
     current_turn_speed: f32,
     upwards_speed: f32,
     is_in_air: bool,
 }
 
-impl<'a> Player<'a> {
+impl Player {
     const RUN_SPEED: f32 = 20.0;
     const TURN_SPEED: f32 = 160.0;
     const GRAVITY: f32 = -50.0;
     const JUMP_POWER: f32 = 30.0;
 
-    pub fn new(entity: Entity<'a>) -> Player<'a> {
+    pub fn new(entity: Entity) -> Player {
         Player {
             entity,
             current_speed: 0.0,

@@ -6,16 +6,16 @@ use crate::models::{
     RawModel,
 };
 
-pub struct WaterTile<'a> {
+pub struct WaterTile {
     pub position: Vector3f,
     pub transform: Matrix4f,
-    pub model: &'a RawModel,
+    pub model: RawModel,
 }
 
-impl<'a> WaterTile<'a> {
+impl WaterTile {
     const SIZE: f32 = 200.0;
 
-    pub fn new(position: Vector3f, model: &'a RawModel) -> Self {
+    pub fn new(position: Vector3f, model: RawModel) -> Self {
         let transform = Matrix4f::create_transform_matrix(&position, &Vector3f::new(0.0, 0.0, 0.0), WaterTile::SIZE);
         WaterTile {
             position,

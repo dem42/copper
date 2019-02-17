@@ -27,6 +27,16 @@ pub struct ResourceManager {
     gui_textures: HashMap<&'static str, u32>,
 }
 
+pub enum ResType {
+    WaterModel,
+    SkyboxModel,
+    GuiModel,
+    GuiRes(&'static str),
+    TexAndModel {tex: &'static str, model: &'static str, model_props: ModelProps},
+    TerrainTexPack {blend: &'static str, back: &'static str, a_chan: &'static str, g_chan: &'static str, b_chan: &'static str},
+    TerrainModel {heightmap: &'static str},
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum ModelType {
     Grass,
@@ -152,8 +162,8 @@ impl ResourceManager {
         self.models.insert(model_type.clone(), model);
     }
 
-    pub fn model(&self, model_type: ModelType) -> &TexturedModel {
-        self.models.get(&model_type).expect(&format!("Need to call init_model({:?}) before accessing the model", model_type))
+    pub fn model(&self, model_type: ModelType) -> TexturedModel {
+        self.models.get(&model_type).expect(&format!("Need to call init_model({:?}) before accessing the model", model_type)).clone()
     }
     
     pub fn init_terrain_textures(&mut self) {
@@ -170,12 +180,12 @@ impl ResourceManager {
         }
     }
 
-    pub fn terrain_pack(&self) -> &TerrainTexturePack {
-        self.texture_pack.as_ref().expect("Need to call init_terrain_textures before accessing the textures")
+    pub fn terrain_pack(&self) -> TerrainTexturePack {
+        self.texture_pack.clone().expect("Need to call init_terrain_textures before accessing the textures")
     }
 
-    pub fn blend_texture(&self) -> &TerrainTexture {
-        self.blend_texture.as_ref().expect("Need to call init_terrain_textures before accessing the textures")
+    pub fn blend_texture(&self) -> TerrainTexture {
+        self.blend_texture.clone().expect("Need to call init_terrain_textures before accessing the textures")
     }
 
     pub fn init_terrain_model(&mut self) {
@@ -185,8 +195,8 @@ impl ResourceManager {
         }
     }
 
-    pub fn terrain_model(&self) -> &TerrainModel {
-        self.terrain_model.as_ref().expect("Need to call init_terrain_model before accessing the model")
+    pub fn terrain_model(&self) -> TerrainModel {
+        self.terrain_model.clone().expect("Need to call init_terrain_model before accessing the model")
     }
 
     pub fn init_gui_textures(&mut self) {        
@@ -223,12 +233,12 @@ impl ResourceManager {
         }
     }
 
-    pub fn gui_model(&self) -> &GuiModel {
-        self.gui_model.as_ref().expect("Need to call init_gui_model before accessing gui model")
+    pub fn gui_model(&self) -> GuiModel {
+        self.gui_model.clone().expect("Need to call init_gui_model before accessing gui model")
     }
 
-    pub fn skybox(&self) -> &SkyboxModel {
-        self.skybox_model.as_ref().expect("Need to call init_skybox first")
+    pub fn skybox(&self) -> SkyboxModel {
+        self.skybox_model.clone().expect("Need to call init_skybox first")
     }
 
     pub fn init_skybox(&mut self) {
@@ -302,7 +312,7 @@ impl ResourceManager {
         }
     }
 
-    pub fn water_model(&self) -> &RawModel {
-        self.water_model.as_ref().expect("Need to call init_water first")
+    pub fn water_model(&self) -> RawModel {
+        self.water_model.clone().expect("Need to call init_water first")
     }
 }

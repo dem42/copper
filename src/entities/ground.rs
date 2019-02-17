@@ -7,11 +7,11 @@ use crate::math::{
 use std::f32;
 use std::cmp;
 
-pub struct Ground<'a> {
-    pub terrains: Vec<Terrain<'a>>,
+pub struct Ground {
+    pub terrains: Vec<Terrain>,
 }
 
-impl Ground<'_> {
+impl Ground {
     
     pub fn create_pos_above_terrain(&self, x: f32, y: f32, z: f32) -> Vector3f {
         let height = self.height_at_xz(x, z);

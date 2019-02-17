@@ -7,24 +7,25 @@ use crate::models::{
 use crate::math::{
 	Vector3f,
 };
+use std::rc::Rc;
 use texture_lib::texture_loader::{
 	load_rgba_2d_texture,
 	Texture2DRGBA,
 };
 
-pub struct Terrain<'a> {
+pub struct Terrain {
     pub x: f32,
     pub z: f32,
-    pub model: &'a TerrainModel,
-    pub blend_texture: &'a TerrainTexture,
-    pub texture_pack: &'a TerrainTexturePack,
+    pub model: TerrainModel,
+    pub blend_texture: TerrainTexture,
+    pub texture_pack: TerrainTexturePack,
 }
 
-impl<'a> Terrain<'a> {
+impl Terrain {
     pub const SIZE: f32 = 800.0;
     const MAX_HEIGHT: f32 = 40.0;
     
-    pub fn new(grid_x: i32, grid_z: i32, texture_pack: &'a TerrainTexturePack, blend_texture: &'a TerrainTexture, terrain_model: &'a TerrainModel) -> Terrain<'a> {        
+    pub fn new(grid_x: i32, grid_z: i32, texture_pack: TerrainTexturePack, blend_texture: TerrainTexture, terrain_model: TerrainModel) -> Terrain {        
         Terrain {
             x: grid_x as f32 * Terrain::SIZE,
             z: grid_z as f32 * Terrain::SIZE,
@@ -125,7 +126,7 @@ impl<'a> Terrain<'a> {
 		}
 		TerrainModel {
 			raw_model: loader.load_to_vao(&vertices, &texture_coords, &indices, &normals),
-			height_map: height_array,
+			height_map: Rc::new(height_array),
 		}
 	}
 }

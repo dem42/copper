@@ -107,7 +107,7 @@ fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_water();
 }
 
-fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Player, &GuiModel, Vec<WaterTile>) {
+fn create_world(resource_manager: &ResourceManager) -> (Vec<Entity>, Ground, Player, GuiModel, Vec<WaterTile>) {
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;

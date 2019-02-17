@@ -100,9 +100,9 @@ impl BatchRenderer {
             self.entity_renderer.unprepare_textured_model(textured_model);
         }        
         // render player
-        self.entity_renderer.prepare_textured_model(player.entity.model, clip_plane); 
+        self.entity_renderer.prepare_textured_model(&player.entity.model, clip_plane); 
         self.entity_renderer.render(&player.entity);
-        self.entity_renderer.unprepare_textured_model(player.entity.model);
+        self.entity_renderer.unprepare_textured_model(&player.entity.model);
 
         self.entity_renderer.stop_render();
 
@@ -126,11 +126,11 @@ impl BatchRenderer {
         gl::clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
 
-    fn group_entities_by_tex<'a, 'b>(entities: &'b Vec<Entity<'a>>) -> HashMap<&'b TexturedModel, Vec<&'b Entity<'a>>> {
+    fn group_entities_by_tex<'b>(entities: &'b Vec<Entity>) -> HashMap<&'b TexturedModel, Vec<&'b Entity>> {
         let mut groups_by_tex = HashMap::new();
 
         for entity in entities.iter() {
-            let group = groups_by_tex.entry(entity.model).or_insert(Vec::new());
+            let group = groups_by_tex.entry(&entity.model).or_insert(Vec::new());
             group.push(entity);
         }
 

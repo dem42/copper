@@ -3,6 +3,7 @@ use texture_lib::texture_loader::{
     load_rgba_2d_texture,
 };
 use std::hash::{Hash, Hasher};
+use std::rc::Rc;
 
 #[derive(Default)]
 pub struct ModelLoader {    
@@ -152,6 +153,7 @@ impl Drop for ModelLoader {
     }
 }
 
+#[derive(Clone)]
 pub struct RawModel {
     pub vao_id: u32,
     pub vertex_count: usize,
@@ -170,10 +172,12 @@ impl RawModel {
     }
 }
 
+#[derive(Clone)]
 pub struct TerrainTexture {
     pub tex_id: u32,
 }
 
+#[derive(Clone)]
 pub struct TerrainTexturePack {
     pub background_texture: TerrainTexture,
     pub r_texture: TerrainTexture,
@@ -181,6 +185,7 @@ pub struct TerrainTexturePack {
     pub b_texture: TerrainTexture,
 }
 
+#[derive(Clone)]
 pub struct ModelTexture {
     pub tex_id: u32,
     pub shine_damper: f32,
@@ -205,6 +210,7 @@ impl Default for ModelTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct TexturedModel {
     pub raw_model: RawModel,
     pub texture: ModelTexture,
@@ -225,15 +231,18 @@ impl Hash for TexturedModel {
     }
 }
 
+#[derive(Clone)]
 pub struct TerrainModel {
     pub raw_model: RawModel,
-    pub height_map: Vec<Vec<f32>>,
+    pub height_map: Rc<Vec<Vec<f32>>>,
 }
 
+#[derive(Clone)]
 pub struct GuiModel {
     pub raw_model: RawModel,
 }
 
+#[derive(Clone)]
 pub struct SkyboxModel {
     pub raw_model: RawModel,
     pub day_texture_id: u32,

@@ -9,13 +9,13 @@ use crate::display::{
 const ROTATE_SPEED: f32 = 1.0;
 const DAY_SEGMENTS: f32 = WallClock::DAY_LENGTH / 4.0;
 
-pub struct Skybox<'a> {
-    pub model: &'a SkyboxModel,
+pub struct Skybox {
+    pub model: SkyboxModel,
     pub rotation_yaw_deg: f32,
 }
 
-impl<'a> Skybox<'a> {
-    pub fn new(model: &'a SkyboxModel, rotation_yaw_deg: f32) -> Skybox<'a> {
+impl Skybox {
+    pub fn new(model: SkyboxModel, rotation_yaw_deg: f32) -> Skybox {
         Skybox {
             model,
             rotation_yaw_deg,
