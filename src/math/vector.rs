@@ -49,6 +49,9 @@ pub struct Vector3f {
 }
 
 impl Vector3f {
+    pub const ZERO: Vector3f = Vector3f {x: 0.0, y: 0.0, z: 0.0};
+    pub const POS_X_AXIS: Vector3f = Vector3f {x: 1.0, y: 0.0, z: 0.0};
+    
     pub fn new(x: f32, y: f32, z: f32) -> Vector3f {
         Vector3f { x, y, z}
     }

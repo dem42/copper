@@ -4,6 +4,7 @@ use crate::display::{
 };
 use crate::entities::{
     Camera,
+    Light,
     WaterTile,
 };
 use crate::gl;
@@ -35,13 +36,19 @@ impl WaterRenderer {
         }
     }
 
-    pub fn render(&mut self, water_tiles: &Vec<WaterTile>, framebuffers: &Framebuffers, camera: &Camera, display: &Display) {
+    pub fn render(&mut self, water_tiles: &Vec<WaterTile>, framebuffers: &Framebuffers, camera: &Camera, display: &Display, lights: &Vec<Light>) {
         self.shader.start();
-        let view_matrix = Matrix4f::create_view_matrix(camera);
-        self.shader.load_view_matrix(&view_matrix);
+        self.shader.load_camera(camera);
         
         self.update_wave_factor(display);
         self.shader.load_wave_factor(self.wave_factor);
+
+        self.shader.load_lights(lights);
+
+        gl::active_texture(gl::TEXTURE0);
+        gl::bind_texture(gl::TEXTURE_2D, framebuffers.reflection_fbo.color_texture);
+        gl::active_texture(gl::TEXTURE1);
+        gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.color_texture);        
 
         for water_tile in water_tiles {
             let transform_matrix = &water_tile.transform;
@@ -49,12 +56,11 @@ impl WaterRenderer {
 
             gl::bind_vertex_array(water_tile.model.raw_model.vao_id);
             gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
-            gl::active_texture(gl::TEXTURE0);
-            gl::bind_texture(gl::TEXTURE_2D, framebuffers.reflection_fbo.color_texture);
-            gl::active_texture(gl::TEXTURE1);
-            gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.color_texture);
+            
             gl::active_texture(gl::TEXTURE2);
             gl::bind_texture(gl::TEXTURE_2D, water_tile.model.dudv_tex_id);
+            gl::active_texture(gl::TEXTURE3);
+            gl::bind_texture(gl::TEXTURE_2D, water_tile.model.normal_map_tex_id);
 
             gl::draw_arrays(gl::TRIANGLE_STRIP, 0, water_tile.model.raw_model.vertex_count);
 

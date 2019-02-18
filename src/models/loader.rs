@@ -253,4 +253,5 @@ pub struct SkyboxModel {
 pub struct WaterModel {
     pub raw_model: RawModel,
     pub dudv_tex_id: u32,
+    pub normal_map_tex_id: u32,
 }

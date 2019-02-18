@@ -96,8 +96,8 @@ impl Models {
         has_transparency: false, 
         uses_fake_lighting: false, 
         uses_mipmaps: true,
-        shine_damper: 2.0,
-        reflectivity: 0.5,  
+        shine_damper: 20.0,
+        reflectivity: 0.6,  
         atlas_props: AtlasProps(1)
     };
     const FERN_PROPS: ModelProps = ModelProps { 
@@ -309,9 +309,11 @@ impl ResourceManager {
             ];
             let raw_model = self.loader.load_simple_model_to_vao(&positions, 3);
             let dudv_tex_id = self.loader.load_terrain_texture("res/textures/water/waterDUDV.png", 0).tex_id;
+            let normal_map_tex_id = self.loader.load_terrain_texture("res/textures/water/normalMap.png", 0).tex_id;
             self.water_model = Some(WaterModel {
                 raw_model,
                 dudv_tex_id,
+                normal_map_tex_id,
             });
         }
     }

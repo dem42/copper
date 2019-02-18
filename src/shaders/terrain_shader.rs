@@ -145,9 +145,9 @@ impl TerrainShader {
                 ShaderProgram::load_vector3d(self.location_attenuation[i], &lights[i].attenuation);
             } else {
                 // no light data means fewer than NUM_LIGHTS affect object
-                ShaderProgram::load_vector3d(self.location_light_pos[i], &Vector3f::new(0.0, 0.0, 0.0));
-                ShaderProgram::load_vector3d(self.location_light_color[i], &Vector3f::new(0.0, 0.0, 0.0));
-                ShaderProgram::load_vector3d(self.location_attenuation[i], &Vector3f::new(1.0, 0.0, 0.0));
+                ShaderProgram::load_vector3d(self.location_light_pos[i], &Vector3f::ZERO);
+                ShaderProgram::load_vector3d(self.location_light_color[i], &Vector3f::ZERO);
+                ShaderProgram::load_vector3d(self.location_attenuation[i], &Vector3f::POS_X_AXIS);
             }
         } 
     }

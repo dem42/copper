@@ -5,9 +5,7 @@ const int NUM_LIGHTS = 4;
 in vec2 pass_tex_coord;
 in vec3 surface_normal;
 in vec3 light_direction[NUM_LIGHTS];
-
 in vec3 to_camera_dir;
-in vec3 specular_reflection_dir[NUM_LIGHTS];
 // fog stuff
 in float visibility;
 
@@ -71,7 +69,8 @@ void main(void) {
         float dotNormToLight = dot(unit_normal, unit_light);
         float brightness = max(dotNormToLight, 0.0);
                         
-        vec3 unit_specular_reflection = normalize(specular_reflection_dir[i]);
+        vec3 specular_reflection_dir = reflect(-light_direction[i], unit_normal);
+        vec3 unit_specular_reflection = normalize(specular_reflection_dir);
         float dotSpecToCamera = dot(unit_camera, unit_specular_reflection);
         float spec_brightness = max(dotSpecToCamera, 0.0);
 

@@ -10,7 +10,6 @@ out vec2 pass_tex_coord;
 out vec3 surface_normal;
 out vec3 light_direction[NUM_LIGHTS];
 out vec3 to_camera_dir;
-out vec3 specular_reflection_dir[NUM_LIGHTS];
 out float visibility;
 
 uniform mat4 transform;
@@ -44,10 +43,7 @@ void main(void) {
     // extract camera position from view matrix
     vec3 camera_position = (inverse(view_matrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
     to_camera_dir = camera_position - world_position.xyz;
-    for (int i=0; i<NUM_LIGHTS; i++) {
-        specular_reflection_dir[i] = reflect(-light_direction[i], surface_normal);
-    }
-
+    
     // compute visibility
     float distance_to_eye = length(eye_space_position.xyz);
     float fog_vis_coef = exp(-pow(distance_to_eye * fog_density, fog_gradient));
