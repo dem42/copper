@@ -52,6 +52,11 @@ impl WaterRenderer {
         gl::active_texture(gl::TEXTURE4);
         gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.depth_texture);
 
+        // turn on alpha blending for softer edges (linear blending)
+        // this is ok because water rendering happens after terrain/entity rendering so we blend with them
+        gl::enable(gl::BLEND);
+        gl::blend_func(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+
         for water_tile in water_tiles {
             let transform_matrix = &water_tile.transform;
             self.shader.load_transform_matrix(transform_matrix);
@@ -69,6 +74,8 @@ impl WaterRenderer {
             gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
             gl::bind_vertex_array(0);
         }
+
+        gl::disable(gl::BLEND);
         self.shader.stop();
     }
 

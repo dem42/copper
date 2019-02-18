@@ -46,11 +46,15 @@ void main() {
     float water_surface_depth = gl_FragCoord.z; // find frags depth buffer z
     float water_surface_depth_real_z = -(-depth_calc_B / (depth_calc_A + 2.0*water_surface_depth - 1.0)); // the minus is from wanting positive like above
     float water_depth = bottom_to_camera_real_z - water_surface_depth_real_z;
+    // alpha blending linearly until distance of 5 into water depth -> after that opaque
+    float water_blend_factor = clamp(water_depth / 2.0, 0.0, 1.0);
+    // distortion factor
+    float water_depth_anti_distort_factor = clamp(water_depth / 20.0, 0.0, 1.0);
 
     // this seems like a fancy way to distort the water
     vec2 distorted_tex_coords = texture(dudv_map, vec2(tex_coords.x + wave_factor, tex_coords.y)).rg * 0.1;
     distorted_tex_coords = tex_coords + vec2(distorted_tex_coords.x, distorted_tex_coords.y + wave_factor);
-    vec2 total_distortion = (texture(dudv_map, distorted_tex_coords).rg * 2.0 - 1.0) * wave_strength;
+    vec2 total_distortion = (texture(dudv_map, distorted_tex_coords).rg * 2.0 - 1.0) * wave_strength * water_depth_anti_distort_factor;
     
     reflect_coords += total_distortion;
     reflect_coords = clamp(reflect_coords, 0.001, 0.999);
@@ -59,17 +63,19 @@ void main() {
 
     vec4 reflection_color = texture(reflection_tex, reflect_coords);
     vec4 refraction_color = texture(refraction_tex, refract_coords);
-
-    vec3 normalize_to_cam = normalize(to_camera_vec);
-    vec3 water_normal = vec3(0.0, 1.0, 0.0);
-    // 1 if to camera in same direction as water normal, 0 if perpendicular
-    float refraction_factor = dot(normalize_to_cam, water_normal);
-    refraction_factor = pow(refraction_factor, water_reflectivity);
-
+    
     vec4 normal_color = texture(normal_map, distorted_tex_coords);
     // we want negative values in x and y in the normals
-    vec3 normal = vec3(normal_color.r * 2.0 - 1.0, normal_color.b, normal_color.g * 2.0 - 1.0);
+    // we also want the normals to be all sort of pointing up not go in all directions -> stead water
+    const float water_flattness = 3.0;
+    vec3 normal = vec3(normal_color.r * 2.0 - 1.0, normal_color.b * water_flattness, normal_color.g * 2.0 - 1.0);
     normal = normalize(normal);
+
+    vec3 normalize_to_cam = normalize(to_camera_vec);    
+    // 1 if to camera in same direction as water normal, 0 if perpendicular
+    float refraction_factor = dot(normalize_to_cam, normal);
+    refraction_factor = pow(refraction_factor, water_reflectivity);
+    refraction_factor = clamp(refraction_factor, 0.0, 1.0);
 
     vec3 total_specular = vec3(0.0);
     for (int i = 0; i < LIGHT_NUM; ++i) {
@@ -81,10 +87,9 @@ void main() {
         float spec_factor = max(dot(reflected, normalize_to_cam), 0.0);
         total_specular += (pow(spec_factor, shine_damper) * shine_reflectivity * light_color[i]) / attenuation_factor;
     }
-    
-    reflection_color += vec4(total_specular, 0.0);
+        
     final_color = mix(reflection_color, refraction_color, refraction_factor);
     // mix with a bit of blue/gree
-    final_color = mix(final_color, vec4(0.0, 0.3, 0.5, 1.0), 0.2);    
-    final_color = mix(final_color, vec4(water_depth / 50.0), 0.999);
+    final_color = mix(final_color, vec4(0.0, 0.3, 0.5, 1.0), 0.2) + vec4(total_specular * water_blend_factor, 0.0);;    
+    final_color.a = water_blend_factor;
 }

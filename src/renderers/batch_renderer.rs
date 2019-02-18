@@ -65,8 +65,9 @@ impl BatchRenderer {
         gl::enable(gl::CLIP_DISTANCE0); 
 
         let water_height = WaterTile::get_water_height(water_tiles);
-        let above_water_clip_plane = Vector4f::new(0.0, -1.0, 0.0, water_height);
-        let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height);
+        let tiny_overlap = 0.07; // to prevent glitches near the edge of the water
+        let above_water_clip_plane = Vector4f::new(0.0, -1.0, 0.0, water_height + tiny_overlap);
+        let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height + tiny_overlap);
         let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
         
         camera.set_to_reflected_ray_camera_origin(water_height);
