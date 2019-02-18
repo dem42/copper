@@ -30,6 +30,7 @@ pub struct WaterShader {
     location_depth_map_unit: i32,
     location_depth_a: i32,
     location_depth_b: i32,
+    location_sky_color: i32,
 }
 
 impl WaterShader {
@@ -52,6 +53,7 @@ impl WaterShader {
             mut location_attenuation,
             mut location_depth_a,
             mut location_depth_b,
+            mut location_sky_color,
         ) = Default::default();
 
         let program = ShaderProgram::new(
@@ -83,6 +85,7 @@ impl WaterShader {
 
                 location_depth_a = shader_prog.get_uniform_location("depth_calc_A");
                 location_depth_b = shader_prog.get_uniform_location("depth_calc_B");
+                location_sky_color = shader_prog.get_uniform_location("sky_color");
             },
         );
         WaterShader {
@@ -102,6 +105,7 @@ impl WaterShader {
             location_depth_map_unit,
             location_depth_a,
             location_depth_b,
+            location_sky_color,
         }
     }
 
@@ -111,6 +115,10 @@ impl WaterShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn load_sky_color(&mut self, color: &Vector3f) {
+        ShaderProgram::load_vector3d(self.location_sky_color, color);
     }
 
     pub fn load_projection_matrix(&mut self, proj_mat: &Matrix4f) {

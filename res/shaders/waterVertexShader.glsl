@@ -19,7 +19,8 @@ const float tiling = 4.0;
 
 void main() {
     vec4 world_pos = transform_matrix * vec4(position, 1.0);
-    clip_coords = projection_matrix * view_matrix * world_pos;
+    vec4 eye_pos = view_matrix * world_pos;
+    clip_coords = projection_matrix * eye_pos;
     gl_Position = clip_coords;
 
     tex_coords = (position.xz / 2.0 + 0.5) * tiling;

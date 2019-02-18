@@ -49,7 +49,7 @@ impl BatchRenderer {
         let entity_renderer = EntityRenderer::new(&projection_matrix);
         let terrain_renderer = TerrainRenderer::new(&projection_matrix);
         let skybox_renderer = SkyboxRenderer::new(&projection_matrix);
-        let water_renderer = WaterRenderer::new(&projection_matrix);
+        let water_renderer = WaterRenderer::new(&projection_matrix, &BatchRenderer::SKY_COLOR);
         
         BatchRenderer {
             entity_renderer,

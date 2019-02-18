@@ -13,6 +13,7 @@ use crate::models::{
 };
 use crate::math::{
     Matrix4f,
+    Vector3f,
 };
 use crate::shaders::WaterShader;
 
@@ -24,10 +25,11 @@ pub struct WaterRenderer {
 impl WaterRenderer {
     const WATER_SPEED: f32 = 0.03;
 
-    pub fn new(projection_mat: &Matrix4f) -> Self {
+    pub fn new(projection_mat: &Matrix4f, sky_color: &Vector3f) -> Self {
         let mut shader = WaterShader::new();
         shader.start();
         shader.load_projection_matrix(projection_mat);
+        shader.load_sky_color(sky_color);
         shader.connect_texture_units();
         shader.stop();        
         WaterRenderer {

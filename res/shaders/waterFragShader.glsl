@@ -25,11 +25,17 @@ uniform vec3 attenuation[LIGHT_NUM];
 uniform float depth_calc_A;
 uniform float depth_calc_B;
 
+// fog
+uniform vec3 sky_color;
+
 const float wave_strength = 0.04;
 const float water_reflectivity = 1.5;
 
 const float shine_damper = 20.0;
 const float shine_reflectivity = 0.5;
+
+const float fog_density = 0.007;
+const float fog_gradient = 1.5;
 
 void main() {
     vec2 ndc_coords = clip_coords.xy / clip_coords.w;
@@ -88,8 +94,13 @@ void main() {
         total_specular += (pow(spec_factor, shine_damper) * shine_reflectivity * light_color[i]) / attenuation_factor;
     }
         
+    // compute visibility    
+    float fog_vis_coef = exp(-pow(water_surface_depth_real_z * fog_density, fog_gradient));
+    float visibility = clamp(fog_vis_coef, 0.0, 1.0);
+
     final_color = mix(reflection_color, refraction_color, refraction_factor);
     // mix with a bit of blue/gree
     final_color = mix(final_color, vec4(0.0, 0.3, 0.5, 1.0), 0.2) + vec4(total_specular * water_blend_factor, 0.0);;    
+    final_color = mix(vec4(sky_color, 1.0), final_color, visibility);
     final_color.a = water_blend_factor;
 }
