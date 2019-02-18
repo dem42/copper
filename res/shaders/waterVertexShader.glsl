@@ -15,7 +15,7 @@ uniform mat4 transform_matrix;
 uniform vec3 camera_world_pos;
 uniform vec3 light_pos[LIGHT_NUM];
 
-const float tiling = 6.0;
+const float tiling = 4.0;
 
 void main() {
     vec4 world_pos = transform_matrix * vec4(position, 1.0);

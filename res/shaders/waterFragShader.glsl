@@ -13,16 +13,23 @@ uniform sampler2D reflection_tex;
 uniform sampler2D refraction_tex;
 uniform sampler2D dudv_map;
 uniform sampler2D normal_map;
+uniform sampler2D depth_map;
 
 uniform float wave_factor;
 uniform vec3 light_color[LIGHT_NUM];
 uniform vec3 attenuation[LIGHT_NUM];
 
-const float wave_strength = 0.02;
+// these are the coefficients from the perspective transform matrix
+// we use them to get the real depth (real z) from the ndc coord z [-1,1] range
+// the depth buffer in fact has the value in the range [0,1]
+uniform float depth_calc_A;
+uniform float depth_calc_B;
+
+const float wave_strength = 0.04;
 const float water_reflectivity = 1.5;
 
 const float shine_damper = 20.0;
-const float shine_reflectivity = 0.8;
+const float shine_reflectivity = 0.5;
 
 void main() {
     vec2 ndc_coords = clip_coords.xy / clip_coords.w;
@@ -30,6 +37,15 @@ void main() {
     vec2 texture_coords = (ndc_coords + 1.0) / 2.0;
     vec2 refract_coords = vec2(texture_coords.x, texture_coords.y);
     vec2 reflect_coords = vec2(texture_coords.x, 1 - texture_coords.y);
+
+    float bottom_to_camera = texture(depth_map, texture_coords).x;
+    // use depth buffer reversal formula 
+    float bottom_to_camera_real_z = -depth_calc_B / (depth_calc_A + 2.0*bottom_to_camera - 1.0);
+    bottom_to_camera_real_z = -bottom_to_camera_real_z; // we want depths to be positive unlike z
+
+    float water_surface_depth = gl_FragCoord.z; // find frags depth buffer z
+    float water_surface_depth_real_z = -(-depth_calc_B / (depth_calc_A + 2.0*water_surface_depth - 1.0)); // the minus is from wanting positive like above
+    float water_depth = bottom_to_camera_real_z - water_surface_depth_real_z;
 
     // this seems like a fancy way to distort the water
     vec2 distorted_tex_coords = texture(dudv_map, vec2(tex_coords.x + wave_factor, tex_coords.y)).rg * 0.1;
@@ -70,4 +86,5 @@ void main() {
     final_color = mix(reflection_color, refraction_color, refraction_factor);
     // mix with a bit of blue/gree
     final_color = mix(final_color, vec4(0.0, 0.3, 0.5, 1.0), 0.2);    
+    final_color = mix(final_color, vec4(water_depth / 50.0), 0.999);
 }

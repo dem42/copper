@@ -27,6 +27,9 @@ pub struct WaterShader {
     location_light_color: [i32; LIGHT_NUM],
     location_light_pos: [i32; LIGHT_NUM],
     location_attenuation: [i32; LIGHT_NUM],
+    location_depth_map_unit: i32,
+    location_depth_a: i32,
+    location_depth_b: i32,
 }
 
 impl WaterShader {
@@ -41,11 +44,14 @@ impl WaterShader {
             mut location_wave_factor,
             mut location_camera,
             mut location_normal_map_unit,
+            mut location_depth_map_unit,
         ) = Default::default();
         let (
             mut location_light_color,
             mut location_light_pos,
             mut location_attenuation,
+            mut location_depth_a,
+            mut location_depth_b,
         ) = Default::default();
 
         let program = ShaderProgram::new(
@@ -64,6 +70,7 @@ impl WaterShader {
                 location_wave_factor = shader_prog.get_uniform_location("wave_factor");
                 location_camera = shader_prog.get_uniform_location("camera_world_pos");
                 location_normal_map_unit = shader_prog.get_uniform_location("normal_map");
+                location_depth_map_unit = shader_prog.get_uniform_location("depth_map");
 
                 location_light_color = [0i32; LIGHT_NUM];
                 location_light_pos = [0i32; LIGHT_NUM];
@@ -73,6 +80,9 @@ impl WaterShader {
                     location_light_pos[i] = shader_prog.get_uniform_location(&format!("light_pos[{}]", i));
                     location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));                
                 }
+
+                location_depth_a = shader_prog.get_uniform_location("depth_calc_A");
+                location_depth_b = shader_prog.get_uniform_location("depth_calc_B");
             },
         );
         WaterShader {
@@ -89,6 +99,9 @@ impl WaterShader {
             location_light_color,
             location_light_pos,
             location_attenuation,
+            location_depth_map_unit,
+            location_depth_a,
+            location_depth_b,
         }
     }
 
@@ -102,6 +115,8 @@ impl WaterShader {
 
     pub fn load_projection_matrix(&mut self, proj_mat: &Matrix4f) {
         ShaderProgram::load_matrix(self.location_proj_mat, proj_mat);
+        ShaderProgram::load_float(self.location_depth_a, proj_mat[2][2]);
+        ShaderProgram::load_float(self.location_depth_b, proj_mat[2][3]);
     }
 
     pub fn load_camera(&mut self, camera: &Camera) {
@@ -119,6 +134,7 @@ impl WaterShader {
         ShaderProgram::load_int(self.location_refraction_unit, 1);
         ShaderProgram::load_int(self.location_dudv_unit, 2);
         ShaderProgram::load_int(self.location_normal_map_unit, 3);
+        ShaderProgram::load_int(self.location_depth_map_unit, 4);
     }
 
     pub fn load_wave_factor(&mut self, wave_factor: f32) {

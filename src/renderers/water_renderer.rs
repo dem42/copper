@@ -49,6 +49,8 @@ impl WaterRenderer {
         gl::bind_texture(gl::TEXTURE_2D, framebuffers.reflection_fbo.color_texture);
         gl::active_texture(gl::TEXTURE1);
         gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.color_texture);        
+        gl::active_texture(gl::TEXTURE4);
+        gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.depth_texture);
 
         for water_tile in water_tiles {
             let transform_matrix = &water_tile.transform;
