@@ -163,6 +163,7 @@ impl RawModel {
     pub const POS_ATTRIB: u32 = 0;
     pub const TEX_COORD_ATTRIB: u32 = 1;
     pub const NORMAL_ATTRIB: u32 = 2;
+    pub const TANGENT_ATTRIB: u32 = 3;
 
     pub fn new(vao_id: u32, vertex_count: usize) -> RawModel {
         RawModel {

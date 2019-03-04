@@ -277,9 +277,39 @@ pub struct Matrix2f {
 }
 
 impl Matrix2f {
+    pub fn new() -> Matrix2f {
+        let data = [[0f32; 2]; 2];
+        Matrix2f { data }
+    }
+
+    pub fn inverse(&self) -> Matrix2f {
+        let mut data = [[0f32; 2]; 2];
+        let fac = 1.0 / self.determinant();
+        data[0][0] = self.data[1][1] * fac;
+        data[0][1] = -self.data[0][1] * fac;
+        data[1][0] = -self.data[1][0] * fac;
+        data[1][1] = self.data[0][0] * fac;
+        Matrix2f { data }
+    }
+
     #[inline]
     pub fn determinant(&self) -> f32 {
         self.data[0][0]*self.data[1][1] - self.data[0][1]*self.data[1][0]        
+    }
+}
+
+impl Index<usize> for Matrix2f {
+    type Output = [f32; 2];
+
+    fn index(&self, index: usize) -> &[f32; 2] {
+        &self.data[index]
+    }
+}
+
+impl IndexMut<usize> for Matrix2f {
+
+    fn index_mut(&mut self, index: usize) -> &mut [f32; 2] {
+        &mut self.data[index]
     }
 }
 

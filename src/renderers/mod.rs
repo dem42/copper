@@ -1,5 +1,6 @@
 pub mod batch_renderer;
 pub mod entity_renderer;
+pub mod normal_map_entity_renderer;
 pub mod terrain_renderer;
 pub mod gui_renderer;
 pub mod skybox_renderer;

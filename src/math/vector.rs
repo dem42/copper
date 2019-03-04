@@ -1,4 +1,4 @@
-use std::ops::{Neg, Index, IndexMut};
+use std::ops::{Neg, Index, IndexMut, Add, Sub, AddAssign, MulAssign};
 use std::iter::IntoIterator;
 use std::f32;
 
@@ -11,10 +11,22 @@ pub struct Vector4f {
 }
 
 impl Vector4f {
+    pub const ZERO: Vector4f = Vector4f {x: 0.0, y: 0.0, z: 0.0, w: 0.0};
+
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Vector4f {
         Vector4f { x, y, z, w}
     }
 }
+
+impl IntoIterator for Vector4f {
+    type Item = f32;
+    type IntoIter = ::std::vec::IntoIter<f32>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![self.x, self.y, self.z, self.w].into_iter()
+    }
+}
+
 impl Index<usize> for Vector4f {
     type Output = f32;
 
@@ -56,6 +68,17 @@ impl Vector3f {
         Vector3f { x, y, z}
     }
 
+    pub fn zero() -> Vector3f {
+        Vector3f::ZERO.clone()
+    }
+
+    pub fn onto_project(&self, other: &Vector3f) -> Vector3f {
+        let dot = self.dot_product(other);
+        let len = self.length();
+        let factor = dot / len;
+        Vector3f::new(factor * self.x, factor * self.y, factor * self.z)
+    }
+
     pub fn length(&self) -> f32 {
         let sq_sum = self.x * self.x + self.y * self.y + self.z * self.z;
         sq_sum.sqrt()
@@ -66,6 +89,10 @@ impl Vector3f {
         self.x /= len;
         self.y /= len;
         self.z /= len;
+    }
+
+    pub fn dot_product(&self, other: &Vector3f) -> f32 {
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     pub fn cross_prod(&self, o: &Vector3f) -> Vector3f {
@@ -96,6 +123,38 @@ impl<'a> Neg for &'a Vector3f {
             y: -self.y,
             z: -self.z,
         }
+    }
+}
+
+impl Add for Vector3f {
+    type Output = Vector3f;
+
+    fn add(self, other: Vector3f) -> Vector3f {
+        Vector3f::new(self.x + other.x, self.y + other.y, self.y + other.y)
+    }
+}
+
+impl Sub for Vector3f {
+    type Output = Vector3f;
+
+    fn sub(self, other: Vector3f) -> Vector3f {
+        Vector3f::new(self.x - other.x, self.y - other.y, self.y - other.y)
+    }
+}
+
+impl AddAssign<&Vector3f> for Vector3f {
+    fn add_assign(&mut self, other: &Vector3f) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
+
+impl MulAssign<f32> for Vector3f {
+    fn mul_assign(&mut self, other: f32) {
+        self.x *= other;
+        self.y *= other;
+        self.z *= other;
     }
 }
 

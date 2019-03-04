@@ -10,7 +10,10 @@ use super::loader::{
     WaterModel,
 };
 use crate::entities::Terrain;
-use crate::obj_converter::load_obj_model;
+use crate::obj_converter::{
+    load_obj_model,
+    load_simple_obj_model
+};
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -149,7 +152,7 @@ impl ResourceManager {
         if self.models.contains_key(model_type) {
             return;
         }
-        let model_data = load_obj_model(obj_file).expect(&format!("Unable to load {}", obj_file));
+        let model_data = load_simple_obj_model(obj_file).expect(&format!("Unable to load {}", obj_file));
         let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
         let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
         texture.has_transparency = model_props.has_transparency;
