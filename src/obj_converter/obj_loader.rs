@@ -122,11 +122,7 @@ pub fn load_obj_model(file_name: &str, compute_tangent: bool) -> std::io::Result
     })    
 }
 
-fn update_tangent_with_handedness_and_average(mut tangent: TanAndBitan, normal: &Vector3f) -> Vector4f {
-    // the tangent and bitangent need to be averaged for all faces that touch vertex
-    tangent.0 *= 1.0 / tangent.2 as f32;
-    tangent.1 *= 1.0 / tangent.2 as f32;
-
+fn update_tangent_with_handedness_and_average(mut tangent: TanAndBitan, normal: &Vector3f) -> Vector4f {    
     // gram-schmidt orthogonalize 
     // needed since tan and bitangent are not necessarily orthogonal from our calculation
     // however we want them to be orthogonal so that we can perform inversion of tangent space matrix
