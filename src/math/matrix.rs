@@ -405,4 +405,27 @@ mod tests {
             }
         }                        
     }
+
+    #[test]
+    fn test_inverse_2x2() {        
+        let mut m1 = Matrix2f::new();
+        m1[0][0] = 17.0;
+        m1[0][1] = 13.0;
+        m1[1][0] = 2.0;
+        m1[1][1] = 9.0;
+        let inv_m1 = m1.inverse();
+
+        let mut res = Matrix2f::new();
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    res[i][j] += m1[i][k] * inv_m1[k][j];
+                }
+            }    
+        }        
+        assert_f32_eq!(res[0][0], 1.0, tests::EPS_BAD); 
+        assert_f32_eq!(res[0][1], 0.0, tests::EPS_BAD); 
+        assert_f32_eq!(res[1][0], 0.0, tests::EPS_BAD); 
+        assert_f32_eq!(res[1][1], 1.0, tests::EPS_BAD); 
+    }
 }

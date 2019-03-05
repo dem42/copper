@@ -52,6 +52,7 @@ pub enum ModelType {
     Lamp,
     ToonRocks,
     BobbleTree,
+    Barrel,
 }
 
 pub struct AtlasProps(usize);
@@ -63,6 +64,7 @@ pub struct ModelProps {
     pub shine_damper: f32,
     pub reflectivity: f32,
     pub atlas_props: AtlasProps,
+    pub normal_map: Option<&'static str>,
 }
 impl ModelProps {
     fn get_texture_flags(&self) -> u8 {
@@ -85,7 +87,8 @@ impl Models {
         uses_mipmaps: false,
         shine_damper: 1.0,
         reflectivity: 0.0, 
-        atlas_props: AtlasProps(1)
+        atlas_props: AtlasProps(1),
+        normal_map: None,
     };
     const COMMON_PROPS: ModelProps = ModelProps {
         has_transparency: false, 
@@ -93,7 +96,8 @@ impl Models {
         uses_mipmaps: true,
         shine_damper: 1.0,
         reflectivity: 0.0,  
-        atlas_props: AtlasProps(1)
+        atlas_props: AtlasProps(1),
+        normal_map: None,
     };
     const SHINY_PROPS: ModelProps = ModelProps {
         has_transparency: false, 
@@ -101,7 +105,8 @@ impl Models {
         uses_mipmaps: true,
         shine_damper: 20.0,
         reflectivity: 0.6,  
-        atlas_props: AtlasProps(1)
+        atlas_props: AtlasProps(1),
+        normal_map: None,
     };
     const FERN_PROPS: ModelProps = ModelProps { 
         has_transparency: true, 
@@ -109,7 +114,8 @@ impl Models {
         uses_mipmaps: true, 
         shine_damper: 1.0,
         reflectivity: 0.0, 
-        atlas_props: AtlasProps(2)
+        atlas_props: AtlasProps(2),
+        normal_map: None,
     };    
     const GRASS_PROPS: ModelProps = ModelProps { 
         has_transparency: true, 
@@ -117,7 +123,8 @@ impl Models {
         uses_mipmaps: true, 
         shine_damper: 1.0,
         reflectivity: 0.0, 
-        atlas_props: AtlasProps(1)
+        atlas_props: AtlasProps(1),
+        normal_map: None,
     };
     // point light is inside the lamp. to get it to light up the outer faces we make the outer faces have a vector that points up
     const LAMP_PROPS: ModelProps = ModelProps { 
@@ -126,8 +133,18 @@ impl Models {
         uses_mipmaps: true, 
         shine_damper: 1.0,
         reflectivity: 0.0, 
-        atlas_props: AtlasProps(1)
+        atlas_props: AtlasProps(1),
+        normal_map: None,
     };
+    const BARREL_PROPS: ModelProps = ModelProps { 
+        has_transparency: false, 
+        uses_fake_lighting: false, 
+        uses_mipmaps: true, 
+        shine_damper: 10.0,
+        reflectivity: 0.5, 
+        atlas_props: AtlasProps(1),
+        normal_map: Some("res/textures/normal_maps/barrelNormal.png"),
+    };    
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
@@ -139,6 +156,7 @@ impl Models {
     pub const LAMP: Model = Model(ModelType::Lamp, "res/models/lamp.obj", "res/textures/lamp.png", &Models::LAMP_PROPS);
     pub const TOON_ROCKS: Model = Model(ModelType::ToonRocks, "res/models/toonRocks.obj", "res/textures/toonRocks.png", &Models::SHINY_PROPS);
     pub const BOBBLE_TREE: Model = Model(ModelType::BobbleTree, "res/models/bobbleTree.obj", "res/textures/bobbleTree.png", &Models::COMMON_PROPS);
+    pub const BARREL: Model = Model(ModelType::Barrel, "res/models/barrel.obj", "res/textures/barrel.png", &Models::BARREL_PROPS);
 }
 
 
@@ -152,8 +170,15 @@ impl ResourceManager {
         if self.models.contains_key(model_type) {
             return;
         }
-        let model_data = load_simple_obj_model(obj_file).expect(&format!("Unable to load {}", obj_file));
-        let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
+        
+        let raw_model = if let Some(_normal_map_texture) = model_props.normal_map {
+            let model_data = load_obj_model(obj_file, true).expect(&format!("Unable to load {}", obj_file));
+            self.loader.load_to_vao_with_normal_map(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals, &model_data.tangents)
+        } else {
+            let model_data = load_simple_obj_model(obj_file).expect(&format!("Unable to load simple {}", obj_file));
+            self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals)
+        }; 
+        
         let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
         texture.has_transparency = model_props.has_transparency;
         texture.uses_fake_lighting = model_props.uses_fake_lighting;

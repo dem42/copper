@@ -52,12 +52,13 @@ impl NormalMapStaticShader {
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
-            "res/shaders/vertexShader.glsl", 
-            "res/shaders/fragmentShader.glsl", 
+            "res/shaders/normalMappedVertShader.glsl", 
+            "res/shaders/normalMappedFragShader.glsl", 
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");
                 shader_prog.bind_attribute(RawModel::TEX_COORD_ATTRIB, "tex_coord");
                 shader_prog.bind_attribute(RawModel::NORMAL_ATTRIB, "normal");
+                shader_prog.bind_attribute(RawModel::TANGENT_ATTRIB, "tangents");
             },
             |shader_prog| {                
                 location_transformation_matrix = shader_prog.get_uniform_location("transform");

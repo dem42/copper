@@ -24,12 +24,14 @@ use crate::models::{
     TexturedModel,
 };
 use super::entity_renderer::EntityRenderer;
+use super::normal_map_entity_renderer::NormalMapEntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
 use super::skybox_renderer::SkyboxRenderer;
 use super::water_renderer::WaterRenderer;
 
 pub struct BatchRenderer {    
     entity_renderer: EntityRenderer,
+    normal_map_entity_renderer: NormalMapEntityRenderer,
     terrain_renderer: TerrainRenderer,
     skybox_renderer: SkyboxRenderer,
     water_renderer: WaterRenderer,
@@ -47,12 +49,14 @@ impl BatchRenderer {
     pub fn new(display: &Display) -> BatchRenderer {
         let projection_matrix = Matrix4f::create_projection_matrix(BatchRenderer::NEAR, BatchRenderer::FAR, BatchRenderer::FOV_HORIZONTAL, display.get_aspect_ration());
         let entity_renderer = EntityRenderer::new(&projection_matrix);
+        let normal_map_entity_renderer = NormalMapEntityRenderer::new(&projection_matrix);
         let terrain_renderer = TerrainRenderer::new(&projection_matrix);
         let skybox_renderer = SkyboxRenderer::new(&projection_matrix);
         let water_renderer = WaterRenderer::new(&projection_matrix, &BatchRenderer::SKY_COLOR);
         
         BatchRenderer {
             entity_renderer,
+            normal_map_entity_renderer,
             terrain_renderer,
             skybox_renderer,
             water_renderer,
@@ -60,7 +64,8 @@ impl BatchRenderer {
         }
     }
     
-    pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &Framebuffers) {
+    pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
+                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &Framebuffers) {
         // enable clip plane                    
         gl::enable(gl::CLIP_DISTANCE0); 
 
@@ -72,21 +77,22 @@ impl BatchRenderer {
         
         camera.set_to_reflected_ray_camera_origin(water_height);
         framebuffers.reflection_fbo.bind();
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
         camera.set_to_reflected_ray_camera_origin(water_height);
 
         // we should also move camera before refraction to account for refracted angle?
         framebuffers.refraction_fbo.bind();
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
 
         gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?
         display.restore_default_framebuffer();
-        self.render_pass(lights, camera, entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
     }
 
-    fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f) {
+    fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
+                player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f) {
         self.prepare();
 
         // render entites
@@ -106,6 +112,19 @@ impl BatchRenderer {
         self.entity_renderer.unprepare_textured_model(&player.entity.model);
 
         self.entity_renderer.stop_render();
+
+        // render normal mapped entites
+        self.normal_map_entity_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);
+        let groups_by_tex = BatchRenderer::group_entities_by_tex(normal_mapped_entities);
+        for (textured_model, entity_vec) in groups_by_tex.iter() {
+            self.normal_map_entity_renderer.prepare_textured_model(textured_model, clip_plane);
+            for entity in entity_vec {
+                // load transform matrix into shader
+                self.normal_map_entity_renderer.render(entity);
+            }
+            self.normal_map_entity_renderer.unprepare_textured_model(textured_model);
+        }
+        self.normal_map_entity_renderer.stop_render(); 
 
         // render terrain
         self.terrain_renderer.start_render(lights, camera, &BatchRenderer::SKY_COLOR);

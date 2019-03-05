@@ -32,6 +32,17 @@ impl ModelLoader {
         <ModelLoader as Default>::default()        
     }
 
+    pub fn load_to_vao_with_normal_map(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32], tangents: &[f32]) -> RawModel {
+        let vao_id = self.create_vao();
+        self.bind_indices_buffer(indices);
+        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 3, positions);
+        self.store_data_in_attribute_list(RawModel::TEX_COORD_ATTRIB, 2, texture_coords);
+        self.store_data_in_attribute_list(RawModel::NORMAL_ATTRIB, 3, normals);
+        self.store_data_in_attribute_list(RawModel::TANGENT_ATTRIB, 4, tangents);
+        self.unbind_vao();
+        RawModel::new(vao_id, indices.len())
+    }
+
     pub fn load_to_vao(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32]) -> RawModel {
         let vao_id = self.create_vao();
         self.bind_indices_buffer(indices);

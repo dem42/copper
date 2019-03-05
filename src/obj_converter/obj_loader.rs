@@ -84,7 +84,7 @@ pub fn load_obj_model(file_name: &str, compute_tangent: bool) -> std::io::Result
                             &mut tangents, file_name);
                     }
                     if compute_tangent {
-                        calculate_tangents(face_vertices, &mut tangents, &vertices, textures_mut_ref, normals_mut_ref);
+                        calculate_tangents(face_vertices, &mut tangents, &vertices, textures_mut_ref);
                     }                    
                 }
             },
@@ -98,11 +98,15 @@ pub fn load_obj_model(file_name: &str, compute_tangent: bool) -> std::io::Result
     let flat_textures = textures_sorted.expect(ERROR_MSG).into_iter()
                                        .flat_map(|v| v.into_iter())
                                        .collect::<Vec<f32>>();
-    let flat_tangents = tangents.into_iter()
-                                .enumerate()
-                                .map(|(idx, bitan)| update_tangent_with_handedness_and_average(bitan, &normals_sorted.as_ref().expect(ERROR_MSG)[idx])) 
-                                .flat_map(|v| v.into_iter())
-                                .collect::<Vec<f32>>();
+    let flat_tangents = if compute_tangent {    
+        tangents.into_iter()
+                .enumerate()
+                .map(|(idx, bitan)| update_tangent_with_handedness_and_average(bitan, &normals_sorted.as_ref().expect(ERROR_MSG)[idx])) 
+                .flat_map(|v| v.into_iter())
+                .collect::<Vec<f32>>()
+    } else {
+        Vec::new()
+    };
     let flat_normals = normals_sorted.expect(ERROR_MSG).into_iter()
                                      .flat_map(|v| v.into_iter())
                                      .collect::<Vec<f32>>();
@@ -133,12 +137,12 @@ fn update_tangent_with_handedness_and_average(mut tangent: TanAndBitan, normal: 
 
     let handedness = tangent.0.cross_prod(normal).dot_product(&tangent.1);
     let handedness = if handedness < 0.0 {
-        1.0
+        -1.0
     } else {
         1.0
     };
 
-    Vector4f::new(tangent.0.x, tangent.0.y, tangent.0.z, handedness)
+    Vector4f::new(tangent.0.x, tangent.0.y, tangent.0.z, handedness)    
 }
 
 fn process_face_token(token: &str, textures_sorted: &mut Vec<Vector2f>, normals_sorted: &mut Vec<Vector3f>, indices: &mut Vec<u32>, 
@@ -176,10 +180,10 @@ fn process_face_token(token: &str, textures_sorted: &mut Vec<Vector2f>, normals_
 }
 
 fn new_tan_bitan() -> TanAndBitan {
-    (Vector3f::ZERO.clone(), Vector3f::ZERO.clone(), 0)
+    (Vector3f::zero(), Vector3f::zero(), 0)
 }
 
-fn calculate_tangents(triangle: [usize; 3], tangents: &mut Vec<TanAndBitan>, vertices: &Vec<Vector3f>, textures: &Vec<Vector2f>, normals: &Vec<Vector3f>) {
+fn calculate_tangents(triangle: [usize; 3], tangents: &mut Vec<TanAndBitan>, vertices: &Vec<Vector3f>, textures: &Vec<Vector2f>) {
     let mut st = Matrix2f::new();
     st[0][0] = textures[triangle[1]].x - textures[triangle[0]].x;
     st[0][1] = textures[triangle[1]].y - textures[triangle[0]].y;
