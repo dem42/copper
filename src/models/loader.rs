@@ -226,6 +226,7 @@ impl Default for ModelTexture {
 pub struct TexturedModel {
     pub raw_model: RawModel,
     pub texture: ModelTexture,
+    pub normal_map_tex_id: Option<u32>,
 }
 
 impl PartialEq for TexturedModel {

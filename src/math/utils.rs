@@ -24,3 +24,29 @@ impl BarycentricCoords {
         Vector3f::new(x, y, z)
     }
 }
+
+pub fn gram_schmidt_orthogonalize(v1: &Vector3f, v2: Vector3f, v3: Vector3f) -> (Vector3f, Vector3f) {
+    let proj_u1_v2 = v1.onto_project(&v2);
+    let u2 = v2 - proj_u1_v2;
+    let proj_u1_v3 = v1.onto_project(&v3);
+    let proj_u2_v3 = u2.onto_project(&v3);
+    let u3 = v3 - proj_u1_v3 - proj_u2_v3;
+    (u2, u3)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn orthogonalize_test_1() {
+        let v1 = Vector3f::new(3.0, 2.1, -4.0);
+        let v2 = Vector3f::new(0.5, -1.1, -2.0);
+        let v3 = Vector3f::new(5.0, 5.0, 2.0);
+        let (u2, u3) = gram_schmidt_orthogonalize(&v1, v2, v3);     
+        
+        assert!(v1.dot_product(&u2).abs() < 1e-3, format!("Was {}", v1.dot_product(&u2)));
+        assert!(v1.dot_product(&u3).abs() < 1e-3, format!("Was {}", v1.dot_product(&u3)));
+        assert!(u2.dot_product(&u3).abs() < 1e-3, format!("Was {}", u2.dot_product(&u3)));
+    }
+}

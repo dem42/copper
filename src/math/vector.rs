@@ -74,7 +74,7 @@ impl Vector3f {
 
     pub fn onto_project(&self, other: &Vector3f) -> Vector3f {
         let dot = self.dot_product(other);
-        let len = self.length();
+        let len = self.dot_product(&self);
         let factor = dot / len;
         Vector3f::new(factor * self.x, factor * self.y, factor * self.z)
     }
@@ -138,7 +138,7 @@ impl Sub for Vector3f {
     type Output = Vector3f;
 
     fn sub(self, other: Vector3f) -> Vector3f {
-        Vector3f::new(self.x - other.x, self.y - other.y, self.y - other.y)
+        Vector3f::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
 }
 

@@ -171,12 +171,15 @@ impl ResourceManager {
             return;
         }
         
-        let raw_model = if let Some(_normal_map_texture) = model_props.normal_map {
+        let (raw_model, normal_map) = if let Some(normal_map_texture) = model_props.normal_map {
             let model_data = load_obj_model(obj_file, true).expect(&format!("Unable to load {}", obj_file));
-            self.loader.load_to_vao_with_normal_map(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals, &model_data.tangents)
+            let normal_map = self.loader.load_texture(normal_map_texture, 0);
+            let raw_model = self.loader.load_to_vao_with_normal_map(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals, &model_data.tangents);
+            (raw_model, Some(normal_map.tex_id))
         } else {
             let model_data = load_simple_obj_model(obj_file).expect(&format!("Unable to load simple {}", obj_file));
-            self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals)
+            let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
+            (raw_model, None)
         }; 
         
         let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
@@ -185,7 +188,7 @@ impl ResourceManager {
         texture.shine_damper = model_props.shine_damper;
         texture.reflectivity = model_props.reflectivity;
         texture.number_of_rows_in_atlas = model_props.atlas_props.0;
-        let model = TexturedModel { raw_model, texture };
+        let model = TexturedModel { raw_model, texture, normal_map_tex_id: normal_map };
 
         self.models.insert(model_type.clone(), model);
     }

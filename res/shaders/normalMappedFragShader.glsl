@@ -15,6 +15,7 @@ in vec3 pass_tangents;
 out vec4 out_Color;
 
 uniform sampler2D texture_sampler;
+uniform sampler2D normal_map_sampler;
 uniform vec3 light_color[NUM_LIGHTS];
 // specular lighting
 uniform float shine_damper;

@@ -3,6 +3,7 @@ use crate::math::{
     Vector2f,
     Vector3f,
     Vector4f,
+    utils::gram_schmidt_orthogonalize,
 };
 use std::io::{
     prelude::*,
@@ -119,26 +120,25 @@ pub fn load_obj_model(file_name: &str, compute_tangent: bool) -> std::io::Result
         indices,
         tangents: flat_tangents, 
         furthest_point: furthest_distance,
-    })    
+    })
 }
 
-fn update_tangent_with_handedness_and_average(mut tangent: TanAndBitan, normal: &Vector3f) -> Vector4f {    
+fn update_tangent_with_handedness_and_average(tangent: TanAndBitan, normal: &Vector3f) -> Vector4f {    
     // gram-schmidt orthogonalize 
     // needed since tan and bitangent are not necessarily orthogonal from our calculation
     // however we want them to be orthogonal so that we can perform inversion of tangent space matrix
     // simply by transposing the matrix
-    let proj_t = normal.onto_project(&tangent.0);
-    tangent.0 = tangent.0 - proj_t;
-    tangent.0.normalize();
+    let (mut tan, bitan) = gram_schmidt_orthogonalize(&normal, tangent.0, tangent.1);    
+    tan.normalize();
 
-    let handedness = tangent.0.cross_prod(normal).dot_product(&tangent.1);
+    let handedness = tan.cross_prod(normal).dot_product(&bitan);
     let handedness = if handedness < 0.0 {
         -1.0
     } else {
         1.0
     };
 
-    Vector4f::new(tangent.0.x, tangent.0.y, tangent.0.z, handedness)    
+    Vector4f::new(tan.x, tan.y, tan.z, handedness)    
 }
 
 fn process_face_token(token: &str, textures_sorted: &mut Vec<Vector2f>, normals_sorted: &mut Vec<Vector3f>, indices: &mut Vec<u32>, 
