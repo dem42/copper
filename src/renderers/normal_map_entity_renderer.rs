@@ -25,6 +25,7 @@ impl NormalMapEntityRenderer {
         let mut shader = NormalMapStaticShader::new();
         shader.start();
         shader.load_projection_matrix(projection_matrix);
+        shader.connect_texture_units();
         shader.stop();
         NormalMapEntityRenderer {
             shader,
@@ -62,6 +63,8 @@ impl NormalMapEntityRenderer {
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
         gl::bind_texture(gl::TEXTURE_2D, textured_model.texture.tex_id);
+        gl::active_texture(gl::TEXTURE1); // activate bank 1
+        gl::bind_texture(gl::TEXTURE_2D, textured_model.normal_map_tex_id.expect("A normal mapped entity must have a normal map texture"));
     }
 
     pub fn render(&mut self, entity: &Entity) {

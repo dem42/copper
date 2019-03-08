@@ -28,6 +28,8 @@ pub struct NormalMapStaticShader {
     location_texture_offset: i32,
     location_attenuation: [i32; NUM_LIGHTS],
     location_clip_plane: i32,
+    location_texture: i32,
+    location_normal_map: i32,
 }
 
 impl NormalMapStaticShader {
@@ -49,6 +51,8 @@ impl NormalMapStaticShader {
             mut location_texture_offset,
             mut location_attenuation,
             mut location_clip_plane,
+            mut location_texture,
+            mut location_normal_map,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -88,6 +92,9 @@ impl NormalMapStaticShader {
                     location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));
                 }
                 location_clip_plane = shader_prog.get_uniform_location("clip_plane");
+                // setting up uniforms to bind samplers to texture units
+                location_texture = shader_prog.get_uniform_location("texture_sampler");
+                location_normal_map = shader_prog.get_uniform_location("normal_map_sampler");
         });
 
         NormalMapStaticShader {
@@ -105,6 +112,8 @@ impl NormalMapStaticShader {
             location_texture_offset,
             location_attenuation,
             location_clip_plane,
+            location_texture,
+            location_normal_map,
         }
     }
 
@@ -167,5 +176,10 @@ impl NormalMapStaticShader {
 
     pub fn load_clip_plane(&mut self, clip_plane: &Vector4f) {
         ShaderProgram::load_vector4d(self.location_clip_plane, clip_plane);
+    }
+
+    pub fn connect_texture_units(&mut self) {
+        ShaderProgram::load_int(self.location_texture, 0);
+        ShaderProgram::load_int(self.location_normal_map, 1);
     }
 }
