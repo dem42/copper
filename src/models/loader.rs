@@ -12,17 +12,20 @@ pub struct ModelLoader {
     tex_list: Vec<u32>,
 }
 
-#[repr(u8)]
-pub enum TextureFlags {
-    REVERSE = 1,
-    MIPMAP = 2,
+#[derive(Default)]
+pub struct TextureParams {
+    reverse_texture_data: bool,
+    use_mipmap: bool,
+    mipmap_lod: f32,
 }
 
-impl TextureFlags {
-    fn parse(flags_mask: u8) -> (bool, bool) {        
-        let is_reverse = (flags_mask & (TextureFlags::REVERSE as u8)) == (TextureFlags::REVERSE as u8);
-        let uses_mipmaps = (flags_mask & (TextureFlags::MIPMAP as u8)) == (TextureFlags::MIPMAP as u8);
-        (is_reverse, uses_mipmaps)
+impl TextureParams {    
+    pub fn mipmapped_texture(mipmap_lod: f32) -> TextureParams {
+        TextureParams {
+            use_mipmap: true,
+            mipmap_lod,
+            ..Default::default()
+        }
     }
 }
 
@@ -81,9 +84,8 @@ impl ModelLoader {
         cubemap_id
     }
 
-    fn load_texture_internal(&mut self, file_name: &str, flags: u8) -> u32 {
-        let (reverse, mipmap) = TextureFlags::parse(flags);
-        let texture = load_rgba_2d_texture(file_name, reverse).expect(&format!("Failed to load texture: {}", file_name));
+    fn load_texture_internal(&mut self, file_name: &str, params: TextureParams) -> u32 {
+        let texture = load_rgba_2d_texture(file_name, params.reverse_texture_data).expect(&format!("Failed to load texture: {}", file_name));
         
         let tex_id = gl::gen_texture();
         self.tex_list.push(tex_id);
@@ -94,12 +96,12 @@ impl ModelLoader {
         gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT);        
 
         gl::tex_image_2d(gl::TEXTURE_2D, 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
-        if mipmap {
+        if params.use_mipmap {
              // turn on mipmapping, has to be called after loading the texture data 
             gl::generate_mipmap(gl::TEXTURE_2D);
             gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
             // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
-            gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, -0.4);
+            gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, params.mipmap_lod);
         } else {        
             gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
             gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
@@ -109,20 +111,20 @@ impl ModelLoader {
         tex_id        
     }
 
-     pub fn load_gui_texture(&mut self, file_name: &str, flags: u8) -> u32 {
-        self.load_texture_internal(file_name, flags)
+     pub fn load_gui_texture(&mut self, file_name: &str, params: TextureParams) -> u32 {
+        self.load_texture_internal(file_name, params)
      }
 
-    pub fn load_texture(&mut self, file_name: &str, flags: u8) -> ModelTexture {        
+    pub fn load_texture(&mut self, file_name: &str, params: TextureParams) -> ModelTexture {        
         ModelTexture {
-            tex_id: self.load_texture_internal(file_name, flags),
+            tex_id: self.load_texture_internal(file_name, params),
             ..Default::default()
         }
     }
 
-    pub fn load_terrain_texture(&mut self, file_name: &str, flags: u8) -> TerrainTexture {        
+    pub fn load_terrain_texture(&mut self, file_name: &str, params: TextureParams) -> TerrainTexture {        
         TerrainTexture {
-            tex_id: self.load_texture_internal(file_name, flags),
+            tex_id: self.load_texture_internal(file_name, params),
         }
     }
 

@@ -3,7 +3,7 @@ use super::loader::{
     TexturedModel,
     TerrainTexture,  
     TerrainTexturePack,
-    TextureFlags,
+    TextureParams,
     TerrainModel,
     GuiModel,
     SkyboxModel,
@@ -53,6 +53,7 @@ pub enum ModelType {
     ToonRocks,
     BobbleTree,
     Barrel,
+    Boulder,
 }
 
 pub struct AtlasProps(usize);
@@ -67,12 +68,16 @@ pub struct ModelProps {
     pub normal_map: Option<&'static str>,
 }
 impl ModelProps {
-    fn get_texture_flags(&self) -> u8 {
-        let mut res = 0;
+    fn get_texture_params(&self) -> TextureParams {        
         if self.uses_mipmaps {
-            res |= TextureFlags::MIPMAP as u8;
-        }
-        res
+            if self.normal_map.is_some() {
+                TextureParams::mipmapped_texture(-2.4)
+            } else {
+                TextureParams::mipmapped_texture(-0.4)
+            }
+        } else {
+            TextureParams::default()
+        }        
     }
 }
 
@@ -144,7 +149,16 @@ impl Models {
         reflectivity: 0.5, 
         atlas_props: AtlasProps(1),
         normal_map: Some("res/textures/normal_maps/barrelNormal.png"),
-    };    
+    };
+    const BOULDER_PROPS: ModelProps = ModelProps { 
+        has_transparency: false, 
+        uses_fake_lighting: false, 
+        uses_mipmaps: true, 
+        shine_damper: 10.0,
+        reflectivity: 0.5, 
+        atlas_props: AtlasProps(1),
+        normal_map: Some("res/textures/normal_maps/boulderNormal.png"),
+    }; 
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
@@ -157,6 +171,7 @@ impl Models {
     pub const TOON_ROCKS: Model = Model(ModelType::ToonRocks, "res/models/toonRocks.obj", "res/textures/toonRocks.png", &Models::SHINY_PROPS);
     pub const BOBBLE_TREE: Model = Model(ModelType::BobbleTree, "res/models/bobbleTree.obj", "res/textures/bobbleTree.png", &Models::COMMON_PROPS);
     pub const BARREL: Model = Model(ModelType::Barrel, "res/models/barrel.obj", "res/textures/barrel.png", &Models::BARREL_PROPS);
+    pub const BOULDER: Model = Model(ModelType::Boulder, "res/models/boulder.obj", "res/textures/boulder.png", &Models::BOULDER_PROPS);
 }
 
 
@@ -173,7 +188,7 @@ impl ResourceManager {
         
         let (raw_model, normal_map) = if let Some(normal_map_texture) = model_props.normal_map {
             let model_data = load_obj_model(obj_file, true).expect(&format!("Unable to load {}", obj_file));
-            let normal_map = self.loader.load_texture(normal_map_texture, 0);
+            let normal_map = self.loader.load_texture(normal_map_texture, TextureParams::default());
             let raw_model = self.loader.load_to_vao_with_normal_map(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals, &model_data.tangents);
             (raw_model, Some(normal_map.tex_id))
         } else {
@@ -182,7 +197,7 @@ impl ResourceManager {
             (raw_model, None)
         }; 
         
-        let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_flags());
+        let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_params());
         texture.has_transparency = model_props.has_transparency;
         texture.uses_fake_lighting = model_props.uses_fake_lighting;
         texture.shine_damper = model_props.shine_damper;
@@ -197,17 +212,16 @@ impl ResourceManager {
         self.models.get(&model_type).expect(&format!("Need to call init_model({:?}) before accessing the model", model_type)).clone()
     }
     
-    pub fn init_terrain_textures(&mut self) {
-        let texture_flags = TextureFlags::MIPMAP as u8;
+    pub fn init_terrain_textures(&mut self) {        
         if let None = self.texture_pack {
-            let background_texture = self.loader.load_terrain_texture("res/textures/terrain/grassy2.png", texture_flags);
-            let r_texture = self.loader.load_terrain_texture("res/textures/terrain/mud.png", texture_flags);
-            let g_texture = self.loader.load_terrain_texture("res/textures/terrain/grassFlowers.png", texture_flags);
-            let b_texture = self.loader.load_terrain_texture("res/textures/terrain/path.png", texture_flags);
+            let background_texture = self.loader.load_terrain_texture("res/textures/terrain/grassy2.png", TextureParams::mipmapped_texture(-0.4));
+            let r_texture = self.loader.load_terrain_texture("res/textures/terrain/mud.png", TextureParams::mipmapped_texture(-0.4));
+            let g_texture = self.loader.load_terrain_texture("res/textures/terrain/grassFlowers.png", TextureParams::mipmapped_texture(-0.4));
+            let b_texture = self.loader.load_terrain_texture("res/textures/terrain/path.png", TextureParams::mipmapped_texture(-0.4));
             self.texture_pack = Some(TerrainTexturePack { background_texture, r_texture, g_texture, b_texture, });
         }
         if let None = self.blend_texture {
-            self.blend_texture = Some(self.loader.load_terrain_texture("res/textures/terrain/blendMap.png", texture_flags));
+            self.blend_texture = Some(self.loader.load_terrain_texture("res/textures/terrain/blendMap.png", TextureParams::mipmapped_texture(-0.4)));
         }
     }
 
@@ -233,12 +247,12 @@ impl ResourceManager {
     pub fn init_gui_textures(&mut self) {        
         let props = Models::GUI_PROPS;
         if !self.gui_textures.contains_key(ResourceManager::HEALTHBAR_TEXTURE) {
-            let texture_id = self.loader.load_gui_texture(ResourceManager::HEALTHBAR_TEXTURE, props.get_texture_flags());
+            let texture_id = self.loader.load_gui_texture(ResourceManager::HEALTHBAR_TEXTURE, props.get_texture_params());
             self.gui_textures.insert(ResourceManager::HEALTHBAR_TEXTURE, texture_id);
         }
 
         if !self.gui_textures.contains_key(ResourceManager::GUI_BACKGROUND_TEXTURE) {
-            let texture_id = self.loader.load_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE, props.get_texture_flags());
+            let texture_id = self.loader.load_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE, props.get_texture_params());
             self.gui_textures.insert(ResourceManager::GUI_BACKGROUND_TEXTURE, texture_id);
         }
     }
@@ -339,8 +353,8 @@ impl ResourceManager {
                 1.0, 0.0, -1.0, 
             ];
             let raw_model = self.loader.load_simple_model_to_vao(&positions, 3);
-            let dudv_tex_id = self.loader.load_terrain_texture("res/textures/water/waterDUDV.png", 0).tex_id;
-            let normal_map_tex_id = self.loader.load_terrain_texture("res/textures/water/normalMap.png", 0).tex_id;
+            let dudv_tex_id = self.loader.load_terrain_texture("res/textures/water/waterDUDV.png", TextureParams::default()).tex_id;
+            let normal_map_tex_id = self.loader.load_terrain_texture("res/textures/water/normalMap.png", TextureParams::default()).tex_id;
             self.water_model = Some(WaterModel {
                 raw_model,
                 dudv_tex_id,

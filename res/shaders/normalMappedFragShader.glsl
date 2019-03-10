@@ -48,6 +48,7 @@ void main(void) {
 
     // we have to normalize after interpolation
     vec3 unit_normal = normalize(normal_from_map);
+    // vec3 unit_normal = mix(normalize(surface_normal_eye), normal_from_map, 0.001); UNCOMMENT to see non bump mapped
     vec3 unit_camera = normalize(to_camera_dir_tgs);
 
     vec3 total_diffuse = vec3(0.0);

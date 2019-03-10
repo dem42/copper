@@ -128,10 +128,10 @@ fn update_tangent_with_handedness_and_average(tangent: TanAndBitan, normal: &Vec
     // needed since tan and bitangent are not necessarily orthogonal from our calculation
     // however we want them to be orthogonal so that we can perform inversion of tangent space matrix
     // simply by transposing the matrix
-    let (mut tan, bitan) = gram_schmidt_orthogonalize(&normal, tangent.0, tangent.1);    
+    let handedness = tangent.0.cross_prod(normal).dot_product(&tangent.1);
+    let (mut tan, _bitan) = gram_schmidt_orthogonalize(&normal, tangent.0, tangent.1);    
     tan.normalize();
 
-    let handedness = tan.cross_prod(normal).dot_product(&bitan);
     let handedness = if handedness < 0.0 {
         -1.0
     } else {
@@ -139,6 +139,7 @@ fn update_tangent_with_handedness_and_average(tangent: TanAndBitan, normal: &Vec
     };
 
     Vector4f::new(tan.x, tan.y, tan.z, handedness)    
+    //Vector4f::new(tangent.0.x, tangent.0.y, tangent.0.z, 1.0) 
 }
 
 fn process_face_token(token: &str, textures_sorted: &mut Vec<Vector2f>, normals_sorted: &mut Vec<Vector3f>, indices: &mut Vec<u32>, 

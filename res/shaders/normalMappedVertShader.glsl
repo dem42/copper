@@ -50,30 +50,36 @@ void main(void) {
         actual_normal = vec3(0.0, 0.1, 0.0); // use a fake normal that points up (hack for bad grass model)
     }
     
-    vec3 tang = tangents.xyz * tangents.w;
-    vec3 bitang = cross(tang, actual_normal);
+    vec3 tang = tangents.xyz;    
 
     vec3 tang_eye = (local_to_eye * vec4(tang, 0.0)).xyz; 
-    vec3 bitang_eye = (local_to_eye * vec4(bitang, 0.0)).xyz; 
     // this i think is correct: you need to transform normals by the transpose of the inverse of the transformation matrix
-    mat4 normal_transform = transpose(inverse(local_to_eye));
-    vec3 surface_normal_eye = (normal_transform * vec4(actual_normal, 0.0)).xyz;
-
+    // however if you dont need translation then you transform we if 3x3 matrix really an
+    // if there is no skew then the transform matrix is orthonormal (rotation + scaling) then the inverse is the transpose and 
+    // so transpose transpose is identity 
+    mat4 normal_transform = local_to_eye;
+    vec3 surface_normal_eye = (normal_transform * vec4(actual_normal, 0.0)).xyz;    
+    //vec3 bitang_eye = cross(tang_eye, surface_normal_eye) * tangents.w; we should be multiplying by handedness but it causes oddness
+    vec3 bitang_eye = cross(tang_eye, surface_normal_eye);
+    
     tang_eye = normalize(tang_eye);
     bitang_eye = normalize(bitang_eye);
     surface_normal_eye = normalize(surface_normal_eye);
+    // if you want to see non bump mapped transform surface_normal_eye to tangent space and pass it to fragment shader
 
+    // NOTE!!! glsl shader mat3 constructor takes column vectors!!
+    // so this is the matrix transposed (and since it is orthonormal that means inverted)
     mat3 eye_to_tangent_space = mat3(
-        tang_eye.x, tang_eye.y, tang_eye.z,
-        bitang_eye.x, bitang_eye.y, bitang_eye.z,
-        surface_normal_eye.x, surface_normal_eye.y, surface_normal_eye.z
+        tang_eye.x, bitang_eye.x, surface_normal_eye.x,
+        tang_eye.y, bitang_eye.y, surface_normal_eye.y,
+        tang_eye.z, bitang_eye.z, surface_normal_eye.z
     );
 
     for (int i=0; i<NUM_LIGHTS; i++) {
-        light_direction_tgs[i] = eye_to_tangent_space * (view_matrix * (vec4(light_pos[i], 1.0) - world_position)).xyz;
+        light_direction_tgs[i] = eye_to_tangent_space * (view_matrix * (vec4(light_pos[i], 1.0) - world_position)).xyz;  
     }    
     to_camera_dir_tgs = eye_to_tangent_space * (-eye_space_position.xyz);
-    
+        
     // compute visibility
     float distance_to_eye = length(eye_space_position.xyz);
     float fog_vis_coef = exp(-pow(distance_to_eye * fog_density, fog_gradient));
