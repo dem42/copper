@@ -7,7 +7,7 @@ use copper::display::{
     Display,
     Framebuffers,
 };
-use copper::guis::Gui;
+use copper::guis::GuiPanel;
 use copper::renderers::{
     BatchRenderer,
     GuiRenderer,
@@ -49,13 +49,15 @@ fn main() {
     let mut resource_manager = ResourceManager::default();
 
     init_resources(&mut resource_manager);
+    let copper_font = resource_manager.get_font(ResourceManager::COPPER_FONT_TYPE);
     let mut scene = create_scene(&resource_manager);
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
     let guis = vec!{
-        Gui::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
-        Gui::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
+        GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
+        GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
     };
+
 
     let mut batch_renderer = BatchRenderer::new(&display);
     let mut gui_renderer = GuiRenderer::new();
@@ -109,17 +111,22 @@ fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::TOON_ROCKS);
     resource_manager.init(&Models::BOBBLE_TREE);
     resource_manager.init(&Models::LOW_POLY_TREE);
-    resource_manager.init_terrain_textures();
-    resource_manager.init_terrain_model();
     resource_manager.init(&Models::PLAYER);
     resource_manager.init(&Models::CRATE);
     resource_manager.init(&Models::LAMP);
-    resource_manager.init_gui_model();
-    resource_manager.init_gui_textures();
-    resource_manager.init_skybox();
-    resource_manager.init_water();
     resource_manager.init(&Models::BARREL);
     resource_manager.init(&Models::BOULDER);
+
+    resource_manager.init_terrain_textures();
+    resource_manager.init_terrain_model();
+
+    resource_manager.init_skybox();
+    resource_manager.init_water();
+
+    resource_manager.init_gui_model();
+    resource_manager.init_gui_textures();
+
+    resource_manager.init_fonts();
 }
 
 fn create_scene(resource_manager: &ResourceManager) -> Scene {

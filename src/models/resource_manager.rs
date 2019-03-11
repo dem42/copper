@@ -15,6 +15,9 @@ use crate::obj_converter::{
     load_simple_obj_model
 };
 use std::collections::HashMap;
+use crate::guis::{
+    text::FontType,
+};
 
 #[derive(Default)]
 pub struct ResourceManager {
@@ -28,6 +31,7 @@ pub struct ResourceManager {
 
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
+    font_types: HashMap<&'static str, FontType>,
 }
 
 pub enum ResType {
@@ -179,6 +183,8 @@ impl ResourceManager {
 
     pub const HEALTHBAR_TEXTURE: &'static str = "res/textures/health.png";
     pub const GUI_BACKGROUND_TEXTURE: &'static str = "res/textures/gui_background.png";
+    
+    pub const COPPER_FONT_TYPE: &'static str = "res/fonts/copperFont";
     
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
@@ -365,5 +371,23 @@ impl ResourceManager {
 
     pub fn water_model(&self) -> WaterModel {
         self.water_model.clone().expect("Need to call init_water first")
+    }
+
+
+    pub fn init_fonts(&mut self) {
+        if !self.font_types.contains_key(ResourceManager::COPPER_FONT_TYPE) {
+
+            let fnt_file_name = format!("{}.{}", ResourceManager::COPPER_FONT_TYPE, "fnt");
+            let fnt_texture_atlas_name = format!("{}.{}", ResourceManager::COPPER_FONT_TYPE, "png");
+
+            let texture_id = self.loader.load_gui_texture(&fnt_texture_atlas_name, TextureParams::default());
+            let font_type = FontType::new(&fnt_file_name, texture_id);
+
+            self.font_types.insert(ResourceManager::COPPER_FONT_TYPE, font_type);
+        }
+    }
+
+    pub fn get_font(&self, font_name: &str) -> FontType {
+        self.font_types.get(font_name).expect("Must init fonts before accessing font types").clone()
     }
 }

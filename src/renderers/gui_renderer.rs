@@ -1,5 +1,5 @@
 use crate::guis::{
-    Gui,
+    GuiPanel,
 };
 use crate::models::{
     RawModel,
@@ -21,7 +21,7 @@ impl GuiRenderer {
         }
     }
 
-    pub fn render(&mut self, guis: &Vec<Gui>, gui_model: &RawModel) {
+    pub fn render(&mut self, guis: &Vec<GuiPanel>, gui_model: &RawModel) {
         self.shader.start();
         gl::bind_vertex_array(gui_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
