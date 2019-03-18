@@ -17,6 +17,8 @@ use crate::obj_converter::{
 use std::collections::HashMap;
 use crate::guis::{
     text::FontType,
+    text::GuiText,
+    text::text_mesh_creator::*,
 };
 
 #[derive(Default)]
@@ -389,5 +391,12 @@ impl ResourceManager {
 
     pub fn get_font(&self, font_name: &str) -> FontType {
         self.font_types.get(font_name).expect("Must init fonts before accessing font types").clone()
+    }
+
+    pub fn create_gui_text(&mut self, text: &str, font_name: &str) -> GuiText {
+        let font_type = self.get_font(font_name);
+        let text_mesh = create_mesh(text, &font_type);
+        let text_mesh_vao = self.loader.load_quads_mesh_to_vao(&text_mesh.positions, &text_mesh.tex_coords);
+        GuiText::new(font_type, text_mesh_vao, text_mesh.char_count)
     }
 }

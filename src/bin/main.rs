@@ -49,7 +49,10 @@ fn main() {
     let mut resource_manager = ResourceManager::default();
 
     init_resources(&mut resource_manager);
-    let copper_font = resource_manager.get_font(ResourceManager::COPPER_FONT_TYPE);
+    
+    let copper_hello = resource_manager.create_gui_text("hello world!", ResourceManager::COPPER_FONT_TYPE);
+    let texts = vec![copper_hello];
+
     let mut scene = create_scene(&resource_manager);
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
@@ -98,7 +101,7 @@ fn main() {
         skybox.increase_rotation(&display);
         batch_renderer.render(&lights, &mut camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
             &scene.player, &scene.water, &skybox, &display, &framebuffers);
-        gui_renderer.render(&guis, &scene.gui_model.raw_model);
+        gui_renderer.render(&guis, &scene.gui_model.raw_model, &texts);
         display.update_display();
     }
 }

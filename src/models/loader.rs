@@ -63,6 +63,14 @@ impl ModelLoader {
         RawModel::new(vao_id, positions.len() / 2)
     }
 
+    pub fn load_quads_mesh_to_vao(&mut self, positions: &[f32], texture_coords: &[f32]) -> u32 {
+        let vao_id = self.create_vao();        
+        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 2, positions);        
+        self.store_data_in_attribute_list(RawModel::TEX_COORD_ATTRIB, 2, texture_coords);   
+        self.unbind_vao();
+        vao_id
+    }
+
     pub fn load_cube_map(&mut self, cube_map_folder: &str) -> u32 {        
         let cubemap_id = gl::gen_texture();
         self.tex_list.push(cubemap_id);
