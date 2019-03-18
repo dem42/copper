@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use crate::guis::{
     GuiPanel,
     GuiText,
+    text::FontType,
 };
 use crate::models::{
     RawModel,
@@ -33,6 +35,7 @@ impl GuiRenderer {
         gl::enable(gl::BLEND);
         // linear blending
         gl::blend_func(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl::helper::disable_culling();
 
         self.gui_shader.start();
         gl::bind_vertex_array(gui_model.vao_id);
@@ -55,15 +58,19 @@ impl GuiRenderer {
         self.gui_shader.stop();
 
 
-        self.text_shader.start();        
-        for text in texts.iter() {
-            gl::bind_vertex_array(text.text_mesh_vao_id);
-            gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
-            gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
-
+        self.text_shader.start();
+        let text_by_font = GuiRenderer::group_text_by_font(texts);
+        for (font_type, text_vec) in text_by_font.iter() {
             gl::active_texture(gl::TEXTURE0);
-            gl::bind_texture(gl::TEXTURE_2D, text.font_type.texture_atlas);
-            gl::draw_arrays(gl::TRIANGLES, 0, text.text_char_count * 4);
+            gl::bind_texture(gl::TEXTURE_2D, font_type.texture_atlas);
+
+            for text in text_vec.iter() {
+                gl::bind_vertex_array(text.text_model.vao_id);
+                gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+                gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
+
+                gl::draw_arrays(gl::TRIANGLES, 0, text.text_model.vertex_count);
+            }
         }
         gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::disable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
@@ -73,5 +80,15 @@ impl GuiRenderer {
         gl::enable(gl::DEPTH_TEST);
         gl::disable(gl::BLEND);
         gl::bind_texture(gl::TEXTURE_2D, 0);
+        gl::helper::enable_backface_culling();
+    }
+
+    fn group_text_by_font(texts: &Vec<GuiText>) -> HashMap<&FontType, Vec<&GuiText>> {
+        let mut result = HashMap::new();
+        for text in texts.iter() {
+            let group = result.entry(&text.font_type).or_insert(Vec::new());
+            group.push(text);
+        }
+        result
     }
 }

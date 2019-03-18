@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::fs::File;
 use std::io::{
     prelude::*,
@@ -8,6 +9,9 @@ use std::rc::Rc;
 
 use crate::math::{
     Vector2f,
+};
+use crate::models::{
+    RawModel,
 };
 
 #[derive(Debug)]
@@ -20,10 +24,10 @@ struct MetaFileCharDesc {
 }
 
 struct MetaFile {
-    pub atlas_size: (u32, u32),
-    pub line_height: u32,
-    pub base: u32,
-    pub char_map: HashMap<char, MetaFileCharDesc>,
+    atlas_size: (u32, u32),
+    line_height: u32,
+    base: u32,
+    char_map: HashMap<char, MetaFileCharDesc>,
 } 
 
 impl MetaFile {
@@ -104,6 +108,20 @@ pub struct FontType {
     pub texture_atlas: u32,
 }
 
+impl PartialEq for FontType {
+    fn eq(&self, other: &FontType) -> bool {
+        self.texture_atlas == other.texture_atlas
+    }
+}
+
+impl Eq for FontType {}
+
+impl Hash for FontType {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.texture_atlas.hash(state);
+    }
+}
+
 impl FontType {
     pub fn new(fnt_file_name: &str, texture_atlas_id: u32) -> FontType {
         let meta_file = MetaFile::load_from_file(fnt_file_name).expect(&format!("Unable to load fnt file: {}", fnt_file_name));
@@ -116,16 +134,14 @@ impl FontType {
 
 pub struct GuiText {
     pub font_type: FontType,
-    pub text_mesh_vao_id: u32,
-    pub text_char_count: usize,
+    pub text_model: RawModel,
 }
 
 impl GuiText {
-    pub fn new(font_type: FontType, vao_id: u32, char_count: usize) -> GuiText {
+    pub fn new(font_type: FontType, text_model: RawModel) -> GuiText {
         GuiText {
             font_type,
-            text_mesh_vao_id: vao_id,
-            text_char_count: char_count,
+            text_model,
         }
     }
 }
@@ -134,6 +150,7 @@ impl GuiText {
 pub mod text_mesh_creator {
     use super::*;
     
+    #[derive(Debug)]
     pub struct TextMesh {
         pub positions: Vec<f32>,
         pub tex_coords: Vec<f32>,
@@ -145,7 +162,7 @@ pub mod text_mesh_creator {
         let mut positions: Vec<Vector2f> = Vec::new();
         let mut tex_coords: Vec<Vector2f> = Vec::new();
         let mut line_pos_x = 0;
-        let line_pos_y = 0;
+        let line_pos_y = font_type.meta_file.base as i32;
         let mut char_cnt = 0;
 
         for c in text.chars() {
@@ -153,7 +170,7 @@ pub mod text_mesh_creator {
             if let Some(meta_data_val) = meta_data {
                 char_cnt += 1;
                 
-                let bottom = (line_pos_y + meta_data_val.offset.1) as f32;
+                let bottom = (line_pos_y) as f32;
                 let left = (line_pos_x + meta_data_val.offset.0) as f32;
                 let right = left + meta_data_val.size.0 as f32;
                 let top = bottom + meta_data_val.size.1 as f32;
@@ -168,10 +185,10 @@ pub mod text_mesh_creator {
                 let right_upper = Vector2f::new(right / font_type.meta_file.atlas_size.0 as f32, top / font_type.meta_file.atlas_size.1 as f32);
                 let right_lower = Vector2f::new(right / font_type.meta_file.atlas_size.0 as f32, bottom / font_type.meta_file.atlas_size.1 as f32);
 
-                let tex_lu = Vector2f::new(l_tex, t_tex);
-                let tex_ll = Vector2f::new(l_tex, b_tex);
-                let tex_ru = Vector2f::new(r_tex, t_tex);
-                let tex_rl = Vector2f::new(r_tex, b_tex);
+                let tex_lu = Vector2f::new(l_tex, b_tex);
+                let tex_ll = Vector2f::new(l_tex, t_tex);
+                let tex_ru = Vector2f::new(r_tex, b_tex);
+                let tex_rl = Vector2f::new(r_tex, t_tex);
 
                 // the order of the vertices is important since we have backface culling turned on
                 // backface culling means that triangles which are assumed to face away from camera are not to be rendered

@@ -396,7 +396,7 @@ impl ResourceManager {
     pub fn create_gui_text(&mut self, text: &str, font_name: &str) -> GuiText {
         let font_type = self.get_font(font_name);
         let text_mesh = create_mesh(text, &font_type);
-        let text_mesh_vao = self.loader.load_quads_mesh_to_vao(&text_mesh.positions, &text_mesh.tex_coords);
-        GuiText::new(font_type, text_mesh_vao, text_mesh.char_count)
+        let text_model = self.loader.load_quads_mesh_to_vao(&text_mesh.positions, &text_mesh.tex_coords);
+        GuiText::new(font_type, text_model)
     }
 }
