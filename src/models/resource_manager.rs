@@ -189,9 +189,8 @@ impl ResourceManager {
 
     pub const HEALTHBAR_TEXTURE: &'static str = "res/textures/health.png";
     pub const GUI_BACKGROUND_TEXTURE: &'static str = "res/textures/gui_background.png";
-    
-    pub const COPPER_FONT_TYPE: &'static str = "res/fonts/copperFont";
-    pub const TEST_FONT_TYPE: &'static str = "res/fonts/test";
+        
+    pub const COPPER_SDF_FONT_TYPE: &'static str = "res/fonts/copperDf";    
     
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
@@ -382,7 +381,7 @@ impl ResourceManager {
 
 
     pub fn init_fonts(&mut self) {
-        let fonts = vec![ResourceManager::COPPER_FONT_TYPE, ResourceManager::TEST_FONT_TYPE];
+        let fonts = vec![ResourceManager::COPPER_SDF_FONT_TYPE];
 
         for font in fonts.iter() {
             if !self.font_types.contains_key(font) {
