@@ -9,6 +9,7 @@ use std::rc::Rc;
 
 use crate::math::{
     Vector2f,
+    Vector3f,
 };
 use crate::models::{
     RawModel,
@@ -25,12 +26,13 @@ struct MetaFileCharDesc {
 
 struct MetaFile {
     atlas_size: (u32, u32),
-    line_height: u32,
-    base: u32,
+    line_height: i32,
     char_map: HashMap<char, MetaFileCharDesc>,
 } 
 
 impl MetaFile {
+    const DEFAULT_FONT_SIZE: f32 = 10.0;
+
     /**
      * parses a .fnt file created with Hiero
      */
@@ -46,7 +48,6 @@ impl MetaFile {
         let line_info_tokens = line_info.split_whitespace().collect::<Vec<_>>();
         
         let line_height = MetaFile::get_num_from_tkn(line_info_tokens[1]);
-        let base = MetaFile::get_num_from_tkn(line_info_tokens[2]);
         let atlas_size_w = MetaFile::get_num_from_tkn(line_info_tokens[3]);
         let atlas_size_h = MetaFile::get_num_from_tkn(line_info_tokens[4]);        
 
@@ -86,7 +87,6 @@ impl MetaFile {
 
         Ok(MetaFile {
             char_map,
-            base,
             line_height,
             atlas_size: (atlas_size_w, atlas_size_h),
         })
@@ -99,6 +99,21 @@ impl MetaFile {
         let name_value: Vec<_> = str_token.split("=").collect();
         let val = name_value[1].parse::<T>().expect("Metafile must contain name=value pairs");
         val
+    }
+
+    fn scale_horiz(&self, horiz_val: i32) -> f32 {
+        horiz_val as f32 / self.atlas_size.0 as f32
+    }
+
+    fn scale_vert(&self, vert_val: i32) -> f32 {
+        vert_val as f32 / self.atlas_size.1 as f32
+    }
+
+    fn scale(&self, mut v: Vector2f, font_size: usize) -> Vector2f {
+        let font_scale = font_size as f32 / MetaFile::DEFAULT_FONT_SIZE;
+        v.x = (v.x * font_scale) / self.atlas_size.0 as f32;
+        v.y = (v.y * font_scale) / self.atlas_size.1 as f32;
+        v
     }
 }
 
@@ -135,13 +150,17 @@ impl FontType {
 pub struct GuiText {
     pub font_type: FontType,
     pub text_model: RawModel,
+    pub position: Vector2f,
+    pub color: Vector3f,
 }
 
 impl GuiText {
-    pub fn new(font_type: FontType, text_model: RawModel) -> GuiText {
+    pub fn new(font_type: FontType, text_model: RawModel, position: Vector2f, color: Vector3f) -> GuiText {
         GuiText {
             font_type,
             text_model,
+            position,
+            color,
         }
     }
 }
@@ -157,63 +176,70 @@ pub mod text_mesh_creator {
         pub char_count: usize,
     }
 
-    pub fn create_mesh(text: &str, font_type: &FontType) -> TextMesh {
+    pub fn create_mesh(text: &str, font_type: &FontType, font_size: usize) -> TextMesh {
 
         let mut positions: Vec<Vector2f> = Vec::new();
         let mut tex_coords: Vec<Vector2f> = Vec::new();
         let mut line_pos_x = 0;
-        let line_pos_y = font_type.meta_file.base as i32;
+        let mut line_pos_y = font_type.meta_file.line_height;
         let mut char_cnt = 0;
+        let mf = &font_type.meta_file;
+        
+        for line in text.lines() {            
+            for c in line.chars() {
+                let meta_data = mf.char_map.get(&c);
+                if let Some(meta_data_val) = meta_data {
+                    char_cnt += 1;
+                    
+                    // odd bug seen here where it either didnt re-compile or computed the signs incorrectly
+                    // if you ever see misaligned graphemes check here
+                    let top = (line_pos_y - meta_data_val.offset.1) as f32;
+                    let left = (line_pos_x + meta_data_val.offset.0) as f32;
+                    let right = left + meta_data_val.size.0 as f32;
+                    let bottom = top - meta_data_val.size.1 as f32;
 
-        for c in text.chars() {
-            let meta_data = font_type.meta_file.char_map.get(&c);
-            if let Some(meta_data_val) = meta_data {
-                char_cnt += 1;
-                
-                let bottom = (line_pos_y) as f32;
-                let left = (line_pos_x + meta_data_val.offset.0) as f32;
-                let right = left + meta_data_val.size.0 as f32;
-                let top = bottom + meta_data_val.size.1 as f32;
+                    let l_tex = mf.scale_horiz(meta_data_val.pos.0);
+                    let b_tex = mf.scale_vert(meta_data_val.pos.1);
+                    let r_tex = mf.scale_horiz(meta_data_val.pos.0 + meta_data_val.size.0);
+                    let t_tex = mf.scale_vert(meta_data_val.pos.1 + meta_data_val.size.1);
+                    
+                    let left_upper = mf.scale(Vector2f::new(left, top), font_size);
+                    let left_lower = mf.scale(Vector2f::new(left, bottom), font_size);
+                    let right_upper = mf.scale(Vector2f::new(right, top), font_size);
+                    let right_lower = mf.scale(Vector2f::new(right, bottom), font_size);
 
-                let l_tex = meta_data_val.pos.0 as f32 / font_type.meta_file.atlas_size.0 as f32;
-                let b_tex = meta_data_val.pos.1 as f32 / font_type.meta_file.atlas_size.1 as f32;
-                let r_tex = (meta_data_val.pos.0 + meta_data_val.size.0) as f32 / font_type.meta_file.atlas_size.0 as f32;
-                let t_tex = (meta_data_val.pos.1 + meta_data_val.size.1) as f32 / font_type.meta_file.atlas_size.1 as f32;
-                
-                let left_upper = Vector2f::new(left / font_type.meta_file.atlas_size.0 as f32, top / font_type.meta_file.atlas_size.1 as f32);
-                let left_lower = Vector2f::new(left / font_type.meta_file.atlas_size.0 as f32, bottom / font_type.meta_file.atlas_size.1 as f32);
-                let right_upper = Vector2f::new(right / font_type.meta_file.atlas_size.0 as f32, top / font_type.meta_file.atlas_size.1 as f32);
-                let right_lower = Vector2f::new(right / font_type.meta_file.atlas_size.0 as f32, bottom / font_type.meta_file.atlas_size.1 as f32);
+                    let tex_lu = Vector2f::new(l_tex, b_tex);
+                    let tex_ll = Vector2f::new(l_tex, t_tex);
+                    let tex_ru = Vector2f::new(r_tex, b_tex);
+                    let tex_rl = Vector2f::new(r_tex, t_tex);
 
-                let tex_lu = Vector2f::new(l_tex, b_tex);
-                let tex_ll = Vector2f::new(l_tex, t_tex);
-                let tex_ru = Vector2f::new(r_tex, b_tex);
-                let tex_rl = Vector2f::new(r_tex, t_tex);
+                    // the order of the vertices is important since we have backface culling turned on
+                    // backface culling means that triangles which are assumed to face away from camera are not to be rendered
+                    // since we may be inside them
+                    // here we go with counter-clockwise order                
+                    // build position quad
+                    positions.push(left_lower.clone());
+                    positions.push(right_upper.clone());
+                    positions.push(left_upper.clone());
+                    
+                    positions.push(right_upper.clone());
+                    positions.push(left_lower.clone());
+                    positions.push(right_lower.clone());
 
-                // the order of the vertices is important since we have backface culling turned on
-                // backface culling means that triangles which are assumed to face away from camera are not to be rendered
-                // since we may be inside them
-                // here we go with counter-clockwise order                
-                // build position quad
-                positions.push(left_lower.clone());
-                positions.push(right_upper.clone());
-                positions.push(left_upper.clone());
-                
-                positions.push(right_upper.clone());
-                positions.push(left_lower.clone());
-                positions.push(right_lower.clone());
+                    // build tex coord quad
+                    tex_coords.push(tex_ll.clone());
+                    tex_coords.push(tex_ru.clone());
+                    tex_coords.push(tex_lu.clone());
+                    
+                    tex_coords.push(tex_ru.clone());
+                    tex_coords.push(tex_ll.clone());
+                    tex_coords.push(tex_rl.clone());
 
-                // build tex coord quad
-                tex_coords.push(tex_ll.clone());
-                tex_coords.push(tex_ru.clone());
-                tex_coords.push(tex_lu.clone());
-                
-                tex_coords.push(tex_ru.clone());
-                tex_coords.push(tex_ll.clone());
-                tex_coords.push(tex_rl.clone());
-
-                line_pos_x += meta_data_val.xadvance;
-            }            
+                    line_pos_x += meta_data_val.xadvance;
+                }
+            }
+            line_pos_y -= font_type.meta_file.line_height;   
+            line_pos_x = 0;
         }
 
         let flat_pos = positions.into_iter().flat_map(|v| v.into_iter()).collect::<Vec<f32>>();

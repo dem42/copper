@@ -50,8 +50,10 @@ fn main() {
 
     init_resources(&mut resource_manager);
     
-    let copper_hello = resource_manager.create_gui_text("hello world!", ResourceManager::COPPER_FONT_TYPE);
-    let texts = vec![copper_hello];
+    let texts = vec![
+        resource_manager.create_gui_text("peljo'\nwo rld!", ResourceManager::COPPER_FONT_TYPE, 10, Vector2f::new(0.0, 0.5), Vector3f::new(1.0, 0.0, 0.0)),
+        resource_manager.create_gui_text("Not_imPres\" Sejp; @", ResourceManager::TEST_FONT_TYPE, 8, Vector2f::new(-0.5, -0.5), Vector3f::new(0.0, 0.0, 1.0)),
+    ];
 
     let mut scene = create_scene(&resource_manager);
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);

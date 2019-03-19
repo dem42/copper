@@ -35,8 +35,7 @@ impl GuiRenderer {
         gl::enable(gl::BLEND);
         // linear blending
         gl::blend_func(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        gl::helper::disable_culling();
-
+        
         self.gui_shader.start();
         gl::bind_vertex_array(gui_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
@@ -65,6 +64,9 @@ impl GuiRenderer {
             gl::bind_texture(gl::TEXTURE_2D, font_type.texture_atlas);
 
             for text in text_vec.iter() {
+                self.text_shader.load_position(&text.position);
+                self.text_shader.load_color(&text.color);
+
                 gl::bind_vertex_array(text.text_model.vao_id);
                 gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
                 gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
@@ -79,8 +81,7 @@ impl GuiRenderer {
 
         gl::enable(gl::DEPTH_TEST);
         gl::disable(gl::BLEND);
-        gl::bind_texture(gl::TEXTURE_2D, 0);
-        gl::helper::enable_backface_culling();
+        gl::bind_texture(gl::TEXTURE_2D, 0);        
     }
 
     fn group_text_by_font(texts: &Vec<GuiText>) -> HashMap<&FontType, Vec<&GuiText>> {

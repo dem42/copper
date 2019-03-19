@@ -20,6 +20,10 @@ use crate::guis::{
     text::GuiText,
     text::text_mesh_creator::*,
 };
+use crate::math::{
+    Vector2f,
+    Vector3f,
+};
 
 #[derive(Default)]
 pub struct ResourceManager {
@@ -187,6 +191,7 @@ impl ResourceManager {
     pub const GUI_BACKGROUND_TEXTURE: &'static str = "res/textures/gui_background.png";
     
     pub const COPPER_FONT_TYPE: &'static str = "res/fonts/copperFont";
+    pub const TEST_FONT_TYPE: &'static str = "res/fonts/test";
     
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
@@ -377,15 +382,19 @@ impl ResourceManager {
 
 
     pub fn init_fonts(&mut self) {
-        if !self.font_types.contains_key(ResourceManager::COPPER_FONT_TYPE) {
+        let fonts = vec![ResourceManager::COPPER_FONT_TYPE, ResourceManager::TEST_FONT_TYPE];
 
-            let fnt_file_name = format!("{}.{}", ResourceManager::COPPER_FONT_TYPE, "fnt");
-            let fnt_texture_atlas_name = format!("{}.{}", ResourceManager::COPPER_FONT_TYPE, "png");
+        for font in fonts.iter() {
+            if !self.font_types.contains_key(font) {
 
-            let texture_id = self.loader.load_gui_texture(&fnt_texture_atlas_name, TextureParams::default());
-            let font_type = FontType::new(&fnt_file_name, texture_id);
+                let fnt_file_name = format!("{}.{}", font, "fnt");
+                let fnt_texture_atlas_name = format!("{}.{}", font, "png");
 
-            self.font_types.insert(ResourceManager::COPPER_FONT_TYPE, font_type);
+                let texture_id = self.loader.load_gui_texture(&fnt_texture_atlas_name, TextureParams::default());
+                let font_type = FontType::new(&fnt_file_name, texture_id);
+
+                self.font_types.insert(font, font_type);
+            }
         }
     }
 
@@ -393,10 +402,10 @@ impl ResourceManager {
         self.font_types.get(font_name).expect("Must init fonts before accessing font types").clone()
     }
 
-    pub fn create_gui_text(&mut self, text: &str, font_name: &str) -> GuiText {
+    pub fn create_gui_text(&mut self, text: &str, font_name: &str, font_size: usize, position: Vector2f, color: Vector3f) -> GuiText {
         let font_type = self.get_font(font_name);
-        let text_mesh = create_mesh(text, &font_type);
+        let text_mesh = create_mesh(text, &font_type, font_size);
         let text_model = self.loader.load_quads_mesh_to_vao(&text_mesh.positions, &text_mesh.tex_coords);
-        GuiText::new(font_type, text_model)
+        GuiText::new(font_type, text_model, position, color)
     }
 }
