@@ -18,11 +18,11 @@ use std::collections::HashMap;
 use crate::guis::{
     text::FontType,
     text::GuiText,
+    text::TextMaterial,
     text::text_mesh_creator::*,
 };
 use crate::math::{
     Vector2f,
-    Vector3f,
 };
 
 #[derive(Default)]
@@ -401,10 +401,10 @@ impl ResourceManager {
         self.font_types.get(font_name).expect("Must init fonts before accessing font types").clone()
     }
 
-    pub fn create_gui_text(&mut self, text: &str, font_name: &str, font_size: usize, position: Vector2f, color: Vector3f) -> GuiText {
+    pub fn create_gui_text(&mut self, text: &str, font_name: &str, font_size: usize, position: Vector2f, material: TextMaterial) -> GuiText {
         let font_type = self.get_font(font_name);
         let text_mesh = create_mesh(text, &font_type, font_size);
         let text_model = self.loader.load_quads_mesh_to_vao(&text_mesh.positions, &text_mesh.tex_coords);
-        GuiText::new(font_type, text_model, position, color)
+        GuiText::new(font_type, text_model, position, material)
     }
 }

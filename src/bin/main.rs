@@ -7,7 +7,10 @@ use copper::display::{
     Display,
     Framebuffers,
 };
-use copper::guis::GuiPanel;
+use copper::guis::{
+    GuiPanel,
+    TextMaterial,
+};
 use copper::renderers::{
     BatchRenderer,
     GuiRenderer,
@@ -51,8 +54,21 @@ fn main() {
     init_resources(&mut resource_manager);
     
     let texts = vec![
-        resource_manager.create_gui_text("peljo'\nwo rld!", ResourceManager::COPPER_SDF_FONT_TYPE, 10, Vector2f::new(0.0, 0.5), Vector3f::new(1.0, 0.0, 0.0)),
-        resource_manager.create_gui_text("Not_imPres\" Sejp; @", ResourceManager::COPPER_SDF_FONT_TYPE, 15, Vector2f::new(-0.5, -0.5), Vector3f::new(0.0, 0.0, 1.0)),
+        resource_manager.create_gui_text("peljo'\nwo rld!", 
+            ResourceManager::COPPER_SDF_FONT_TYPE, 10, Vector2f::new(0.0, 0.5), 
+            TextMaterial {
+                color: Vector3f::new(1.0, 0.0, 0.0), ..TextMaterial::default()
+            }
+        ),
+        resource_manager.create_gui_text("Not_imPres\" Sejp; @", 
+            ResourceManager::COPPER_SDF_FONT_TYPE, 15, Vector2f::new(-0.5, -0.5), 
+            TextMaterial {
+                color: Vector3f::new(0.0, 0.0, 1.0), 
+                outline_color: Vector3f::new(0.2, 0.2, 0.2),
+                offset: Vector2f::new(-0.002, -0.002),
+                ..TextMaterial::default()
+            }
+        ),
     ];
 
     let mut scene = create_scene(&resource_manager);

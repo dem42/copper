@@ -65,7 +65,7 @@ impl GuiRenderer {
 
             for text in text_vec.iter() {
                 self.text_shader.load_position(&text.position);
-                self.text_shader.load_color(&text.color);
+                self.text_shader.load_text_material(&text.material);
 
                 gl::bind_vertex_array(text.text_model.vao_id);
                 gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);

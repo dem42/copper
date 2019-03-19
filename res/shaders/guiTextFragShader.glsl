@@ -7,18 +7,24 @@ out vec4 out_color;
 uniform sampler2D df_font_texture;
 uniform vec3 color;
 
-const float width = 0.5;
-const float edge = 0.1;
+uniform float width;
+uniform float edge;
+uniform float border_width;
+uniform float border_edge;
+uniform vec3 border_color;
+uniform vec2 shadow_offset;
 
 // create a solid looking border by choosing a larger width than char width and a small edge just to anti-alias
 // const float border_width = 0.7;
 // const float border_edge = 0.1;
 
 // create a glow effect by hiding the solid part of the border and making the edge very large 
-const float border_width = 0.5;
-const float border_edge = 0.4;
-const vec3 border_color = vec3(0.0, 1.0, 0.0);
-const vec2 shadow_offset = vec2(0.0, 0.0);
+// uniform float width = 0.5;
+// uniform float edge = 0.1;
+// uniform float border_width = 0.5;
+// uniform float border_edge = 0.4;
+// uniform vec3 border_color = vec3(0.0, 1.0, 0.0);
+// uniform vec2 shadow_offset = vec2(0.0, 0.0);
 
 // create a drop shadow by choosing a grey border color a fuzzy edge and an offset
 // drop shadows may cause outlines of other characters to appear -> to solve make the spacing(padding) larger when you generate the font atlas

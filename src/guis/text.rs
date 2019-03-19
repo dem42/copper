@@ -151,20 +151,43 @@ pub struct GuiText {
     pub font_type: FontType,
     pub text_model: RawModel,
     pub position: Vector2f,
-    pub color: Vector3f,
+    pub material: TextMaterial,
 }
 
 impl GuiText {
-    pub fn new(font_type: FontType, text_model: RawModel, position: Vector2f, color: Vector3f) -> GuiText {
+    pub fn new(font_type: FontType, text_model: RawModel, position: Vector2f, material: TextMaterial) -> GuiText {
         GuiText {
             font_type,
             text_model,
             position,
-            color,
+            material,        
         }
     }
 }
 
+pub struct TextMaterial {
+    pub color: Vector3f,
+    pub width: f32,
+    pub edge: f32,
+    pub outline_width: f32,
+    pub outline_edge: f32,
+    pub outline_color: Vector3f,
+    pub offset: Vector2f,
+}
+
+impl Default for TextMaterial {
+    fn default() -> Self {
+        TextMaterial {
+            color: Vector3f::new(1.0, 1.0, 1.0),
+            width: 0.5,
+            edge: 0.1,
+            outline_width: 0.5,
+            outline_edge: 0.4,
+            outline_color: Vector3f::new(0.0, 1.0, 0.0),
+            offset: Vector2f::new(0.0, 0.0),
+        }
+    }
+}
 
 pub mod text_mesh_creator {
     use super::*;

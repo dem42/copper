@@ -3,3 +3,4 @@ pub mod text;
 
 pub use self::panel::GuiPanel;
 pub use self::text::GuiText;
+pub use self::text::TextMaterial;
