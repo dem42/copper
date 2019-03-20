@@ -2,17 +2,20 @@ use crate::constants::GRAVITY;
 use crate::display::{
     Display,
 };
+use crate::entities::Camera;
 use crate::math::{
     Matrix4f,
     Vector3f,
 };
+use crate::models::ParticleModel;
 use crate::renderers::ParticleRenderer;
 
 pub struct Particle {
+    pub model: ParticleModel,
     pub position: Vector3f,
     pub velocity: Vector3f,
     pub gravity_effect: f32, // scale that says how much graity affects this particle
-    pub rotation: f32,
+    pub rotation_deg_z: f32,
     pub scale: f32,
     pub lifetime: f32,
     elapsed_time: f32,
@@ -20,12 +23,13 @@ pub struct Particle {
 
 impl Particle {
 
-    pub fn new(position: Vector3f, velocity: Vector3f, gravity_effect: f32, rotation: f32, scale: f32, lifetime: f32,) -> Self {
+    pub fn new(model: ParticleModel, position: Vector3f, velocity: Vector3f, gravity_effect: f32, rotation_deg_z: f32, scale: f32, lifetime: f32,) -> Self {
         Particle {
+            model,
             position,
             velocity,
             gravity_effect,
-            rotation,
+            rotation_deg_z,
             scale,
             lifetime,
             elapsed_time: 0.0,
@@ -68,9 +72,7 @@ impl ParticleMaster {
         self.particles.retain(|particle_ref| particle_ref.is_alive());
     }
 
-    pub fn render(&mut self) {
-        for particle in &self.particles {
-            self.particle_renderer.render(particle);
-        }
+    pub fn render(&mut self, camera: &Camera) {
+        self.particle_renderer.render(&self.particles, camera);
     }
 }

@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Mul};
 use super::{
     Vector2f,
     Vector3f,
@@ -313,6 +313,22 @@ impl IndexMut<usize> for Matrix2f {
     }
 }
 
+impl Mul<Matrix4f> for &Matrix4f {
+    type Output = Matrix4f;
+
+    fn mul(self, mut other: Matrix4f) -> Matrix4f {
+        let mut res = [[0f32; 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                for k in 0..4 {
+                    res[i][j] += self.data[i][k] * other.data[k][j];
+                }
+            }    
+        }
+        other.data = res;
+        other     
+    }
+}
 
 
 #[cfg(test)]
@@ -320,11 +336,26 @@ mod tests {
     use super::*;
 
     const EPS_PRECISE: f32 = 1e-6;
+    const EPS_MEDIUM: f32 = 1e-5;
     const EPS_BAD: f32 = 1e-2;
 
     macro_rules! assert_f32_eq {
         ($left:expr, $right:expr, $eps:expr) => (assert!(($left - $right).abs() < $eps, format!("Left: {}, Right: {}.", $left, $right)););
         ($left:expr, $right:expr, $eps:expr, $msg:expr) => (assert!(($left - $right).abs() < $eps, format!("{}. Left: {}, Right: {}.", $msg, $left, $right));)
+    }
+
+    #[test]
+    fn matrix_mul_4x4() {
+        let m1 = Matrix4f {data: [[-1.3, 10.0, 2.8, 2.0], [-2.0, 3.0, -13.0, 9.0], [-1.4, 4.5, 0.0, 3.2], [-1.0, -2.0, 3.0, 5.0]] };
+        let m2 = Matrix4f {data: [[-0.3, -7.0, 12.8, 2.0], [3.0, 3.0, 3.0, 3.0], [-4.0, -4.5, 4.0, 4.5], [-11.0, -22.0, 33.0, 55.0]] };        
+        let result = &m1 * m2;
+        
+        let expected = Matrix4f {data: [[-2.81, -17.5, 90.560, 150.0], [-37.4, -116.5, 228.4, 441.5], [-21.28, -47.10, 101.18, 186.7], [-72.7, -122.50, 158.20, 280.5]] };  
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(result[r][c], expected[r][c], tests::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
+            }
+        }
     }
 
     #[test]

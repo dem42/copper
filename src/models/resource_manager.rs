@@ -8,6 +8,7 @@ use super::loader::{
     GuiModel,
     SkyboxModel,
     WaterModel,
+    ParticleModel,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::{
@@ -34,6 +35,7 @@ pub struct ResourceManager {
     gui_model: Option<GuiModel>,
     skybox_model: Option<SkyboxModel>,
     water_model: Option<WaterModel>,
+    particle_model: Option<ParticleModel>,
 
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
@@ -406,5 +408,24 @@ impl ResourceManager {
         let text_mesh = create_mesh(text, &font_type, font_size);
         let text_model = self.loader.load_quads_mesh_to_vao(&text_mesh.positions, &text_mesh.tex_coords);
         GuiText::new(font_type, text_model, position, material)
+    }
+
+    pub fn init_particle_model(&mut self) {
+        if let None = self.particle_model {
+            let quad_triang_strip = vec![
+                -0.5, 0.5,
+                0.5, 0.5,
+                -0.5, -0.5,
+                0.5, -0.5,
+            ];
+            let raw_model = self.loader.load_simple_model_to_vao(&quad_triang_strip, 2);
+            self.particle_model = Some(ParticleModel {
+                raw_model,
+            });
+        }
+    }
+
+    pub fn particle_model(&self) -> ParticleModel {
+        self.particle_model.as_ref().expect("Must init_particle_model before accessing it").clone()
     }
 }

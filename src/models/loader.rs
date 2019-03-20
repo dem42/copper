@@ -278,3 +278,8 @@ pub struct WaterModel {
     pub dudv_tex_id: u32,
     pub normal_map_tex_id: u32,
 }
+
+#[derive(Clone)]
+pub struct ParticleModel {
+    pub raw_model: RawModel,    
+}

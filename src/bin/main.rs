@@ -6,6 +6,8 @@ use rand::Rng;
 use copper::display::{
     Display,
     Framebuffers,
+    Keyboard,
+    Key,
 };
 use copper::guis::{
     GuiPanel,
@@ -58,18 +60,22 @@ fn main() {
     init_resources(&mut resource_manager);
     
     let texts = vec![
-        resource_manager.create_gui_text("peljo'\nwo rld!", 
-            ResourceManager::COPPER_SDF_FONT_TYPE, 10, Vector2f::new(0.0, 0.5), 
+        resource_manager.create_gui_text("hello\nworld", 
+            ResourceManager::COPPER_SDF_FONT_TYPE, 4, Vector2f::new(-0.8, -0.60), 
             TextMaterial {
-                color: Vector3f::new(1.0, 0.0, 0.0), ..TextMaterial::default()
+                color: Vector3f::new(1.0, 0.0, 0.0), 
+                width: 0.5, edge: 0.3,
+                outline_width: 0.5, outline_edge: 0.4,
+                ..TextMaterial::default()
             }
         ),
-        resource_manager.create_gui_text("Not_imPres\" Sejp; @", 
-            ResourceManager::COPPER_SDF_FONT_TYPE, 15, Vector2f::new(-0.5, -0.5), 
+        resource_manager.create_gui_text("Made with Rust", 
+            ResourceManager::COPPER_SDF_FONT_TYPE, 4, Vector2f::new(0.3, -0.95), 
             TextMaterial {
                 color: Vector3f::new(0.0, 0.0, 1.0), 
-                outline_color: Vector3f::new(0.2, 0.2, 0.2),
+                outline_color: Vector3f::new(0.0, 0.0, 0.0),
                 offset: Vector2f::new(-0.002, -0.002),
+                outline_width: 0.5, outline_edge: 0.4,
                 ..TextMaterial::default()
             }
         ),
@@ -107,7 +113,7 @@ fn main() {
 
     // particle effects
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
-    let mut particle_system = ParticleSystem::new();
+    let particle_system = ParticleSystem::new(resource_manager.particle_model());
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &scene.player);
@@ -116,7 +122,10 @@ fn main() {
 
         spin_around_normal_mapped_entities(&mut scene, &display);
 
-        particle_system.emit_particles(&mut particle_master);
+        if display.is_pressed(Key::Y) {
+            particle_system.emit_particles(&mut particle_master, &scene.player.entity.position);
+        }
+        
         particle_master.update(&display);
 
         scene.player.move_player(&display, &scene.ground);
@@ -126,7 +135,7 @@ fn main() {
         batch_renderer.render(&lights, &mut camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
             &scene.player, &scene.water, &skybox, &display, &framebuffers);
 
-        particle_master.render();
+        particle_master.render(&camera);
 
         gui_renderer.render(&guis, &scene.gui_model.raw_model, &texts);
 
@@ -174,6 +183,8 @@ fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_gui_textures();
 
     resource_manager.init_fonts();
+
+    resource_manager.init_particle_model();
 }
 
 fn create_scene(resource_manager: &ResourceManager) -> Scene {
