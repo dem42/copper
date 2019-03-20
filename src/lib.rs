@@ -1,6 +1,7 @@
 extern crate glfw;
 extern crate libc;
 extern crate texture_lib;
+extern crate rand;
 
 pub mod display;
 pub mod constants;

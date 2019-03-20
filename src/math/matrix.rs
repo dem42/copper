@@ -30,6 +30,21 @@ impl Matrix4f {
         transform_mat
     }
 
+    pub fn create_particle_transform_matrix(translation: &Vector3f, rotation_z_deg: f32, scale: f32, view_matrix: &Matrix4f) -> Matrix4f {        
+        let mut transform_mat = Matrix4f::identity();
+        transform_mat.translate(translation);
+        // the 3x3 top left corner of view matrix is the camera rotation (no scale .. camera doesnt scale) -> therefore it is an orthonormal transform matrix
+        // since it's orthonormal we can cancel it (make it Identity) by multiplying with it's transpose -> so before rotate scale set original rotation to be inverse of view rotation
+        for i in 0..3 {
+            for j in 0..3 {
+                transform_mat.data[i][j] = view_matrix.data[j][i];
+            }
+        }
+        transform_mat.rotate_tait_bryan_zyx(&Vector3f::new(0.0, 0.0, rotation_z_deg));
+        transform_mat.scale(&Vector3f::new(scale, scale, scale));
+        transform_mat
+    }
+
     pub fn create_transform_matrix(translation: &Vector3f, rot_xyz_degrees: &Vector3f, scale: f32) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
         transform_mat.translate(translation);

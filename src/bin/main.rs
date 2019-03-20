@@ -6,8 +6,6 @@ use rand::Rng;
 use copper::display::{
     Display,
     Framebuffers,
-    Keyboard,
-    Key,
 };
 use copper::guis::{
     GuiPanel,
@@ -40,6 +38,7 @@ use copper::math::{
 use copper::particles::{
     ParticleMaster,
     ParticleSystem,
+    SimpleParticleSystem,
 };
 use copper::mouse_picker::MousePicker;
 
@@ -113,7 +112,7 @@ fn main() {
 
     // particle effects
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
-    let particle_system = ParticleSystem::new(resource_manager.particle_model());
+    let particle_system = SimpleParticleSystem::new(resource_manager.particle_model(), 50.0, 50.0, 0.3, 4.0);
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &scene.player);
@@ -121,10 +120,8 @@ fn main() {
         update_mouse_picker_and_move_lamp(&mut mouse_picker, &display, &camera, &mut scene, &mut lights);
 
         spin_around_normal_mapped_entities(&mut scene, &display);
-
-        if display.is_pressed(Key::Y) {
-            particle_system.emit_particles(&mut particle_master, &scene.player.entity.position);
-        }
+        
+        particle_system.emit_particles(&mut particle_master, &scene.player.entity.position, &display);
         
         particle_master.update(&display);
 

@@ -380,6 +380,12 @@ pub fn tex_parameterf(target: types::GLenum, pname: types::GLenum, value: f32) {
     }
 }
 
+pub fn depth_mask(flag: bool) {
+    unsafe {
+        DepthMask(if flag { TRUE } else { FALSE });
+    }
+}
+
 ///////////
 // gl 3.0
 ///////////

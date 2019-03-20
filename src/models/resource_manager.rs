@@ -414,8 +414,8 @@ impl ResourceManager {
         if let None = self.particle_model {
             let quad_triang_strip = vec![
                 -0.5, 0.5,
-                0.5, 0.5,
                 -0.5, -0.5,
+                0.5, 0.5,
                 0.5, -0.5,
             ];
             let raw_model = self.loader.load_simple_model_to_vao(&quad_triang_strip, 2);
