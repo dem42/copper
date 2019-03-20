@@ -1,4 +1,4 @@
-use std::ops::{Neg, Index, IndexMut, Add, Sub, AddAssign, MulAssign};
+use std::ops::{Neg, Index, IndexMut, Add, Sub, AddAssign, Mul, MulAssign};
 use std::iter::IntoIterator;
 use std::f32;
 
@@ -129,16 +129,22 @@ impl<'a> Neg for &'a Vector3f {
 impl Add for Vector3f {
     type Output = Vector3f;
 
-    fn add(self, other: Vector3f) -> Vector3f {
-        Vector3f::new(self.x + other.x, self.y + other.y, self.y + other.y)
+    fn add(mut self, other: Vector3f) -> Vector3f {
+        self.x += other.x;
+        self.y += other.y; 
+        self.z += other.z;
+        self
     }
 }
 
 impl Sub for Vector3f {
     type Output = Vector3f;
 
-    fn sub(self, other: Vector3f) -> Vector3f {
-        Vector3f::new(self.x - other.x, self.y - other.y, self.z - other.z)
+    fn sub(mut self, other: Vector3f) -> Vector3f {
+        self.x -= other.x;
+        self.y -= other.y; 
+        self.z -= other.z;
+        self
     }
 }
 
@@ -147,6 +153,17 @@ impl AddAssign<&Vector3f> for Vector3f {
         self.x += other.x;
         self.y += other.y;
         self.z += other.z;
+    }
+}
+
+impl Mul<f32> for Vector3f {
+    type Output = Vector3f;
+
+    fn mul(mut self, other: f32) -> Vector3f {
+        self.x *= other;
+        self.y *= other;
+        self.z *= other;
+        self
     }
 }
 

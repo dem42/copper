@@ -1,4 +1,3 @@
-
 use glfw::{
     Action,
     Context,
@@ -10,6 +9,7 @@ use std::time::{
 use std::sync::mpsc::Receiver;
 use std::fmt;
 use crate::gl;
+use crate::math::Matrix4f;
 
 pub use glfw::Key;
 
@@ -83,13 +83,14 @@ impl WallClock {
 }
 
 pub struct Display {
+    pub frame_time_sec: f32,
+    pub mouse_pos: MousePosData,
+    pub wall_clock: WallClock,
+    pub projection_matrix: Matrix4f,
     glfw: glfw::Glfw,
     window: glfw::Window,
     events: Receiver<(f64, WindowEvent)>,
     last_frame_sys_time: SystemTime,
-    pub frame_time_sec: f32,
-    pub mouse_pos: MousePosData,
-    pub wall_clock: WallClock,
     mouse_select_active: bool,
 }
 
@@ -107,6 +108,11 @@ impl Keyboard for Display {
 }
 
 impl Display {
+    const FOV_HORIZONTAL: f32 = 70.0;
+    // here using actual world coords which are RHS coord sys with z axis going into screen (so more negative means further)
+    const NEAR: f32 = -0.1;
+    const FAR: f32 = -1000.0;
+
     pub fn create() -> Display {        
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
         glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
@@ -128,6 +134,8 @@ impl Display {
 
         gl::helper::register_error_callback();
 
+        let projection_matrix = Matrix4f::create_projection_matrix(Display::NEAR, Display::FAR, Display::FOV_HORIZONTAL, Display::get_aspect_ration(&window));
+
         Display {
             glfw,
             window,
@@ -137,6 +145,7 @@ impl Display {
             mouse_pos: MousePosData::default(),
             wall_clock: WallClock::default(),
             mouse_select_active: false,
+            projection_matrix,
         }
     }
 
@@ -145,8 +154,8 @@ impl Display {
         (w as f32, h as f32)
     }
 
-    pub fn get_aspect_ration(&self) -> f32 {
-        let (width, height) = self.window.get_framebuffer_size();        
+    fn get_aspect_ration(window: &glfw::Window) -> f32 {
+        let (width, height) = window.get_framebuffer_size();        
         let aspect_ratio = (width as f32) / (height as f32);
         aspect_ratio
     }

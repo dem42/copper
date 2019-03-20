@@ -1,0 +1,1 @@
+pub const GRAVITY: f32 = -50.0;

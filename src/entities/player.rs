@@ -1,4 +1,5 @@
 use std::f32;
+use crate::constants::GRAVITY;
 use crate::display::{
     Keyboard,
     Display,
@@ -20,7 +21,6 @@ pub struct Player {
 impl Player {
     const RUN_SPEED: f32 = 20.0;
     const TURN_SPEED: f32 = 160.0;
-    const GRAVITY: f32 = -50.0;
     const JUMP_POWER: f32 = 30.0;
 
     pub fn new(entity: Entity) -> Player {
@@ -40,7 +40,7 @@ impl Player {
         let (y_sin, y_cos) = self.entity.rotation_deg.y.to_radians().sin_cos();
         let dx = distance * y_sin;
         let dz = distance * y_cos;
-        self.upwards_speed += Player::GRAVITY * display.frame_time_sec;
+        self.upwards_speed += GRAVITY * display.frame_time_sec;
         let upwards_dist = self.upwards_speed * display.frame_time_sec;
         self.entity.increase_position(dx, upwards_dist, dz);
 

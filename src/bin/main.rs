@@ -35,6 +35,10 @@ use copper::math::{
     Vector2f,
     Vector3f,
 };
+use copper::particles::{
+    ParticleMaster,
+    ParticleSystem,
+};
 use copper::mouse_picker::MousePicker;
 
 struct Scene {
@@ -80,7 +84,7 @@ fn main() {
     };
 
 
-    let mut batch_renderer = BatchRenderer::new(&display);
+    let mut batch_renderer = BatchRenderer::new(&display.projection_matrix);
     let mut gui_renderer = GuiRenderer::new();
         
     let mut lights = vec!{
@@ -100,27 +104,49 @@ fn main() {
     let mut skybox = Skybox::new(resource_manager.skybox(), 0.0);
 
     let mut mouse_picker = MousePicker::new();
+
+    // particle effects
+    let mut particle_master = ParticleMaster::new(&display.projection_matrix);
+    let mut particle_system = ParticleSystem::new();
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &scene.player);
-        if let Some(selected_pos) = mouse_picker.update(&display, &batch_renderer.projection_matrix, &camera, &scene.ground) {            
-            let last_pos = scene.entities.len()-1;
-            scene.entities[last_pos].set_position(&selected_pos);
-            lights[3].position = selected_pos;
-            lights[3].position.y += 14.0; 
-        }
+        
+        update_mouse_picker_and_move_lamp(&mut mouse_picker, &display, &camera, &mut scene, &mut lights);
 
-        const SPEED: f32 = 20.0;
-        for idx in 0..scene.normal_mapped_entities.len() {
-            scene.normal_mapped_entities[idx].increase_rotation(0.0, SPEED * display.frame_time_sec, 0.0);
-        }
+        spin_around_normal_mapped_entities(&mut scene, &display);
+
+        particle_system.emit_particles(&mut particle_master);
+        particle_master.update(&display);
 
         scene.player.move_player(&display, &scene.ground);
+
         skybox.increase_rotation(&display);
+
         batch_renderer.render(&lights, &mut camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
             &scene.player, &scene.water, &skybox, &display, &framebuffers);
+
+        particle_master.render();
+
         gui_renderer.render(&guis, &scene.gui_model.raw_model, &texts);
+
         display.update_display();
+    }
+}
+
+fn update_mouse_picker_and_move_lamp(mouse_picker: &mut MousePicker, display: &Display, camera: &Camera, scene: &mut Scene, lights: &mut Vec<Light>) {
+    if let Some(selected_pos) = mouse_picker.update(&display, &display.projection_matrix, &camera, &scene.ground) {            
+        let last_pos = scene.entities.len()-1;
+        scene.entities[last_pos].set_position(&selected_pos);
+        lights[3].position = selected_pos;
+        lights[3].position.y += 14.0; 
+    }
+}
+
+fn spin_around_normal_mapped_entities(scene: &mut Scene, display: &Display) {
+    const SPEED: f32 = 20.0;
+    for idx in 0..scene.normal_mapped_entities.len() {
+        scene.normal_mapped_entities[idx].increase_rotation(0.0, SPEED * display.frame_time_sec, 0.0);
     }
 }
 

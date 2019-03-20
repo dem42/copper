@@ -4,7 +4,6 @@ use crate::guis::{
 };
 use crate::math::{
     Vector2f,
-    Vector3f,
 };
 use crate::models::{
     RawModel,
