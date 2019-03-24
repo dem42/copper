@@ -143,6 +143,24 @@ impl ModelLoader {
         }
     }
 
+    pub fn create_empty_float_vbo(&mut self, float_count: usize) -> u32 {
+        let vbo_id = gl::gen_buffer();
+        self.vbo_list.push(vbo_id);
+        gl::bind_buffer(gl::ARRAY_BUFFER, vbo_id);
+        gl::buffer_data_unitialized::<f32>(gl::ARRAY_BUFFER, float_count, gl::STREAM_DRAW);
+        gl::bind_buffer(gl::ARRAY_BUFFER, 0);
+        vbo_id
+    }
+
+    pub fn add_instanced_attrib(&mut self, vao: u32, vbo: u32, attrib: u32, components_per_attribute: u32, instanced_data_length: usize, offset: usize) {
+        gl::bind_buffer(gl::ARRAY_BUFFER, vbo);
+        gl::bind_vertex_array(vao);
+        gl::vertex_attrib_pointer_interleaved::<f32>(attrib, components_per_attribute, gl::FLOAT, instanced_data_length, offset);
+        gl::vertex_attrib_divisor(attrib, 1);
+        gl::bind_vertex_array(0);
+        gl::bind_buffer(gl::ARRAY_BUFFER, 0);
+    }
+
     fn create_vao(&mut self) -> u32 {
         let vao_id = gl::gen_vertex_array();
         self.vao_list.push(vao_id);
@@ -181,7 +199,7 @@ impl Drop for ModelLoader {
     }
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub struct RawModel {
     pub vao_id: u32,
     pub vertex_count: usize,
@@ -286,9 +304,23 @@ pub struct WaterModel {
     pub normal_map_tex_id: u32,
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub struct ParticleModel {
-    pub raw_model: RawModel,    
+    pub raw_model: RawModel,
+    pub stream_draw_vbo: u32,
+}
+
+impl ParticleModel {    
+    pub const MODELVIEW_COLUMN1: u32 = 1;    
+    pub const MODELVIEW_COLUMN2: u32 = 2;    
+    pub const MODELVIEW_COLUMN3: u32 = 3;    
+    pub const MODELVIEW_COLUMN4: u32 = 4;    
+    pub const TEX_OFFSET: u32 = 5;    
+    pub const BLEND: u32 = 6;
+    
+    // 21 = (4 + 4 + 4 + 4) + 4 + 1 which is how many floats the shader needs
+    pub const INSTANCED_DATA_LENGTH: usize = 21;
+    pub const MAX_INSTANCES: usize = 10_000;
 }
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -296,4 +328,10 @@ pub struct ParticleTexture {
     pub tex_id: u32,
     pub number_of_rows_in_atlas: usize,
     pub additive: bool,
+}
+
+#[derive(Default, Clone, PartialEq, Eq, Hash)]
+pub struct ParticleTexturedModel {
+    pub model: ParticleModel,
+    pub texture: ParticleTexture,
 }

@@ -12,15 +12,13 @@ use crate::math::{
     Vector3f,
 };
 use crate::models::{
-    ParticleModel,
-    ParticleTexture,
+    ParticleTexturedModel,
 };
 use crate::renderers::ParticleRenderer;
 use crate::utils::insertion_sort;
 
 pub struct Particle {
-    pub model: ParticleModel,
-    pub texture: ParticleTexture,
+    pub model: ParticleTexturedModel,
     pub position: Vector3f,
     pub velocity: Vector3f,
     pub gravity_effect: f32, // scale that says how much graity affects this particle
@@ -37,10 +35,9 @@ pub struct Particle {
 
 impl Particle {
 
-    pub fn new(model: ParticleModel, texture: ParticleTexture, position: Vector3f, velocity: Vector3f, gravity_effect: f32, rotation_deg_z: f32, scale: f32, lifetime: f32,) -> Self {
+    pub fn new(model: ParticleTexturedModel, position: Vector3f, velocity: Vector3f, gravity_effect: f32, rotation_deg_z: f32, scale: f32, lifetime: f32,) -> Self {
         Particle {
             model,
-            texture,
             position,
             velocity,
             gravity_effect,
@@ -74,12 +71,12 @@ impl Particle {
 
     fn update_texture_atlas_data(&mut self) {
         let life_progression = self.elapsed_time / self.lifetime;
-        let atlas_progression = life_progression * (self.texture.number_of_rows_in_atlas * self.texture.number_of_rows_in_atlas) as f32;
+        let atlas_progression = life_progression * (self.model.texture.number_of_rows_in_atlas * self.model.texture.number_of_rows_in_atlas) as f32;
         let index1 = atlas_progression.floor() as usize;
-        let index2 = if index1 < self.texture.number_of_rows_in_atlas - 1 { index1 + 1 } else { index1 };
+        let index2 = if index1 < self.model.texture.number_of_rows_in_atlas - 1 { index1 + 1 } else { index1 };
         self.blend = atlas_progression % 1.0;
-        Particle::calc_tex_offset(&mut self.texture_offset1, index1, self.texture.number_of_rows_in_atlas);
-        Particle::calc_tex_offset(&mut self.texture_offset2, index2, self.texture.number_of_rows_in_atlas);
+        Particle::calc_tex_offset(&mut self.texture_offset1, index1, self.model.texture.number_of_rows_in_atlas);
+        Particle::calc_tex_offset(&mut self.texture_offset2, index2, self.model.texture.number_of_rows_in_atlas);
     }
 
     fn calc_tex_offset(tex_coord: &mut Vector2f, index: usize, rows_in_atlas: usize) {
@@ -104,7 +101,7 @@ impl PartialOrd for Particle {
 }
 
 pub struct ParticleMaster {
-    particles: HashMap<ParticleTexture, Vec<Particle>>,
+    particles: HashMap<ParticleTexturedModel, Vec<Particle>>,
     particle_renderer: ParticleRenderer,
 }
 
@@ -117,7 +114,7 @@ impl ParticleMaster {
     }
 
     pub fn add_particle(&mut self, particle: Particle) {
-        let entry = self.particles.entry(particle.texture.clone()).or_insert(Vec::new());
+        let entry = self.particles.entry(particle.model.clone()).or_insert(Vec::new());
         entry.push(particle);
     }
 

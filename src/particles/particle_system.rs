@@ -10,6 +10,7 @@ use crate::math::{
 use crate::models::{
     ParticleModel,
     ParticleTexture,
+    ParticleTexturedModel,
 };
 use crate::particles::{
     Particle,
@@ -21,8 +22,7 @@ pub trait ParticleSystem {
 }
 
 pub struct SimpleParticleSystem {
-    particle_model: ParticleModel,
-    texture: ParticleTexture,
+    particle_model: ParticleTexturedModel,
     particles_per_sec: f32, 
     speed: f32, 
     gravity_effect: f32, 
@@ -32,8 +32,7 @@ pub struct SimpleParticleSystem {
 impl SimpleParticleSystem {
     pub fn new(particle_model: ParticleModel, texture: ParticleTexture, particles_per_sec: f32, speed: f32, gravity_effect: f32, life_length: f32) -> Self {
         SimpleParticleSystem {
-            particle_model,
-            texture,
+            particle_model: ParticleTexturedModel { model: particle_model, texture },
             particles_per_sec, 
             speed, 
             gravity_effect, 
@@ -45,7 +44,6 @@ impl SimpleParticleSystem {
         velocity.normalize();
         velocity *= self.speed;
         Particle::new(self.particle_model.clone(), 
-            self.texture.clone(),
             spawn_pos.clone(), 
             velocity, 
             self.gravity_effect, 0.0, 1.0, self.life_length)
@@ -89,8 +87,7 @@ pub struct ParticleSystemProps {
 }
 
 pub struct AdvancedParticleSystem {
-    particle_model: ParticleModel,
-    texture: ParticleTexture,
+    particle_model: ParticleTexturedModel,
     particles_per_sec: f32, 
     speed: f32, 
     scale: f32,
@@ -114,8 +111,7 @@ impl AdvancedParticleSystem {
         };
         texture.additive = props.additive_blending;
         Self {
-            particle_model,
-            texture,
+            particle_model: ParticleTexturedModel { model: particle_model, texture },
             particles_per_sec: props.particles_per_sec, 
             speed: props.speed, 
             scale: props.scale,
@@ -141,7 +137,7 @@ impl AdvancedParticleSystem {
         let particle_scale = AdvancedParticleSystem::generate_value_using_error(rng, self.scale, self.scale_error);
         let particle_rotation = if self.randomize_rotation { rng.gen::<f32>() * 360.0 } else { 0.0 };
         let particle_life = AdvancedParticleSystem::generate_value_using_error(rng, self.life_length, self.life_error);
-        Particle::new(self.particle_model.clone(), self.texture.clone(), spawn_pos.clone(), velocity, self.gravity_effect, particle_rotation, particle_scale, particle_life)
+        Particle::new(self.particle_model.clone(), spawn_pos.clone(), velocity, self.gravity_effect, particle_rotation, particle_scale, particle_life)
     }
 
     fn generate_random_direction(rng: &mut ThreadRng) -> Vector3f {

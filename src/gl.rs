@@ -36,6 +36,12 @@ pub fn draw_arrays(draw_type: types::GLenum, first_idx: usize, num_to_draw: usiz
     }
 }
 
+pub fn draw_arrays_instanced(draw_type: types::GLenum, first_idx: usize, num_to_draw: usize, instancecount: usize) {
+    unsafe {        
+        DrawArraysInstanced(draw_type, first_idx as i32, num_to_draw as i32, instancecount as i32);
+    }
+}
+
 pub fn draw_elements(draw_mode: types::GLenum, index_cnt: usize, draw_type: types::GLenum) {
     unsafe {
         let offset = ptr::null() as *const _; // offset to start of data in buffer
@@ -109,6 +115,22 @@ pub fn buffer_data<T>(target: types::GLenum, data: &[T], usage: types::GLenum) {
     }
 }
 
+pub fn buffer_data_unitialized<T>(target: types::GLenum, elem_count: usize, usage: types::GLenum) {
+    unsafe {
+        let size_in_bytes = (elem_count * mem::size_of::<T>()) as isize;
+        let data_ptr = ptr::null();
+        BufferData(target, size_in_bytes, data_ptr as *const _, usage);
+    }
+}
+
+pub fn buffer_sub_data<T>(target: types::GLenum, offset: usize, data: &[T]) {
+    unsafe {
+        let size_in_bytes = (data.len() * mem::size_of::<T>()) as isize;
+        let offset_size = (offset * mem::size_of::<T>()) as isize;
+        BufferSubData(target, offset_size, size_in_bytes, data.as_ptr() as *const _)
+    }
+}
+
 pub fn delete_buffers(buffer_ids: &[u32]) {
     unsafe {
         DeleteBuffers(buffer_ids.len() as i32, buffer_ids.as_ptr());
@@ -173,7 +195,7 @@ pub fn uniform_matrix4f(location_id: i32, matrix: &[[f32; 4]; 4]) {
 pub fn vertex_attrib_pointer(
     attribute_id: u32,
     components_per_attribute: u32,
-    data_type: types::GLenum,
+    data_type: types::GLenum,    
 ) {
     unsafe {
         let should_normalize = false as u8;
@@ -187,6 +209,36 @@ pub fn vertex_attrib_pointer(
             stride,
             offset,
         );
+    }
+}
+
+pub fn vertex_attrib_pointer_interleaved<T>(
+    attribute_id: u32,
+    components_per_attribute: u32,
+    data_type: types::GLenum,
+    stride: usize,
+    offset: usize    
+) {
+    unsafe {
+        let should_normalize = false as u8;
+        let stride_size = (stride * mem::size_of::<T>()) as i32;
+        let offset_size = (offset * mem::size_of::<T>()) as *const _; // offset to start of data in buffer
+        VertexAttribPointer(
+            attribute_id,
+            components_per_attribute as i32,
+            data_type,
+            should_normalize,
+            stride_size,
+            offset_size,
+        );
+    }
+}
+
+// use this to indicate that the attribute is per instance (instanced attribute)
+// the divisor says how when does the attribute's index advance .. if divisor is 0 then it advances for each vertex. non-zero means it advances each divisor instances
+pub fn vertex_attrib_divisor(attrib_index: u32, divisor: u32) {
+    unsafe {
+        VertexAttribDivisor(attrib_index, divisor);
     }
 }
 

@@ -428,8 +428,16 @@ impl ResourceManager {
                 0.5, -0.5,
             ];
             let raw_model = self.loader.load_simple_model_to_vao(&quad_triang_strip, 2);
+            let stream_draw_vbo = self.loader.create_empty_float_vbo(ParticleModel::INSTANCED_DATA_LENGTH * ParticleModel::MAX_INSTANCES);
+            self.loader.add_instanced_attrib(raw_model.vao_id, stream_draw_vbo, ParticleModel::MODELVIEW_COLUMN1, 4, ParticleModel::INSTANCED_DATA_LENGTH, 0);
+            self.loader.add_instanced_attrib(raw_model.vao_id, stream_draw_vbo, ParticleModel::MODELVIEW_COLUMN2, 4, ParticleModel::INSTANCED_DATA_LENGTH, 4);
+            self.loader.add_instanced_attrib(raw_model.vao_id, stream_draw_vbo, ParticleModel::MODELVIEW_COLUMN3, 4, ParticleModel::INSTANCED_DATA_LENGTH, 8);
+            self.loader.add_instanced_attrib(raw_model.vao_id, stream_draw_vbo, ParticleModel::MODELVIEW_COLUMN4, 4, ParticleModel::INSTANCED_DATA_LENGTH, 12);
+            self.loader.add_instanced_attrib(raw_model.vao_id, stream_draw_vbo, ParticleModel::TEX_OFFSET, 4, ParticleModel::INSTANCED_DATA_LENGTH, 16);
+            self.loader.add_instanced_attrib(raw_model.vao_id, stream_draw_vbo, ParticleModel::BLEND, 1, ParticleModel::INSTANCED_DATA_LENGTH, 20);
             self.particle_model = Some(ParticleModel {
                 raw_model,
+                stream_draw_vbo,
             });
         }
     }
