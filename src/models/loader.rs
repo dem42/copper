@@ -283,3 +283,9 @@ pub struct WaterModel {
 pub struct ParticleModel {
     pub raw_model: RawModel,    
 }
+
+#[derive(Clone)]
+pub struct ParticleTexture {
+    pub tex_id: u32,
+    pub number_of_rows_in_atlas: usize,
+}

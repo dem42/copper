@@ -107,9 +107,9 @@ impl Matrix4f {
     pub fn rotate_tait_bryan_zyx(&mut self, rot_xyz_degrees: &Vector3f) {
         let mut rot_mat = [[0.0f32; 4]; 4];
         rot_mat[3][3] = 1.0;
-        let (sc, cc) = rot_xyz_degrees.x.to_radians().sin_cos();
+        let (sc, cc) = rot_xyz_degrees.z.to_radians().sin_cos();
         let (sb, cb) = rot_xyz_degrees.y.to_radians().sin_cos();
-        let (sa, ca) = rot_xyz_degrees.z.to_radians().sin_cos();
+        let (sa, ca) = rot_xyz_degrees.x.to_radians().sin_cos();
         
         rot_mat[0][0] = cb*cc;
         rot_mat[0][1] = cc*sa*sb - ca*sc;

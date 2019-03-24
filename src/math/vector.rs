@@ -101,6 +101,14 @@ impl Vector3f {
         let k_axis_coef = self.x * o.x - o.x * self.y;
         Vector3f::new(i_axis_coef, -j_axis_coef, k_axis_coef)
     }
+
+    pub fn perpendicular(&self) -> Vector3f {
+        if self.x != 0.0 || self.y != 0.0 {
+            Vector3f::new(-self.y, self.x, 0.0)
+        } else {
+            Vector3f::new(-self.z, 0.0, self.x)
+        }
+    }
 }
 
 impl Neg for Vector3f {
@@ -134,6 +142,17 @@ impl Add for Vector3f {
         self.y += other.y; 
         self.z += other.z;
         self
+    }
+}
+
+impl Add<Vector3f> for &Vector3f {
+    type Output = Vector3f;
+
+    fn add(self, mut other: Vector3f) -> Vector3f {
+        other.x += self.x;
+        other.y += self.y; 
+        other.z += self.z;
+        other
     }
 }
 

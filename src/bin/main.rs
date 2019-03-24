@@ -38,7 +38,7 @@ use copper::math::{
 use copper::particles::{
     ParticleMaster,
     ParticleSystem,
-    SimpleParticleSystem,
+    AdvancedParticleSystem,
 };
 use copper::mouse_picker::MousePicker;
 
@@ -112,7 +112,7 @@ fn main() {
 
     // particle effects
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
-    let particle_system = SimpleParticleSystem::new(resource_manager.particle_model(), 50.0, 50.0, 0.3, 4.0);
+    let particle_system = AdvancedParticleSystem::new(resource_manager.particle_model(), 60.0, 55.0, 0.5, 1.0, 0.5, 0.3, 0.3, 0.3, true, Some((Vector3f::new(0.0, 1.0, 0.0), 45.0)));
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &scene.player);
@@ -152,7 +152,7 @@ fn update_mouse_picker_and_move_lamp(mouse_picker: &mut MousePicker, display: &D
 fn spin_around_normal_mapped_entities(scene: &mut Scene, display: &Display) {
     const SPEED: f32 = 20.0;
     for idx in 0..scene.normal_mapped_entities.len() {
-        scene.normal_mapped_entities[idx].increase_rotation(0.0, SPEED * display.frame_time_sec, 0.0);
+        scene.normal_mapped_entities[idx].increase_rotation(0.0, 0.0, SPEED * display.frame_time_sec);
     }
 }
 
