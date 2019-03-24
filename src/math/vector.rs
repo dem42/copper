@@ -84,6 +84,10 @@ impl Vector3f {
         sq_sum.sqrt()
     }
 
+    pub fn length_squared(&self) -> f32 {
+        self.x * self.x + self.y * self.y + self.z * self.z        
+    }
+
     pub fn normalize(&mut self) {
         let len = self.length();
         self.x /= len;
@@ -167,6 +171,14 @@ impl Sub for Vector3f {
     }
 }
 
+impl Sub<&Vector3f> for &Vector3f {
+    type Output = Vector3f;
+
+    fn sub(self, other: &Vector3f) -> Vector3f {
+        Vector3f::new(self.x - other.x, self.y - other.y, self.z - other.z)
+    }
+}
+
 impl AddAssign<&Vector3f> for Vector3f {
     fn add_assign(&mut self, other: &Vector3f) {
         self.x += other.x;
@@ -213,6 +225,11 @@ impl Vector2f {
     pub fn new(x: f32, y: f32) -> Vector2f {
         Vector2f { x, y, }
     }
+
+    pub fn zero() -> Vector2f {
+        Vector2f::new(0.0, 0.0)
+    }
+
     pub fn length(&self) -> f32 {
         let sq_sum = self.x * self.x + self.y * self.y;
         sq_sum.sqrt()

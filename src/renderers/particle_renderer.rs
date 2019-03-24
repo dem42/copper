@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::entities::Camera;
 use crate::gl;
 use crate::math::{
@@ -5,6 +6,7 @@ use crate::math::{
 };
 use crate::models::{
     RawModel,
+    ParticleTexture,
 };
 use crate::particles::Particle;
 use crate::shaders::ParticleShader;
@@ -24,13 +26,28 @@ impl ParticleRenderer {
         }
     } 
 
-    pub fn render(&mut self, particles: &[Particle], camera: &Camera) {
+    pub fn render(&mut self, particles: &HashMap<ParticleTexture, Vec<Particle>>, camera: &Camera) {
         self.prepare();
 
         let view_mat = Matrix4f::create_view_matrix(camera);
 
-        for particle in particles {
-            self.render_particle(particle, &view_mat);
+        for (texture, particles) in particles {
+
+            gl::active_texture(gl::TEXTURE0);
+            gl::bind_texture(gl::TEXTURE_2D, texture.tex_id);
+
+            if texture.additive {
+                // use additive blending where the colors are always combined
+                // this is achieved by always using 1.0 for the destination (already rendered) unlike gl::ONE_MINUS_SRC_ALPHA in alpha blending
+                // additive blending is good for effects like magic where we want it to be shinier when there is overlap of particles
+                gl::blend_func(gl::SRC_ALPHA, gl::ONE);
+            } else {
+                gl::blend_func(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            }
+
+            for particle in particles {
+                self.render_particle(particle, &view_mat);
+            }
         }
 
         self.finish_rendering();
@@ -42,13 +59,13 @@ impl ParticleRenderer {
         // however if we were to disable depth testing completely with disable(gl::DEPTH_TEST) then particles will be drawn on top of everything including terrain
         // we want them not to write into depth buffer (depth_mask(false)) but still get tested
         gl::depth_mask(false);
-        gl::enable(gl::BLEND);
-        gl::blend_func(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl::enable(gl::BLEND);        
     }
     
     fn render_particle(&mut self, particle: &Particle, view_matrix: &Matrix4f) {
         let model_view_matrix = ParticleRenderer::create_always_camera_facing_model_view_mat(particle, view_matrix);
         self.shader.load_model_view_matrix(&model_view_matrix);
+        self.shader.load_particle_texture_data(particle);
 
         gl::bind_vertex_array(particle.model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);

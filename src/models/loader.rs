@@ -130,6 +130,13 @@ impl ModelLoader {
         }
     }
 
+    pub fn load_particle_texture(&mut self, file_name: &str, params: TextureParams) -> ParticleTexture {        
+        ParticleTexture {
+            tex_id: self.load_texture_internal(file_name, params),
+            ..Default::default()
+        }
+    }
+
     pub fn load_terrain_texture(&mut self, file_name: &str, params: TextureParams) -> TerrainTexture {        
         TerrainTexture {
             tex_id: self.load_texture_internal(file_name, params),
@@ -284,8 +291,9 @@ pub struct ParticleModel {
     pub raw_model: RawModel,    
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub struct ParticleTexture {
     pub tex_id: u32,
     pub number_of_rows_in_atlas: usize,
+    pub additive: bool,
 }

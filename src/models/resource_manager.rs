@@ -9,6 +9,7 @@ use super::loader::{
     SkyboxModel,
     WaterModel,
     ParticleModel,
+    ParticleTexture,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::{
@@ -40,6 +41,7 @@ pub struct ResourceManager {
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
     font_types: HashMap<&'static str, FontType>,
+    particle_textures: HashMap<ParticleTextureProps, ParticleTexture>,
 }
 
 pub enum ResType {
@@ -67,6 +69,8 @@ pub enum ModelType {
     Barrel,
     Boulder,
 }
+
+pub type ParticleTextureProps = (&'static str, usize);
 
 pub struct AtlasProps(usize);
 
@@ -192,7 +196,10 @@ impl ResourceManager {
     pub const HEALTHBAR_TEXTURE: &'static str = "res/textures/health.png";
     pub const GUI_BACKGROUND_TEXTURE: &'static str = "res/textures/gui_background.png";
         
-    pub const COPPER_SDF_FONT_TYPE: &'static str = "res/fonts/copperDf";    
+    pub const COPPER_SDF_FONT_TYPE: &'static str = "res/fonts/copperDf";
+
+    pub const PARTICLE_STAR: ParticleTextureProps = ("res/textures/particles/particleStar.png", 1);
+    pub const PARTICLE_ATLAS: ParticleTextureProps = ("res/textures/particles/particleAtlas.png", 4);
     
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
@@ -427,5 +434,23 @@ impl ResourceManager {
 
     pub fn particle_model(&self) -> ParticleModel {
         self.particle_model.as_ref().expect("Must init_particle_model before accessing it").clone()
+    }
+
+    pub fn init_particle_textures(&mut self) {
+        let texture_props = vec![ResourceManager::PARTICLE_ATLAS];
+
+        for texture_prop in texture_props.iter() {
+            if !self.particle_textures.contains_key(texture_prop) {
+
+                let mut particle_texture = self.loader.load_particle_texture(texture_prop.0, TextureParams::default());
+                particle_texture.number_of_rows_in_atlas = texture_prop.1;
+                
+                self.particle_textures.insert(texture_prop.clone(), particle_texture);
+            }
+        }
+    }
+
+    pub fn particle_texture(&self, texture_prop: ParticleTextureProps) -> ParticleTexture {
+        self.particle_textures.get(&texture_prop).expect("Must init_particle_textures before fetching").clone()
     }
 }

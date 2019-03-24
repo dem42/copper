@@ -39,6 +39,7 @@ use copper::particles::{
     ParticleMaster,
     ParticleSystem,
     AdvancedParticleSystem,
+    ParticleSystemProps,
 };
 use copper::mouse_picker::MousePicker;
 
@@ -96,12 +97,12 @@ fn main() {
         Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
         Light::new_point(scene.ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(scene.ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
-        Light::new_point(scene.ground.create_pos_above_terrain(293.0,14.0,-305.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        
+        Light::new_point(scene.ground.create_pos_above_terrain(120.0,14.0,-240.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        
     };
     // add lamps 
     scene.entities.push(Entity::new(resource_manager.model(ModelType::Lamp), scene.ground.create_pos_on_terrain(185.0, -293.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
     scene.entities.push(Entity::new(resource_manager.model(ModelType::Lamp), scene.ground.create_pos_on_terrain(370.0, -300.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
-    scene.entities.push(Entity::new(resource_manager.model(ModelType::Lamp), scene.ground.create_pos_on_terrain(293.0, -305.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
+    scene.entities.push(Entity::new(resource_manager.model(ModelType::Lamp), scene.ground.create_pos_on_terrain(120.0, -240.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
 
     let mut camera = Camera::new();
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
@@ -112,7 +113,18 @@ fn main() {
 
     // particle effects
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
-    let particle_system = AdvancedParticleSystem::new(resource_manager.particle_model(), 60.0, 55.0, 0.5, 1.0, 0.5, 0.3, 0.3, 0.3, true, Some((Vector3f::new(0.0, 1.0, 0.0), 45.0)));
+    let mut particle_spawn_point = scene.player.entity.position.clone();
+    particle_spawn_point.x += 10.0;
+    particle_spawn_point.y += 10.0;
+    let particle_system = AdvancedParticleSystem::new(resource_manager.particle_model(), resource_manager.particle_texture(ResourceManager::PARTICLE_ATLAS),
+        ParticleSystemProps { 
+            particles_per_sec: 60.0, speed: 15.0, scale: 2.5, 
+            gravity_effect: 0.5, life_length: 1.5, 
+            speed_error: 0.3, life_error: 0.3, scale_error: 0.3, 
+            randomize_rotation: true, direction: Some((Vector3f::new(0.0, 1.0, 0.0), 45.0)),
+            additive_blending: false,
+        }
+    );
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &scene.player);
@@ -121,9 +133,9 @@ fn main() {
 
         spin_around_normal_mapped_entities(&mut scene, &display);
         
-        particle_system.emit_particles(&mut particle_master, &scene.player.entity.position, &display);
+        particle_system.emit_particles(&mut particle_master, &particle_spawn_point, &display);
         
-        particle_master.update(&display);
+        particle_master.update(&display, &camera);
 
         scene.player.move_player(&display, &scene.ground);
 
@@ -182,6 +194,7 @@ fn init_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_fonts();
 
     resource_manager.init_particle_model();
+    resource_manager.init_particle_textures();
 }
 
 fn create_scene(resource_manager: &ResourceManager) -> Scene {
