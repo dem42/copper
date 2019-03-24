@@ -125,6 +125,30 @@ fn main() {
             additive_blending: false,
         }
     );
+    let mut particle_spawn_point_fire = scene.player.entity.position.clone();
+    particle_spawn_point_fire.x -= 50.0;
+    particle_spawn_point_fire.z -= 30.0;
+    let particle_system_fire = AdvancedParticleSystem::new(resource_manager.particle_model(), resource_manager.particle_texture(ResourceManager::FIRE_ATLAS),
+        ParticleSystemProps { 
+            particles_per_sec: 60.0, speed: 15.0, scale: 7.0, 
+            gravity_effect: 0.0, life_length: 1.0, 
+            speed_error: 0.3, life_error: 0.7, scale_error: 0.5, 
+            randomize_rotation: true, direction: Some((Vector3f::new(0.0, 1.0, 0.0), 65.0)),
+            additive_blending: true,
+        }
+    );
+    let mut particle_spawn_point_smoke = scene.player.entity.position.clone();
+    particle_spawn_point_smoke.z += 50.0;
+    particle_spawn_point_smoke.y += 1.0;
+    let particle_system_smoke = AdvancedParticleSystem::new(resource_manager.particle_model(), resource_manager.particle_texture(ResourceManager::SMOKE_ATLAS),
+        ParticleSystemProps { 
+            particles_per_sec: 30.0, speed: 15.0, scale: 6.5, 
+            gravity_effect: 0.05, life_length: 1.5, 
+            speed_error: 0.3, life_error: 0.3, scale_error: 0.1, 
+            randomize_rotation: true, direction: Some((Vector3f::new(0.0, 1.0, 0.0), 50.0)),
+            additive_blending: false,
+        }
+    );
     
     while !display.is_close_requested() {
         camera.move_camera(&display, &scene.player);
@@ -134,6 +158,8 @@ fn main() {
         spin_around_normal_mapped_entities(&mut scene, &display);
         
         particle_system.emit_particles(&mut particle_master, &particle_spawn_point, &display);
+        particle_system_fire.emit_particles(&mut particle_master, &particle_spawn_point_fire, &display);
+        particle_system_smoke.emit_particles(&mut particle_master, &particle_spawn_point_smoke, &display);
         
         particle_master.update(&display, &camera);
 

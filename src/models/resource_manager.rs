@@ -200,6 +200,8 @@ impl ResourceManager {
 
     pub const PARTICLE_STAR: ParticleTextureProps = ("res/textures/particles/particleStar.png", 1);
     pub const PARTICLE_ATLAS: ParticleTextureProps = ("res/textures/particles/particleAtlas.png", 4);
+    pub const SMOKE_ATLAS: ParticleTextureProps = ("res/textures/particles/smoke.png", 8);
+    pub const FIRE_ATLAS: ParticleTextureProps = ("res/textures/particles/fire.png", 8);
     
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
@@ -437,7 +439,7 @@ impl ResourceManager {
     }
 
     pub fn init_particle_textures(&mut self) {
-        let texture_props = vec![ResourceManager::PARTICLE_ATLAS];
+        let texture_props = vec![ResourceManager::PARTICLE_ATLAS, ResourceManager::FIRE_ATLAS, ResourceManager::SMOKE_ATLAS];
 
         for texture_prop in texture_props.iter() {
             if !self.particle_textures.contains_key(texture_prop) {
