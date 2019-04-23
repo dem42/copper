@@ -1,15 +1,18 @@
-use super::loader::{
-    ModelLoader,
-    TexturedModel,
-    TerrainTexture,  
-    TerrainTexturePack,
-    TextureParams,
-    TerrainModel,
-    GuiModel,
-    SkyboxModel,
-    WaterModel,
-    ParticleModel,
-    ParticleTexture,
+use super::{
+    loader::{
+        ModelLoader,
+        TexturedModel,
+        TerrainTexture,  
+        TerrainTexturePack,
+        TextureParams,
+        TerrainModel,
+        GuiModel,
+        SkyboxModel,
+        WaterModel,
+        ParticleModel,
+        ParticleTexture,
+    },
+    terrain_generator::HeightsGenerator,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::{
@@ -30,6 +33,7 @@ use crate::math::{
 #[derive(Default)]
 pub struct ResourceManager {
     loader: ModelLoader,
+    terrain_generator: HeightsGenerator,
     texture_pack: Option<TerrainTexturePack>,
     blend_texture: Option<TerrainTexture>,
     terrain_model: Option<TerrainModel>,
@@ -258,7 +262,7 @@ impl ResourceManager {
 
     pub fn init_terrain_model(&mut self) {
         if let None = self.terrain_model {
-            let model = Terrain::generate_terrain(&mut self.loader, "res/textures/terrain/heightmap.png");
+            let model = Terrain::generate_terrain(&mut self.loader, &self.terrain_generator);
             self.terrain_model = Some(model);
         }
     }
