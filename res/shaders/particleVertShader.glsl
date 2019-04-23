@@ -1,14 +1,13 @@
 #version 400 core
 
 in vec2 position;
+in mat4 model_view_matrix;
+in vec4 tex_offsets;
+in float blend_factor;
 
 out vec2 tex_coords1;
 out vec2 tex_coords2;
 out float blend;
-
-in mat4 model_view_matrix;
-in vec4 tex_offsets;
-in float blend_factor;
 
 uniform mat4 projection_matrix;
 uniform float number_of_rows;
