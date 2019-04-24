@@ -1,7 +1,7 @@
 pub fn insertion_sort<T: PartialOrd>(list: &mut [T]) {
     let n = list.len();
     for i in 0..n {
-        let mut j = i;
+        let mut j = i;        
         while j > 0 && list[j - 1] > list[j] {
             list.swap(j - 1, j);
             j -= 1;
