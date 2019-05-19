@@ -16,3 +16,4 @@ pub mod guis;
 pub mod mouse_picker;
 pub mod particles;
 pub mod utils;
+pub mod shadows;
