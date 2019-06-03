@@ -93,6 +93,10 @@ impl Matrix4f {
         view_mat
     }
 
+    pub fn calculate_rotation_from_rpy(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
+        unimplemented!()
+    }
+
     pub fn translate(&mut self, translation: &Vector3f) {
         for i in 0..4 {            
             self.data[i][3] += translation.x * self.data[i][0] + translation.y * self.data[i][1] + translation.z * self.data[i][2]; 
