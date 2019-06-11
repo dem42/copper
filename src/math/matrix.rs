@@ -94,7 +94,11 @@ impl Matrix4f {
     }
 
     pub fn calculate_rotation_from_rpy(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
-        unimplemented!()
+        let mut result = Matrix4f::identity();
+        // rotate in the opposite order to get inverse rotation (camera rotates inversely to model transform)
+        let rotation_xyz_degrees = Vector3f::new(pitch, yaw, roll);
+        result.rotate_tait_bryan_xyz(&rotation_xyz_degrees);
+        result
     }
 
     pub fn translate(&mut self, translation: &Vector3f) {

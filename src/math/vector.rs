@@ -16,6 +16,10 @@ impl Vector4f {
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Vector4f {
         Vector4f { x, y, z, w}
     }
+
+    pub fn xyz(self) -> Vector3f {
+        Vector3f {x: self.x, y: self.y, z: self.z}
+    }
 }
 
 impl IntoIterator for Vector4f {
@@ -195,6 +199,14 @@ impl Mul<f32> for Vector3f {
         self.y *= other;
         self.z *= other;
         self
+    }
+}
+
+impl Mul<f32> for &Vector3f {
+    type Output = Vector3f;
+
+    fn mul(self, other: f32) -> Vector3f {
+        Vector3f {x: self.x * other, y: self.y * other, z: self.z * other}
     }
 }
 
