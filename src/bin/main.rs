@@ -54,7 +54,7 @@ struct Scene {
 
 fn main() {
     let mut display = Display::create();
-    let framebuffers = Framebuffers::new(&display);
+    let mut framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
     init_resources(&mut resource_manager);
@@ -168,7 +168,7 @@ fn main() {
         skybox.increase_rotation(&display);
 
         batch_renderer.render(&lights, &mut camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
-            &scene.player, &scene.water, &skybox, &display, &framebuffers);
+            &scene.player, &scene.water, &skybox, &display, &mut framebuffers);
 
         particle_master.render(&camera);
 

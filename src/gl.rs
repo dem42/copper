@@ -402,9 +402,9 @@ pub fn tex_image_2d<T>(type_: types::GLenum, level_of_detail: i32, format: types
 }
 
 // use this to allocate memory of width * height that you can later initialize with a subtexture such as from a frame buffer attachment
-pub fn tex_image_2d_uninitialized(type_: types::GLenum, level_of_detail: i32, format: types::GLenum, width: usize, height: usize, pixel_format: types::GLenum) {
+pub fn tex_image_2d_uninitialized(type_: types::GLenum, level_of_detail: i32, format: types::GLenum, internal_format: types::GLenum, width: usize, height: usize, pixel_format: types::GLenum) {
     unsafe {
-        TexImage2D(type_, level_of_detail, format as i32, width as i32, height as i32, 0, format, pixel_format, ptr::null());
+        TexImage2D(type_, level_of_detail, internal_format as i32, width as i32, height as i32, 0, format, pixel_format, ptr::null());
     }
 }
 
@@ -420,6 +420,8 @@ pub fn generate_mipmap(target: types::GLenum) {
     }
 }
 
+// seems like the difference between TexParameteri and TexParameteriv is just that iv can accept different types of values types like border colors etc, and these 
+// can take multiple parameters
 pub fn tex_parameteri(target: types::GLenum, pname: types::GLenum, value: u32) {
     unsafe {        
         TexParameteri(target, pname, value as i32);
@@ -492,6 +494,12 @@ pub fn bind_framebuffer(fbo_type: types::GLenum, fbo_id: u32) {
 pub fn draw_buffers(color_buffers: &[types::GLenum]) {
     unsafe {
         DrawBuffers(color_buffers.len() as i32, color_buffers.as_ptr());
+    }
+}
+
+pub fn read_buffer(buf_type: types::GLenum) {
+    unsafe {
+        ReadBuffer(buf_type);
     }
 }
 
