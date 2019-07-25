@@ -19,7 +19,6 @@ pub struct ShadowBox {
     farplane_height: f32,
     nearplane_width: f32,
     nearplane_height: f32,
-    world_to_light_transform: Matrix4f,
     frustum_min_corner: Vector3f,
     frustum_max_corner: Vector3f,
 }
@@ -30,22 +29,32 @@ impl ShadowBox {
     const FORWARD: Vector4f = Vector4f {x: 0.0, y: 0.0, z: -1.0, w: 0.0};
     const SHADOW_DISTANCE: f32 = 100.0;
 
-    pub fn new(world_to_light_transform: Matrix4f, aspect_ratio: f32) -> Self {
-
+    pub fn new(aspect_ratio: f32) -> Self {
        let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio);
 
         ShadowBox {
             farplane_width,
             farplane_height,
             nearplane_width,
-            nearplane_height, 
-            world_to_light_transform,
+            nearplane_height,
             frustum_min_corner: Vector3f::zero(),
             frustum_max_corner: Vector3f::zero(),
         }
     }
 
-    pub fn update(&mut self, camera: &Camera) {
+    pub fn width(&self) -> f32 {
+        self.frustum_max_corner.x - self.frustum_min_corner.x
+    }
+
+    pub fn height(&self) -> f32 {
+        self.frustum_max_corner.y - self.frustum_min_corner.y
+    }
+
+    pub fn length(&self) -> f32 {
+        self.frustum_max_corner.z - self.frustum_min_corner.z
+    }
+
+    pub fn update(&mut self, camera: &Camera, world_to_light_transform: &Matrix4f) {
         let camera_rotation = Matrix4f::calculate_rotation_from_rpy(camera.roll, camera.pitch, camera.yaw);
         let forward_view_space = camera_rotation.transform(&ShadowBox::FORWARD).xyz();
         let frustum_near_center = &forward_view_space * (-Display::NEAR); 

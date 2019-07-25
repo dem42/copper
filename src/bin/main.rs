@@ -12,7 +12,7 @@ use copper::guis::{
     TextMaterial,
 };
 use copper::renderers::{
-    BatchRenderer,
+    MasterRenderer,
     GuiRenderer,
 };
 use copper::models::{
@@ -90,7 +90,7 @@ fn main() {
     };
 
 
-    let mut batch_renderer = BatchRenderer::new(&display.projection_matrix);
+    let mut batch_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();
         
     let mut lights = vec!{

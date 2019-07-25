@@ -5,7 +5,7 @@ pub struct ShadowShader {
 }
 
 impl ShadowShader {
-    fn new() -> Self {
+    pub fn new() -> Self {
         unimplemented!()
     }
 }

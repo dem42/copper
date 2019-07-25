@@ -67,6 +67,17 @@ impl Matrix4f {
         }
     }
 
+    pub fn create_ortho_projection_matrix(frustum_width: f32, frustum_heigh: f32, frustum_length: f32) -> Matrix4f {         
+        let mut data = [[0.0f32; 4]; 4];        
+        data[0][0] = 2.0 / frustum_width;
+        data[1][1] = 2.0 / frustum_heigh;
+        data[2][2] = -2.0 / frustum_length;
+        data[3][3] = 1.0;
+        Matrix4f {
+            data,
+        }
+    }
+
     // view matrix makes objects move closer to the camera as we move towards them since it includes the negative of the camera translation
     // we dont want the skybox to move as we move around (but we do want it to rotate) so we zero out the translation
     pub fn create_skybox_view_matrix(camera: &Camera, skybox_rotation_deg: f32) -> Matrix4f {        
