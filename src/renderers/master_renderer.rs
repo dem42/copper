@@ -63,14 +63,42 @@ impl MasterRenderer {
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
                 player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers) {
+
+        self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights);
+
+        self.do_water_render_passes(water_tiles, camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights, skybox, display);
+        display.restore_default_framebuffer();
+
+        let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
+        // render water
+        self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
+    }
+
+    fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
+                normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, lights: &Vec<Light>) {
+        
+        framebuffers.shadowmap_fbo.bind();
+        self.shadowmap_renderer.start_render(camera, &lights[0]);
+
+        self.shadowmap_renderer.render(entities);
+        self.shadowmap_renderer.render(normal_mapped_entities);
+        self.shadowmap_renderer.render_terrain(terrains);
+        self.shadowmap_renderer.render_player(player);
+
+        self.shadowmap_renderer.stop_render();        
+    }
+
+    fn do_water_render_passes(&mut self, water_tiles: &Vec<WaterTile>, camera: &mut Camera, framebuffers: &mut Framebuffers,
+                entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, lights: &Vec<Light>,
+                skybox: &Skybox, display: &Display) {
         // enable clip plane                    
         gl::enable(gl::CLIP_DISTANCE0); 
 
         let water_height = WaterTile::get_water_height(water_tiles);
         let tiny_overlap = 0.07; // to prevent glitches near the edge of the water
         let above_water_clip_plane = Vector4f::new(0.0, -1.0, 0.0, water_height + tiny_overlap);
-        let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height + tiny_overlap);
-        let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
+        let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height + tiny_overlap);        
         
         camera.set_to_reflected_ray_camera_origin(water_height);
         framebuffers.reflection_fbo.bind();
@@ -81,11 +109,7 @@ impl MasterRenderer {
         framebuffers.refraction_fbo.bind();
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
 
-        gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?
-        display.restore_default_framebuffer();
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
-        // render water
-        self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
+        gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?        
     }
 
     fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 

@@ -23,6 +23,14 @@ impl Matrix4f {
         }
     }
 
+    pub fn make_identity(&mut self) {        
+        for i in 0..4 {
+            for j in 0..4 {
+                self.data[i][i] = if i == j { 1.0 } else { 0.0 };
+            }
+        }
+    }
+
     pub fn create_gui_transform_matrix(translation: &Vector2f, scale: &Vector2f) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
         transform_mat.translate(&Vector3f::new(translation.x, translation.y, 0.0));        
@@ -67,15 +75,11 @@ impl Matrix4f {
         }
     }
 
-    pub fn create_ortho_projection_matrix(frustum_width: f32, frustum_heigh: f32, frustum_length: f32) -> Matrix4f {         
-        let mut data = [[0.0f32; 4]; 4];        
-        data[0][0] = 2.0 / frustum_width;
-        data[1][1] = 2.0 / frustum_heigh;
-        data[2][2] = -2.0 / frustum_length;
-        data[3][3] = 1.0;
-        Matrix4f {
-            data,
-        }
+    pub fn update_ortho_projection_matrix(ortho_mat: &mut Matrix4f, frustum_width: f32, frustum_heigh: f32, frustum_length: f32) {        
+        ortho_mat[0][0] = 2.0 / frustum_width;
+        ortho_mat[1][1] = 2.0 / frustum_heigh;
+        ortho_mat[2][2] = -2.0 / frustum_length;
+        ortho_mat[3][3] = 1.0;
     }
 
     // view matrix makes objects move closer to the camera as we move towards them since it includes the negative of the camera translation
