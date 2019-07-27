@@ -21,6 +21,7 @@ pub struct ShadowBox {
     nearplane_height: f32,
     frustum_min_corner: Vector3f,
     frustum_max_corner: Vector3f,
+    world_space_center: Vector3f,
 }
 
 impl ShadowBox {
@@ -39,6 +40,7 @@ impl ShadowBox {
             nearplane_height,
             frustum_min_corner: Vector3f::zero(),
             frustum_max_corner: Vector3f::zero(),
+            world_space_center: Vector3f::zero(),
         }
     }
 
@@ -54,6 +56,9 @@ impl ShadowBox {
         self.frustum_max_corner.z - self.frustum_min_corner.z
     }
 
+    // does it make sense to transform to light space if all we care about is the world space center
+    // and the size of the shadow box (for orthographic projection)
+    // a composition of translation and rotation which the transform is a rigid transformation which means it preserves distance between points
     pub fn update(&mut self, camera: &Camera, world_to_light_transform: &Matrix4f) {
         let camera_rotation = Matrix4f::calculate_rotation_from_rpy(camera.roll, camera.pitch, camera.yaw);
         let forward_view_space = camera_rotation.transform(&ShadowBox::FORWARD).xyz();
@@ -88,6 +93,8 @@ impl ShadowBox {
                 self.frustum_max_corner.z = corner.z;
             }
         }
+
+
     }
 
     fn compute_frustum_sizes(aspect_ratio: f32) -> (f32, f32, f32, f32)  {

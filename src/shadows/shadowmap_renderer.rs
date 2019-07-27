@@ -10,12 +10,15 @@ use crate::math::{
     Vector3f,
 };
 use super::shadow_box::ShadowBox;
+use super::shadow_shader::ShadowShader;
 
 pub struct ShadowMapRenderer {
+    shadow_shader: ShadowShader,
     shadow_box: ShadowBox,
     world_to_lightspace: Matrix4f,
     ortho_proj_mat: Matrix4f,
     bias: Matrix4f,
+    mvp_matrix: Matrix4f,
 }
 
 impl ShadowMapRenderer {
@@ -25,11 +28,15 @@ impl ShadowMapRenderer {
         let world_to_lightspace = Matrix4f::identity();
         let ortho_proj_mat = Matrix4f::identity();
         let bias = ShadowMapRenderer::create_bias_matrix();
+        let shadow_shader = ShadowShader::new();
+        let mvp_matrix = Matrix4f::identity();
         ShadowMapRenderer {
+            shadow_shader,
             shadow_box,
             world_to_lightspace,
             ortho_proj_mat,
             bias,
+            mvp_matrix,
         }
     }
 
@@ -37,7 +44,12 @@ impl ShadowMapRenderer {
         self.update_world_to_lightspace(-(&sun.position), &camera.position);
         self.shadow_box.update(camera, &self.world_to_lightspace);
         Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width(), self.shadow_box.height(), self.shadow_box.length());
+        self.shadow_shader.start();
 
+        self.mvp_matrix.make_identity();
+        self.mvp_matrix.multiply_in_place(&self.ortho_proj_mat);
+        self.mvp_matrix.multiply_in_place(&self.world_to_lightspace);
+        self.shadow_shader.load_mvp_matrix(&self.mvp_matrix);
     }
 
     pub fn render(&mut self, entities: &Vec<Entity>) {
@@ -53,7 +65,7 @@ impl ShadowMapRenderer {
     }
 
     pub fn stop_render(&mut self) {
-
+        self.shadow_shader.stop();
     }
 
     fn update_world_to_lightspace(&mut self, light_direction: Vector3f, center: &Vector3f) {

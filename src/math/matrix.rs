@@ -272,6 +272,22 @@ impl IndexMut<usize> for Matrix4f {
     }
 }
 
+impl Mul<Matrix4f> for &Matrix4f {
+    type Output = Matrix4f;
+
+    fn mul(self, mut other: Matrix4f) -> Matrix4f {
+        let mut res = [[0f32; 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                for k in 0..4 {
+                    res[i][j] += self.data[i][k] * other.data[k][j];
+                }
+            }    
+        }
+        other.data = res;
+        other     
+    }
+}
 
 #[derive(Debug)]
 pub struct Matrix3f {
@@ -352,23 +368,6 @@ impl IndexMut<usize> for Matrix2f {
 
     fn index_mut(&mut self, index: usize) -> &mut [f32; 2] {
         &mut self.data[index]
-    }
-}
-
-impl Mul<Matrix4f> for &Matrix4f {
-    type Output = Matrix4f;
-
-    fn mul(self, mut other: Matrix4f) -> Matrix4f {
-        let mut res = [[0f32; 4]; 4];
-        for i in 0..4 {
-            for j in 0..4 {
-                for k in 0..4 {
-                    res[i][j] += self.data[i][k] * other.data[k][j];
-                }
-            }    
-        }
-        other.data = res;
-        other     
     }
 }
 
