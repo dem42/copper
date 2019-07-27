@@ -64,7 +64,7 @@ impl MasterRenderer {
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
                 player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers) {
 
-        self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights);
+        self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights);
 
         self.do_water_render_passes(water_tiles, camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights, skybox, display);
         display.restore_default_framebuffer();
@@ -76,15 +76,29 @@ impl MasterRenderer {
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
-                normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, lights: &Vec<Light>) {
+                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>) {
         
         framebuffers.shadowmap_fbo.bind();
         self.shadowmap_renderer.start_render(camera, &lights[0]);
 
-        self.shadowmap_renderer.render(entities);
-        self.shadowmap_renderer.render(normal_mapped_entities);
-        self.shadowmap_renderer.render_terrain(terrains);
-        self.shadowmap_renderer.render_player(player);
+        // render into the shadowmap depth buffer all the entities that we want to cast shadows
+        let entity_by_tex = MasterRenderer::group_entities_by_tex(entities);
+        for (tex_model, entity_group) in entity_by_tex {
+            self.shadowmap_renderer.prepare_textured_model(tex_model);
+            self.shadowmap_renderer.render(&entity_group);
+            self.shadowmap_renderer.cleanup_textured_model();
+        }
+
+        let norm_entity_by_tex = MasterRenderer::group_entities_by_tex(normal_mapped_entities);
+        for (tex_model, entity_group) in norm_entity_by_tex {
+            self.shadowmap_renderer.prepare_textured_model(tex_model);
+            self.shadowmap_renderer.render(&entity_group);
+            self.shadowmap_renderer.cleanup_textured_model();
+        }
+
+        self.shadowmap_renderer.prepare_textured_model(&player.entity.model);
+        self.shadowmap_renderer.render_entity(&player.entity);
+        self.shadowmap_renderer.cleanup_textured_model();
 
         self.shadowmap_renderer.stop_render();        
     }

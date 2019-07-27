@@ -44,6 +44,10 @@ impl ShadowBox {
         }
     }
 
+    pub fn center(&self) -> &Vector3f {
+        &self.world_space_center
+    }
+
     pub fn width(&self) -> f32 {
         self.frustum_max_corner.x - self.frustum_min_corner.x
     }
@@ -106,6 +110,66 @@ impl ShadowBox {
         (far_width, far_height, near_width, near_height)
     }
 
+    fn calc_camera_frustum_corners_in_worldspace(&self, camera_rotation: Matrix4f, camera_pos: &Vector3f, center_near: Vector3f, center_far: Vector3f) -> [Vector4f; 8] {
+
+        let mut corners: [Vector4f; 8] = Default::default();
+
+        // near top right
+        corners[0].x = self.nearplane_width / 2.0;
+        corners[0].y = self.nearplane_height / 2.0;
+        corners[0].z = Display::NEAR;
+        // near bottom right
+        corners[1].x = self.nearplane_width / 2.0;
+        corners[1].y = -self.nearplane_height / 2.0;
+        corners[1].z = Display::NEAR;
+        // near bottom left
+        corners[2].x = -self.nearplane_width / 2.0;
+        corners[2].y = -self.nearplane_height / 2.0;
+        corners[2].z = Display::NEAR;
+        // near top left
+        corners[3].x = -self.nearplane_width / 2.0;
+        corners[3].y = self.nearplane_height / 2.0;
+        corners[3].z = Display::NEAR;
+        // far top left
+        corners[4].x = -self.farplane_width / 2.0;
+        corners[4].y = self.farplane_height / 2.0;
+        corners[4].z = Display::FAR;
+        // far top right
+        corners[5].x = self.farplane_width / 2.0;
+        corners[5].y = self.farplane_height / 2.0;
+        corners[5].z = Display::FAR;
+        // far bottom right
+        corners[6].x = self.farplane_width / 2.0;
+        corners[6].y = -self.farplane_height / 2.0;
+        corners[6].z = Display::FAR;
+        // far bottom left
+        corners[7].x = -self.farplane_width / 2.0;
+        corners[7].y = -self.farplane_height / 2.0;
+        corners[7].z = Display::FAR;
+
+        for i in 0..corners.len() {
+            corners[i] += camera_pos;
+        }
+
+        let mut cuboid_face_normals: [Vector3f; 3] = Default::default();
+        for i in 0..3 {            
+            cuboid_face_normals[i].x = camera_rotation[i][0];
+            cuboid_face_normals[i].y = camera_rotation[i][1];
+            cuboid_face_normals[i].z = camera_rotation[i][2];
+        }
+        
+        // compute the projection of the frustum corners in ws coords onto the cuboid face normals
+        // the min projection value should give us one corner point, the max the other corner point
+        // we just need to repeat this for all three face normals
+        for i in 0..corners.len() {
+            for j in 0..cuboid_face_normals.len() {
+
+            }
+        }
+
+        unimplemented!()
+    }
+
     fn calc_camera_frustum_corners_in_lightspace(&self, camera_rotation: Matrix4f, fwd_view_space: Vector3f, center_near: Vector3f, center_far: Vector3f) -> [Vector3f; 8] {        
         let mut corners: [Vector3f; 8] = Default::default();
 
@@ -150,6 +214,21 @@ impl ShadowBox {
     }
 
     fn transform_vertex_to_lightspace(&self, vertex: &mut Vector3f) {
+
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_frustume_in_ws() {
+
+    }
+
+    #[test]
+    fn test_shadow_cuboid_plane_normals() {
 
     }
 }

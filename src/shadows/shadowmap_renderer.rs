@@ -2,12 +2,15 @@ use crate::entities::{
     Camera,
     Entity,
     Light,
-    Player,
-    Terrain,
 };
+use crate::gl;
 use crate::math::{
     Matrix4f,
     Vector3f,
+};
+use crate::models::{
+    RawModel,
+    TexturedModel,
 };
 use super::shadow_box::ShadowBox;
 use super::shadow_shader::ShadowShader;
@@ -18,6 +21,7 @@ pub struct ShadowMapRenderer {
     world_to_lightspace: Matrix4f,
     ortho_proj_mat: Matrix4f,
     bias: Matrix4f,
+    vp_matrix: Matrix4f,
     mvp_matrix: Matrix4f,
 }
 
@@ -29,6 +33,7 @@ impl ShadowMapRenderer {
         let ortho_proj_mat = Matrix4f::identity();
         let bias = ShadowMapRenderer::create_bias_matrix();
         let shadow_shader = ShadowShader::new();
+        let vp_matrix = Matrix4f::identity();
         let mvp_matrix = Matrix4f::identity();
         ShadowMapRenderer {
             shadow_shader,
@@ -36,6 +41,7 @@ impl ShadowMapRenderer {
             world_to_lightspace,
             ortho_proj_mat,
             bias,
+            vp_matrix,
             mvp_matrix,
         }
     }
@@ -46,22 +52,35 @@ impl ShadowMapRenderer {
         Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width(), self.shadow_box.height(), self.shadow_box.length());
         self.shadow_shader.start();
 
+        self.vp_matrix.make_identity();
+        self.vp_matrix.multiply_in_place(&self.ortho_proj_mat);
+        self.vp_matrix.multiply_in_place(&self.world_to_lightspace);        
+    }
+
+    pub fn prepare_textured_model(&mut self, model: &TexturedModel) {
+        gl::bind_vertex_array(model.raw_model.vao_id);
+        gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+    }
+
+    pub fn render(&mut self, entities: &Vec<&Entity>) {        
+        for entity in entities.iter() {      
+            self.render_entity(entity);
+        }
+    }
+
+    pub fn render_entity(&mut self, entity: &Entity) {
         self.mvp_matrix.make_identity();
-        self.mvp_matrix.multiply_in_place(&self.ortho_proj_mat);
-        self.mvp_matrix.multiply_in_place(&self.world_to_lightspace);
+        self.mvp_matrix.multiply_in_place(&self.vp_matrix);
+        let transform_mat = Matrix4f::create_transform_matrix(&entity.position, &entity.rotation_deg, entity.scale);
+        self.mvp_matrix.multiply_in_place(&transform_mat);
         self.shadow_shader.load_mvp_matrix(&self.mvp_matrix);
+
+        gl::draw_elements(gl::TRIANGLES, entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);            
     }
 
-    pub fn render(&mut self, entities: &Vec<Entity>) {
-
-    }
-
-    pub fn render_terrain(&mut self, terrain: &Vec<Terrain>) {
-
-    }
-
-    pub fn render_player(&mut self, player: &Player) {
-
+    pub fn cleanup_textured_model(&mut self) {
+        gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
+        gl::bind_vertex_array(0);
     }
 
     pub fn stop_render(&mut self) {

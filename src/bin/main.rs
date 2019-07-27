@@ -84,9 +84,11 @@ fn main() {
     let mut scene = create_scene(&resource_manager);
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
+    let shadow_map = framebuffers.shadowmap_fbo.depth_texture;
     let guis = vec!{
         GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
+        GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
     };
 
 

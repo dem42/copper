@@ -75,9 +75,9 @@ impl Matrix4f {
         }
     }
 
-    pub fn update_ortho_projection_matrix(ortho_mat: &mut Matrix4f, frustum_width: f32, frustum_heigh: f32, frustum_length: f32) {        
+    pub fn update_ortho_projection_matrix(ortho_mat: &mut Matrix4f, frustum_width: f32, frustum_height: f32, frustum_length: f32) {        
         ortho_mat[0][0] = 2.0 / frustum_width;
-        ortho_mat[1][1] = 2.0 / frustum_heigh;
+        ortho_mat[1][1] = 2.0 / frustum_height;
         ortho_mat[2][2] = -2.0 / frustum_length;
         ortho_mat[3][3] = 1.0;
     }
@@ -109,10 +109,9 @@ impl Matrix4f {
     }
 
     pub fn calculate_rotation_from_rpy(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
-        let mut result = Matrix4f::identity();
-        // rotate in the opposite order to get inverse rotation (camera rotates inversely to model transform)
+        let mut result = Matrix4f::identity();        
         let rotation_xyz_degrees = Vector3f::new(pitch, yaw, roll);
-        result.rotate_tait_bryan_xyz(&rotation_xyz_degrees);
+        result.rotate_tait_bryan_zyx(&rotation_xyz_degrees);
         result
     }
 

@@ -57,6 +57,14 @@ impl IndexMut<usize> for Vector4f {
     }
 }
 
+impl AddAssign<&Vector3f> for Vector4f {
+    fn add_assign(&mut self, other: &Vector3f) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Vector3f {
     pub x: f32,
