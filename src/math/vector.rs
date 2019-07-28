@@ -20,6 +20,27 @@ impl Vector4f {
     pub fn xyz(self) -> Vector3f {
         Vector3f {x: self.x, y: self.y, z: self.z}
     }
+
+    pub fn length(&self) -> f32 {
+        let sq_sum = self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w;
+        sq_sum.sqrt()
+    }
+
+    pub fn normalize(&mut self) {
+        let len = self.length();
+        if len == 0.0 {
+            return;
+        }
+        self.x /= len;
+        self.y /= len;
+        self.z /= len;
+        self.w /= len;
+    }
+
+    pub fn dot_product_v3(&self, other: &Vector3f) -> f32 {
+        let sq_sum = self.x * other.x + self.y * other.y + self.z * other.z;
+        sq_sum
+    }
 }
 
 impl IntoIterator for Vector4f {
@@ -232,6 +253,30 @@ impl IntoIterator for Vector3f {
 
     fn into_iter(self) -> Self::IntoIter {
         vec![self.x, self.y, self.z].into_iter()
+    }
+}
+
+impl Index<usize> for Vector3f {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &f32 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Cannot index 3 vec with {}", index)
+        }
+    }
+}
+
+impl IndexMut<usize> for Vector3f {
+    fn index_mut(&mut self, index: usize) -> &mut f32 {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
+            _ => panic!("Cannot index 3 vec with {}", index)
+        }
     }
 }
 

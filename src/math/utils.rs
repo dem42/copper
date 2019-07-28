@@ -34,6 +34,11 @@ pub fn gram_schmidt_orthogonalize(v1: &Vector3f, v2: Vector3f, v3: Vector3f) -> 
     (u2, u3)
 }
 
+pub fn distance(p1: &Vector3f, p2: &Vector3f) -> f32 {
+    let sq_sum = (p2.x - p1.x)*(p2.x - p1.x) + (p2.y - p1.y)*(p2.y - p1.y) + (p2.z - p1.z)*(p2.z - p1.z);
+    sq_sum.sqrt()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

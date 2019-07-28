@@ -47,9 +47,9 @@ impl ShadowMapRenderer {
     }
 
     pub fn start_render(&mut self, camera: &Camera, sun: &Light) {
-        self.update_world_to_lightspace(-(&sun.position), &camera.position);
-        self.shadow_box.update(camera, &self.world_to_lightspace);
-        Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width(), self.shadow_box.height(), self.shadow_box.length());
+        self.shadow_box.update(camera);
+        self.update_world_to_lightspace(-(&sun.position));
+        Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width, self.shadow_box.height, self.shadow_box.length);
         self.shadow_shader.start();
 
         self.vp_matrix.make_identity();
@@ -87,12 +87,13 @@ impl ShadowMapRenderer {
         self.shadow_shader.stop();
     }
 
-    fn update_world_to_lightspace(&mut self, light_direction: Vector3f, center: &Vector3f) {
+    fn update_world_to_lightspace(&mut self, light_direction: Vector3f) {
         self.world_to_lightspace.make_identity();
         let yaw = light_direction.x.atan2(light_direction.z);
         let pitch = (light_direction.y / light_direction.length()).asin();
         let angles = Vector3f {x: pitch.to_degrees(), y: yaw.to_degrees(), z: 0.0};
         self.world_to_lightspace.rotate_tait_bryan_xyz(&angles);
+        let center = &self.shadow_box.world_space_center;
         self.world_to_lightspace.translate(&(-center));
     }
 

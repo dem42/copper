@@ -294,6 +294,12 @@ pub struct Matrix3f {
 }
 
 impl Matrix3f {
+    pub fn new(data: [[f32; 3]; 3]) -> Self {
+        Matrix3f {
+            data,
+        }
+    }
+
     pub fn minor(col: usize, mat4: &Matrix4f) -> Matrix3f {
         Matrix3f::ij_minor(0, col, mat4)
     }
@@ -320,11 +326,78 @@ impl Matrix3f {
         }
     }
 
+    fn cofactor_mat(&self) -> Matrix3f {
+        let mut data = [[0.0f32; 3]; 3];
+        for i in 0..3 {
+            for j in 0..3 {
+                let mat2 = Matrix2f::ij_minor(i, j, self);
+                let sign = if (i + j) % 2 == 0 { 1.0 } else { -1.0 };
+                data[i][j] = sign * mat2.determinant();
+            }
+        }
+        Matrix3f {
+            data,
+        }
+    }
+
+    fn abjugate_mat(&self) -> Matrix3f {
+        let mut cofactor = self.cofactor_mat();
+        cofactor.transpose();
+        cofactor
+    }
+
+    pub fn transform(&self, vec: &Vector3f) -> Vector3f {
+        let mut res = Vector3f::new(0.0, 0.0, 0.0);
+        for i in 0..3 {
+            for j in 0..3 {
+                res[i] += self.data[i][j] * vec[j];
+            }
+        }
+        res
+    }
+
+    pub fn transpose(&mut self) {
+        for i in 0..2 {
+            for j in (i+1)..3 {
+                let temp = self.data[i][j];
+                self.data[i][j] = self.data[j][i];
+                self.data[j][i] = temp;
+            }
+        }        
+    }
+
+    pub fn inverse(&self) -> Matrix3f {
+        let mut abjugate = self.abjugate_mat();
+        let determinant = self.determinant();
+        let fac = 1.0 / determinant;
+        for i in 0..3 {
+            for j in 0..3 {
+                abjugate.data[i][j] *= fac;
+            }
+        }
+        abjugate
+    }
+
     pub fn determinant(&self) -> f32 {      
         let minor_a = self.data[0][0] * (self.data[1][1]*self.data[2][2] - self.data[1][2]*self.data[2][1]);        
         let minor_b = self.data[0][1] * (self.data[1][0]*self.data[2][2] - self.data[1][2]*self.data[2][0]);
         let minor_c = self.data[0][2] * (self.data[1][0]*self.data[2][1] - self.data[1][1]*self.data[2][0]);        
         minor_a - minor_b + minor_c
+    }
+}
+
+impl Index<usize> for Matrix3f {
+    type Output = [f32; 3];
+
+    fn index(&self, index: usize) -> &[f32; 3] {
+        &self.data[index]
+    }
+}
+
+impl IndexMut<usize> for Matrix3f {
+
+    fn index_mut(&mut self, index: usize) -> &mut [f32; 3] {
+        &mut self.data[index]
     }
 }
 
@@ -347,6 +420,28 @@ impl Matrix2f {
         data[1][0] = -self.data[1][0] * fac;
         data[1][1] = self.data[0][0] * fac;
         Matrix2f { data }
+    }
+
+    pub fn ij_minor(row: usize, col: usize, mat3: &Matrix3f) -> Matrix2f {
+        let mut data = [[0.0f32; 2]; 2];
+        let mut nc = 0;        
+        for j in 0..3 {
+            if j == col {
+                continue
+            }
+            let mut nr = 0;
+            for i in 0..3 {
+                if i == row {
+                    continue
+                }
+                data[nr][nc] = mat3.data[i][j];
+                nr += 1;
+            }                        
+            nc += 1;
+        }
+        Matrix2f {
+            data,
+        }
     }
 
     #[inline]
@@ -475,6 +570,34 @@ mod tests {
                 assert_f32_eq!(inv_m1[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
             }
         }                        
+    }
+
+    #[test]
+    fn test_inverse_3x3_a() {
+        let data = [[1.0, 2.3, 3.2], [-4.3, -2.1, 10.0], [4.2, -8.9, 0.04]];
+        let m1 = Matrix3f { data, };
+        let inv_m1 = m1.inverse();
+
+        let expected: [[f32; 3]; 3] = [[0.264159553368453, -0.0848842363449036,  0.0882948167496337],
+                        [0.125288324763309, -0.0398099106475468, -0.0705883191780382],
+                        [0.139899156148730 , 0.0551396971357066,  0.0231432241749545]];
+
+        for r in 0..3 {
+            for c in 0..3 {
+                assert_f32_eq!(inv_m1[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
+            }
+        }                        
+    }
+
+    #[test]
+    fn test_3x3_transform() {
+        let m = Matrix3f::new([[1.0,1.0,2.0],[2.0,2.0,3.0],[1.0,1.0,1.0]]);
+        let v = Vector3f::new(1.0,2.0,3.0);
+        let mv = m.transform(&v);
+        let expected = Vector3f::new(9.0,15.0,6.0);
+        for r in 0..3 {
+            assert_f32_eq!(mv[r], expected[r], tests::EPS_BAD, format!("(r)=({}) mismatch", r));
+        }
     }
 
     #[test]
