@@ -52,7 +52,7 @@ impl ShadowBox {
     // and the size of the shadow box (for orthographic projection)
     // a composition of translation and rotation which the transform is a rigid transformation which means it preserves distance between points
     pub fn update(&mut self, camera: &Camera) {        
-        let frustum_corners_ws = self.calc_camera_frustum_corners_in_worldspace(camera, Display::NEAR, Display::SHADOW_DISTANCE);
+        let frustum_corners_ws = self.calc_camera_frustum_corners_in_worldspace(camera, Display::NEAR, ShadowBox::SHADOW_DISTANCE);
 
         self.width = distance(&frustum_corners_ws[0], &frustum_corners_ws[1]);
         self.height = distance(&frustum_corners_ws[0], &frustum_corners_ws[4]);
