@@ -3,6 +3,8 @@ extern crate libc;
 extern crate texture_lib;
 extern crate rand;
 
+#[macro_use]
+pub mod utils;
 pub mod display;
 pub mod constants;
 pub mod models;
@@ -15,5 +17,4 @@ pub mod obj_converter;
 pub mod guis;
 pub mod mouse_picker;
 pub mod particles;
-pub mod utils;
 pub mod shadows;

@@ -16,6 +16,17 @@
             "externalConsole": true
         },
         {
+            "name": "Test debug (always change hash)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/copper-029aa44bd0c2c4d8.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true
+        },
+        {
             "name": "(Windows) Launch (texture_lib)",
             "type": "cppvsdbg",
             "request": "launch",

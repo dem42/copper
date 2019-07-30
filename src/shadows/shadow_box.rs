@@ -23,6 +23,8 @@ pub struct ShadowBox {
     farplane_height: f32,
     nearplane_width: f32,
     nearplane_height: f32,
+    near_plane: f32,
+    far_plane: f32,
     pub width: f32,
     pub height: f32,
     pub length: f32,
@@ -33,14 +35,16 @@ impl ShadowBox {
     const OFFSET: f32 = 10.0;
     const SHADOW_DISTANCE: f32 = 100.0;
 
-    pub fn new(aspect_ratio: f32) -> Self {
-       let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio);
+    pub fn new(aspect_ratio: f32, fov_deg: f32, near: f32, far: f32) -> Self {
+       let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio, fov_deg, near.abs(), far.abs());
 
         ShadowBox {
             farplane_width,
             farplane_height,
             nearplane_width,
             nearplane_height,
+            near_plane: near,
+            far_plane: far,
             width: 0.0,
             height: 0.0,
             length: 0.0,
@@ -51,68 +55,78 @@ impl ShadowBox {
     // does it make sense to transform to light space if all we care about is the world space center
     // and the size of the shadow box (for orthographic projection)
     // a composition of translation and rotation which the transform is a rigid transformation which means it preserves distance between points
-    pub fn update(&mut self, camera: &Camera) {        
-        let frustum_corners_ws = self.calc_camera_frustum_corners_in_worldspace(camera, Display::NEAR, ShadowBox::SHADOW_DISTANCE);
+    pub fn update(&mut self, camera: &Camera, light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {        
+        let frustum_corners_ws = self.get_frustum_corners_ws(camera);
+        let obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
 
-        self.width = distance(&frustum_corners_ws[0], &frustum_corners_ws[1]);
-        self.height = distance(&frustum_corners_ws[0], &frustum_corners_ws[4]);
-        self.length = distance(&frustum_corners_ws[0], &frustum_corners_ws[3]);
+        self.width = distance(&obb_corners[0], &obb_corners[1]);
+        self.height = distance(&obb_corners[0], &obb_corners[4]);
+        self.length = distance(&obb_corners[0], &obb_corners[3]);
 
-        self.world_space_center.x = 0.5 * (frustum_corners_ws[0].x + frustum_corners_ws[1].x);
-        self.world_space_center.y = 0.5 * (frustum_corners_ws[0].y + frustum_corners_ws[4].y);
-        self.world_space_center.z = 0.5 * (frustum_corners_ws[0].z + frustum_corners_ws[3].z);
+        self.world_space_center = 0.5 * (&obb_corners[0] + &obb_corners[6]);
     }
 
-    fn compute_frustum_sizes(aspect_ratio: f32) -> (f32, f32, f32, f32)  {
-        let tan_fov_half = (Display::FOV_HORIZONTAL / 2.0).to_radians().tan();
-        let near_width = -2.0 * Display::NEAR * tan_fov_half;
-        let far_width = -2.0 * Display::FAR * tan_fov_half;
+    fn compute_frustum_sizes(aspect_ratio: f32, fov_deg: f32, near_dist: f32, far_dist: f32) -> (f32, f32, f32, f32)  {
+        let tan_fov_half = (fov_deg / 2.0).to_radians().tan();
+        let near_width = 2.0 * near_dist * tan_fov_half;
+        let far_width = 2.0 * far_dist * tan_fov_half;
         let near_height = near_width / aspect_ratio;
         let far_height = far_width / aspect_ratio;
         (far_width, far_height, near_width, near_height)
     }
 
-    fn calc_camera_frustum_corners_in_worldspace(&self, camera: &Camera, near: f32, far: f32) -> [Vector3f; 8] {
-        let camera_rotation = Matrix4f::calculate_rotation_from_rpy(camera.roll, camera.pitch, camera.yaw);
+    fn get_frustum_corners_ws(&self, camera: &Camera) -> [Vector3f; 8] {
         let mut corners: [Vector3f; 8] = Default::default();
 
         // near top right
         corners[0].x = self.nearplane_width / 2.0;
         corners[0].y = self.nearplane_height / 2.0;
-        corners[0].z = near;
+        corners[0].z = self.near_plane;
         // near bottom right
         corners[1].x = self.nearplane_width / 2.0;
         corners[1].y = -self.nearplane_height / 2.0;
-        corners[1].z = near;
+        corners[1].z = self.near_plane;
         // near bottom left
         corners[2].x = -self.nearplane_width / 2.0;
         corners[2].y = -self.nearplane_height / 2.0;
-        corners[2].z = near;
+        corners[2].z = self.near_plane;
         // near top left
         corners[3].x = -self.nearplane_width / 2.0;
         corners[3].y = self.nearplane_height / 2.0;
-        corners[3].z = near;
-        // far top left
-        corners[4].x = -self.farplane_width / 2.0;
-        corners[4].y = self.farplane_height / 2.0;
-        corners[4].z = far;
+        corners[3].z = self.near_plane;
         // far top right
-        corners[5].x = self.farplane_width / 2.0;
-        corners[5].y = self.farplane_height / 2.0;
-        corners[5].z = far;
+        corners[4].x = self.farplane_width / 2.0;
+        corners[4].y = self.farplane_height / 2.0;
+        corners[4].z = self.far_plane;
         // far bottom right
-        corners[6].x = self.farplane_width / 2.0;
-        corners[6].y = -self.farplane_height / 2.0;
-        corners[6].z = far;
+        corners[5].x = self.farplane_width / 2.0;
+        corners[5].y = -self.farplane_height / 2.0;
+        corners[5].z = self.far_plane;
         // far bottom left
+        corners[6].x = -self.farplane_width / 2.0;
+        corners[6].y = -self.farplane_height / 2.0;
+        corners[6].z = self.far_plane;
+        // far top left
         corners[7].x = -self.farplane_width / 2.0;
-        corners[7].y = -self.farplane_height / 2.0;
-        corners[7].z = far;
+        corners[7].y = self.farplane_height / 2.0;
+        corners[7].z = self.far_plane;
 
+        let ws_to_vs = Matrix4f::create_view_matrix(camera);
+        let vs_to_ws = ws_to_vs.inverse();
+
+        let mut temp_v4 = Vector4f::new(0.0, 0.0, 0.0, 0.0);
         for i in 0..corners.len() {
-            corners[i] += &camera.position;
+            temp_v4.set_from(&corners[i]);
+            temp_v4.w = 1.0; // transform points
+            let res = vs_to_ws.transform(&temp_v4);
+            corners[i].set_from(&res);
         }
+        corners
+    }
 
+    fn calc_bounding_cuboid_corners_ws(mut corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) -> [Vector3f; 8] {
+        let camera_rotation = Matrix4f::calculate_rotation_from_rpy(0.0, light_direction_pitch_deg, light_direction_yaw_deg);
+        
         let mut cuboid_faces: [Vector4f; 6] = Default::default();
         for i in 0..3 {            
             cuboid_faces[2*i].x = camera_rotation[i][0];
@@ -174,14 +188,122 @@ impl ShadowBox {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::test_utils::*;
 
     #[test]
-    fn test_get_frustume_in_ws() {
-     
+    fn test_get_frustume_in_ws_no_rot_trans() {
+        let sb = ShadowBox::new(1.0, 60.0, 2.0, 10.0);
+        let cam = Camera::new(0.0, 0.0);        
+        let corners = sb.get_frustum_corners_ws(&cam);
+
+        let near_corner = 2.0 / f32::sqrt(3.0);
+        let far_corner = 10.0 / f32::sqrt(3.0);
+        assert_f32_eq!(corners[0].x, near_corner, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[0].y, near_corner, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[0].z, 2.0, test_constants::EPS_MEDIUM);
+        
+        assert_f32_eq!(corners[4].x, far_corner, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[4].y, far_corner, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[4].z, 10.0, test_constants::EPS_MEDIUM);
+    }
+
+    #[test]
+    fn test_get_frustume_in_ws_with_rot() {
+        /*
+         * we have a right-hand system so z axis points into screen
+         * the rotations are counter-clockwise around the axis (rhs is a counter-clockwise system)
+         * so we rotate frustrum from pos z axis axis aligned to neg x axis aligned
+         */
+        let sb = ShadowBox::new(1.0, 60.0, -2.0, -10.0);
+        let mut cam = Camera::new(0.0, 0.0);
+        cam.yaw = 90.0;     
+        let corners = sb.get_frustum_corners_ws(&cam);
+
+        let near_corner = 2.0 / f32::sqrt(3.0);
+        let far_corner = 10.0 / f32::sqrt(3.0);
+        assert_f32_eq!(corners[0].x, 2.0, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[0].y, near_corner, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[0].z, near_corner, test_constants::EPS_MEDIUM);
+        
+        assert_f32_eq!(corners[7].x, 10.0, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[7].y, far_corner, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[7].z, -far_corner, test_constants::EPS_MEDIUM);
+    }
+    
+    #[test]
+    fn test_get_frustume_in_ws_with_rot_trans() {
+        let sb = ShadowBox::new(1.0, 60.0, -2.0, -10.0);
+        let mut cam = Camera::new(0.0, 0.0);
+        cam.yaw = 90.0;
+        cam.position.x = 0.5;
+        cam.position.y = 0.5;
+        cam.position.z = 0.5;
+        let corners = sb.get_frustum_corners_ws(&cam);
+
+        let near_corner = 2.0 / f32::sqrt(3.0);
+        let far_corner = 10.0 / f32::sqrt(3.0);
+        assert_f32_eq!(corners[0].x, 2.0 + 0.5, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[0].y, near_corner + 0.5, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[0].z, near_corner + 0.5, test_constants::EPS_MEDIUM);
+        
+        assert_f32_eq!(corners[7].x, 10.0 + 0.5, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[7].y, far_corner + 0.5, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(corners[7].z, -far_corner + 0.5, test_constants::EPS_MEDIUM);
     }
 
     #[test]
     fn test_shadow_cuboid_plane_normals() {
+        let sb = ShadowBox::new(1.0, 60.0, -2.0, -10.0);
+        let mut cam = Camera::new(0.0, 0.0);
+        cam.yaw = 90.0;
+        cam.position.x = 0.5;
+        cam.position.y = 0.5;
+        cam.position.z = 0.5;
+        let corners = sb.get_frustum_corners_ws(&cam);
+        let obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(corners, -90.0, 0.0);
 
+        let far_corner = 10.0 / f32::sqrt(3.0);
+        let obb_min = Vector3f::new(2.0 + 0.5, -far_corner + 0.5, -far_corner + 0.5);
+        let obb_max = Vector3f::new(10.0 + 0.5, far_corner + 0.5, far_corner + 0.5);
+        
+        assert_f32_eq!(obb_corners[0].x, obb_min.x, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[0].y, obb_min.y, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[0].z, obb_min.z, test_constants::EPS_MEDIUM);
+
+        assert_f32_eq!(obb_corners[1].x, obb_max.x, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[1].y, obb_min.y, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[1].z, obb_min.z, test_constants::EPS_MEDIUM);
+
+        assert_f32_eq!(obb_corners[3].x, obb_min.x, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[3].y, obb_max.y, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[3].z, obb_min.z, test_constants::EPS_MEDIUM);
+
+        assert_f32_eq!(obb_corners[4].x, obb_min.x, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[4].y, obb_min.y, test_constants::EPS_MEDIUM);
+        assert_f32_eq!(obb_corners[4].z, obb_max.z, test_constants::EPS_MEDIUM);
+    }
+
+    #[test]
+    fn test_shadow_box_update() {
+        let mut sb = ShadowBox::new(1.0, 60.0, -2.0, -10.0);
+        let mut cam = Camera::new(0.0, 0.0);
+        cam.yaw = 90.0;
+        cam.position.x = 0.5;
+        cam.position.y = 0.5;
+        cam.position.z = 0.5;
+        
+        let far_corner = 10.0 / f32::sqrt(3.0);
+        let obb_min = Vector3f::new(2.0 + 0.5, -far_corner + 0.5, -far_corner + 0.5);
+        let obb_max = Vector3f::new(10.0 + 0.5, far_corner + 0.5, far_corner + 0.5);
+
+        sb.update(&cam, -90.0, 0.0);
+        
+        assert_f32_eq!(sb.width, (obb_max.x - obb_min.x), test_constants::EPS_PRECISE);
+        assert_f32_eq!(sb.height, (obb_max.y - obb_min.y), test_constants::EPS_PRECISE);
+        assert_f32_eq!(sb.length, (obb_max.z - obb_min.z), test_constants::EPS_PRECISE);
+
+        assert_f32_eq!(sb.world_space_center.x, 0.5 * (obb_max.x + obb_min.x), test_constants::EPS_PRECISE);
+        assert_f32_eq!(sb.world_space_center.y, 0.5 * (obb_max.y + obb_min.y), test_constants::EPS_PRECISE);
+        assert_f32_eq!(sb.world_space_center.z, 0.5 * (obb_max.z + obb_min.z), test_constants::EPS_PRECISE);
     }
 }

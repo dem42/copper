@@ -106,7 +106,7 @@ fn main() {
     scene.entities.push(Entity::new(resource_manager.model(ModelType::Lamp), scene.ground.create_pos_on_terrain(370.0, -300.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
     scene.entities.push(Entity::new(resource_manager.model(ModelType::Lamp), scene.ground.create_pos_on_terrain(120.0, -240.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
 
-    let mut camera = Camera::new();
+    let mut camera = Camera::default();
     camera.position = Vector3f::new(0.0, 10.0, 5.0);
 
     let mut skybox = Skybox::new(resource_manager.skybox(), 0.0);

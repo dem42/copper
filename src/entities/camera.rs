@@ -16,13 +16,13 @@ pub struct Camera {
 
 impl Camera {
 
-    pub fn new() -> Camera {
+    pub fn new(camera_pitch_dg: f32, distance_to_player: f32) -> Camera {
         Camera {
             position: Vector3f::new(0.0, 0.0, 0.0),
             roll: 0.0,
-            pitch: 20.0,
+            pitch: camera_pitch_dg,
             yaw: 0.0,
-            distance_to_player: 50.0,
+            distance_to_player,
             angle_around_player: 0.0,
         }    
     }
@@ -75,5 +75,11 @@ impl Camera {
             // in this case the angle around player needs to be clockwise
             self.angle_around_player -= angle_around_change as f32; 
         }
+    }
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Camera::new(20.0, 50.0)
     }
 }

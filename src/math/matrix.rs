@@ -469,15 +469,7 @@ impl IndexMut<usize> for Matrix2f {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const EPS_PRECISE: f32 = 1e-6;
-    const EPS_MEDIUM: f32 = 1e-5;
-    const EPS_BAD: f32 = 1e-2;
-
-    macro_rules! assert_f32_eq {
-        ($left:expr, $right:expr, $eps:expr) => (assert!(($left - $right).abs() < $eps, format!("Left: {}, Right: {}.", $left, $right)););
-        ($left:expr, $right:expr, $eps:expr, $msg:expr) => (assert!(($left - $right).abs() < $eps, format!("{}. Left: {}, Right: {}.", $msg, $left, $right));)
-    }
+    use crate::utils::test_utils::*;
 
     #[test]
     fn matrix_mul_4x4() {
@@ -488,7 +480,7 @@ mod tests {
         let expected = Matrix4f {data: [[-2.81, -17.5, 90.560, 150.0], [-37.4, -116.5, 228.4, 441.5], [-21.28, -47.10, 101.18, 186.7], [-72.7, -122.50, 158.20, 280.5]] };  
         for r in 0..4 {
             for c in 0..4 {
-                assert_f32_eq!(result[r][c], expected[r][c], tests::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
+                assert_f32_eq!(result[r][c], expected[r][c], test_constants::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
             }
         }
     }
@@ -497,14 +489,14 @@ mod tests {
     fn test_determinant_3x3_a() {
         let data = [[-233.1, 10.0, 2.8], [-12.0, 12.0, -13.0], [-1.4, 4.5, 0.0]];
         let m1 = Matrix3f { data, };
-        assert_f32_eq!(-13558.51, m1.determinant(), tests::EPS_BAD);
+        assert_f32_eq!(-13558.51, m1.determinant(), test_constants::EPS_BAD);
     }
 
     #[test]    
     fn test_determinant_4x4_a() {
         let data = [[1.0, 2.3, 12.2, 7.0], [-4.3, -233.1, 10.0, 2.8], [12.0, -12.0, 12.0, -13.0], [1.2, -1.4, 4.5, 0.0]];
         let m1 = Matrix4f { data, };
-        assert_f32_eq!(-33206.8290000003, m1.determinant(), tests::EPS_BAD);              
+        assert_f32_eq!(-33206.8290000003, m1.determinant(), test_constants::EPS_BAD);              
     }
 
     #[test]
@@ -516,7 +508,7 @@ mod tests {
 
         for r in 0..4 {
             for c in 0..4 {
-                assert_f32_eq!(m1[r][c], expected[r][c], tests::EPS_PRECISE, format!("(r,c)=({},{}) mismatch", r, c));                
+                assert_f32_eq!(m1[r][c], expected[r][c], test_constants::EPS_PRECISE, format!("(r,c)=({},{}) mismatch", r, c));                
             }
         }  
     }
@@ -529,7 +521,7 @@ mod tests {
         let expected = [[6.0, 7.0, 8.0], [10.0, 11.0, 12.0], [14.0, 15.0, 16.0]];
         for r in 0..3 {
             for c in 0..3 {
-                assert_f32_eq!(m00.data[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                 
+                assert_f32_eq!(m00.data[r][c], expected[r][c], test_constants::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                 
             }
         }  
     }
@@ -548,7 +540,7 @@ mod tests {
         let cof = m1.cofactor_mat();
         for r in 0..4 {
             for c in 0..4 {
-                assert_f32_eq!(cof[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));              
+                assert_f32_eq!(cof[r][c], expected[r][c], test_constants::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));              
             }
         }  
     }
@@ -567,7 +559,7 @@ mod tests {
 
         for r in 0..4 {
             for c in 0..4 {
-                assert_f32_eq!(inv_m1[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
+                assert_f32_eq!(inv_m1[r][c], expected[r][c], test_constants::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
             }
         }                        
     }
@@ -584,7 +576,7 @@ mod tests {
 
         for r in 0..3 {
             for c in 0..3 {
-                assert_f32_eq!(inv_m1[r][c], expected[r][c], tests::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
+                assert_f32_eq!(inv_m1[r][c], expected[r][c], test_constants::EPS_BAD, format!("(r,c)=({},{}) mismatch", r, c));                
             }
         }                        
     }
@@ -596,7 +588,7 @@ mod tests {
         let mv = m.transform(&v);
         let expected = Vector3f::new(9.0,15.0,6.0);
         for r in 0..3 {
-            assert_f32_eq!(mv[r], expected[r], tests::EPS_BAD, format!("(r)=({}) mismatch", r));
+            assert_f32_eq!(mv[r], expected[r], test_constants::EPS_BAD, format!("(r)=({}) mismatch", r));
         }
     }
 
@@ -617,9 +609,9 @@ mod tests {
                 }
             }    
         }        
-        assert_f32_eq!(res[0][0], 1.0, tests::EPS_BAD); 
-        assert_f32_eq!(res[0][1], 0.0, tests::EPS_BAD); 
-        assert_f32_eq!(res[1][0], 0.0, tests::EPS_BAD); 
-        assert_f32_eq!(res[1][1], 1.0, tests::EPS_BAD); 
+        assert_f32_eq!(res[0][0], 1.0, test_constants::EPS_BAD); 
+        assert_f32_eq!(res[0][1], 0.0, test_constants::EPS_BAD); 
+        assert_f32_eq!(res[1][0], 0.0, test_constants::EPS_BAD); 
+        assert_f32_eq!(res[1][1], 1.0, test_constants::EPS_BAD); 
     }
 }

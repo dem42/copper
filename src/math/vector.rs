@@ -41,6 +41,12 @@ impl Vector4f {
         let sq_sum = self.x * other.x + self.y * other.y + self.z * other.z;
         sq_sum
     }
+
+    pub fn set_from(&mut self, v3: &Vector3f) {
+        self.x = v3.x;
+        self.y = v3.y;
+        self.z = v3.z;
+    }
 }
 
 impl IntoIterator for Vector4f {
@@ -146,6 +152,12 @@ impl Vector3f {
             Vector3f::new(-self.z, 0.0, self.x)
         }
     }
+
+    pub fn set_from(&mut self, v4: &Vector4f) {
+        self.x = v4.x;
+        self.y = v4.y;
+        self.z = v4.z;
+    }
 }
 
 impl Neg for Vector3f {
@@ -193,6 +205,14 @@ impl Add<Vector3f> for &Vector3f {
     }
 }
 
+impl Add<&Vector3f> for &Vector3f {
+    type Output = Vector3f;
+
+    fn add(self, other: &Vector3f) -> Vector3f {
+        Vector3f::new(self.x + other.x, self.y + other.y, self.z + other.z)
+    }
+}
+
 impl Sub for Vector3f {
     type Output = Vector3f;
 
@@ -228,6 +248,17 @@ impl Mul<f32> for Vector3f {
         self.y *= other;
         self.z *= other;
         self
+    }
+}
+
+impl Mul<Vector3f> for f32 {
+    type Output = Vector3f;
+
+    fn mul(self, mut other: Vector3f) -> Vector3f {
+        other.x *= self;
+        other.y *= self;
+        other.z *= self;
+        other
     }
 }
 

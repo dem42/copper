@@ -1,3 +1,4 @@
+use crate::display::Display;
 use crate::entities::{
     Camera,
     Entity,
@@ -28,7 +29,7 @@ pub struct ShadowMapRenderer {
 impl ShadowMapRenderer {
 
     pub fn new(aspect_ratio: f32) -> Self {
-        let shadow_box = ShadowBox::new(aspect_ratio);
+        let shadow_box = ShadowBox::new(aspect_ratio, Display::FOV_HORIZONTAL, Display::NEAR, Display::FAR);
         let world_to_lightspace = Matrix4f::identity();
         let ortho_proj_mat = Matrix4f::identity();
         let bias = ShadowMapRenderer::create_bias_matrix();
@@ -47,8 +48,9 @@ impl ShadowMapRenderer {
     }
 
     pub fn start_render(&mut self, camera: &Camera, sun: &Light) {
-        self.shadow_box.update(camera);
-        self.update_world_to_lightspace(-(&sun.position));
+        let (light_pitch_dg, light_yaw_dg) = ShadowMapRenderer::calc_light_pitch_yaw_dg(&sun.position);
+        self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);        
+        self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
         Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width, self.shadow_box.height, self.shadow_box.length);
         self.shadow_shader.start();
 
@@ -87,11 +89,15 @@ impl ShadowMapRenderer {
         self.shadow_shader.stop();
     }
 
-    fn update_world_to_lightspace(&mut self, light_direction: Vector3f) {
-        self.world_to_lightspace.make_identity();
-        let yaw = light_direction.x.atan2(light_direction.z);
-        let pitch = (light_direction.y / light_direction.length()).asin();
-        let angles = Vector3f {x: pitch.to_degrees(), y: yaw.to_degrees(), z: 0.0};
+    fn calc_light_pitch_yaw_dg(to_light_direction: &Vector3f) -> (f32, f32) {
+        let yaw = (-to_light_direction.x).atan2(-to_light_direction.z);
+        let pitch = (-to_light_direction.y / to_light_direction.length()).asin();
+        (pitch.to_degrees(), yaw.to_degrees())
+    }
+
+    fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
+        self.world_to_lightspace.make_identity();        
+        let angles = Vector3f::new(pitch, yaw, 0.0);
         self.world_to_lightspace.rotate_tait_bryan_xyz(&angles);
         let center = &self.shadow_box.world_space_center;
         self.world_to_lightspace.translate(&(-center));

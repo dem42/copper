@@ -56,6 +56,22 @@ fn rotl(x: u32, r: usize) -> u32 {
 }
 
 #[cfg(test)]
+#[macro_use]
+pub mod test_utils {
+
+    pub mod test_constants {
+        pub const EPS_PRECISE: f32 = 1e-6;
+        pub const EPS_MEDIUM: f32 = 1e-5;
+        pub const EPS_BAD: f32 = 1e-2;
+    }
+
+    macro_rules! assert_f32_eq {
+        ($left:expr, $right:expr, $eps:expr) => (assert!(($left - $right).abs() < $eps, format!("Left: {}, Right: {}.", $left, $right)););
+        ($left:expr, $right:expr, $eps:expr, $msg:expr) => (assert!(($left - $right).abs() < $eps, format!("{}. Left: {}, Right: {}.", $msg, $left, $right));)
+    }
+}
+
+#[cfg(test)]
 mod test {
     use super::*;
     #[test]
