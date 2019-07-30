@@ -175,7 +175,7 @@ impl ShadowMapFBO {
 
     fn new() -> Self {
         let fbo_id = Self::create_frame_buffer(false);
-        let depth_texture = Self::create_depth_texture_attachment(ShadowMapFBO::SHADOW_MAP_SIZE, ShadowMapFBO::SHADOW_MAP_SIZE);
+        let depth_texture = Self::create_depth_texture_attachment_for_shadows(ShadowMapFBO::SHADOW_MAP_SIZE, ShadowMapFBO::SHADOW_MAP_SIZE);
         ShadowMapFBO {
             fbo_id,
             depth_texture,

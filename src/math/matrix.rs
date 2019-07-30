@@ -26,7 +26,7 @@ impl Matrix4f {
     pub fn make_identity(&mut self) {        
         for i in 0..4 {
             for j in 0..4 {
-                self.data[i][i] = if i == j { 1.0 } else { 0.0 };
+                self.data[i][j] = if i == j { 1.0 } else { 0.0 };
             }
         }
     }
