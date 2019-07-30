@@ -13,6 +13,12 @@ The only other external dependency is on lodepng-rs for reading in pngs. This li
 This project started off following the opengl tutorial by ThinMatrix:
 https://www.youtube.com/watch?v=VS8wlS9hF8E&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP
 
+## Updating glfw dependency
+We don't build glfw from scratch. Rather, in our `build.rs` we point to a local directory that contains the compiled library. 
+
+Sometimes, the github glfw-rs version changes and may depend on a newer version of glfw binary. In that case you need to download a new version.
+This will only be necessary if you are installing this project in a clean directory since it does cache older version of its dependencies and tags them in the Cargo.lock. To force cargo to ignore the version that's locked you need to manually specify the version in Cargo.toml
+
 ## Building C++ with MSVC
 you have a weird system setup where your ucrtd (universal c runtime) is only available with windows 10 sdk 
 but you have multiple sdks installed 8.0 and 8.1 and your visual studio 14 2015 expects to have the ucrtd
