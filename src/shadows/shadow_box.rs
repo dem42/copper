@@ -33,7 +33,7 @@ pub struct ShadowBox {
 
 impl ShadowBox {
     const OFFSET: f32 = 10.0;
-    const SHADOW_DISTANCE: f32 = 100.0;
+    pub const SHADOW_DISTANCE: f32 = 100.0;
 
     pub fn new(aspect_ratio: f32, fov_deg: f32, near: f32, far: f32) -> Self {
        let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio, fov_deg, near.abs(), far.abs());

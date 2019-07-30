@@ -49,7 +49,7 @@ void main() {
     float bottom_to_camera_real_z = -depth_calc_B / (depth_calc_A + 2.0*bottom_to_camera - 1.0);
     bottom_to_camera_real_z = -bottom_to_camera_real_z; // we want depths to be positive unlike z
 
-    float water_surface_depth = gl_FragCoord.z; // find frags depth buffer z ( i think to be able to do this we have to create a renderbuffer attachment like we did in framebuffers -> test)
+    float water_surface_depth = gl_FragCoord.z; // find frags depth buffer z
     float water_surface_depth_real_z = -(-depth_calc_B / (depth_calc_A + 2.0*water_surface_depth - 1.0)); // the minus is from wanting positive like above
     float water_depth = bottom_to_camera_real_z - water_surface_depth_real_z;
     // alpha blending linearly until distance of 5 into water depth -> after that opaque

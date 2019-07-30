@@ -13,7 +13,7 @@ pub struct Framebuffers {
 pub struct ReflectionFBO {
     fbo_id: u32,
     pub color_texture: u32,
-    depth_renderbuffer: u32,
+    //depth_renderbuffer: u32,
 }
 
 pub struct RefractionFBO {
@@ -50,6 +50,7 @@ pub trait FramebufferObject {
         let color_attachments = if has_color_buf {        
             [gl::COLOR_ATTACHMENT0; 1]
         } else {
+            // by setting the draw_buffers to none we effectively make this a depth only pass
             [gl::NONE; 1]
         };
         gl::draw_buffers(&color_attachments);
@@ -81,7 +82,7 @@ pub trait FramebufferObject {
     fn create_depth_texture_attachment_for_shadows(width: usize, height: usize) -> u32 {
         let tex_id = gl::gen_texture();
         gl::bind_texture(gl::TEXTURE_2D, tex_id);
-        gl::tex_image_2d_uninitialized(gl::TEXTURE_2D, 0, gl::DEPTH_COMPONENT, gl::DEPTH_COMPONENT16, width, height, gl::FLOAT);
+        gl::tex_image_2d_uninitialized(gl::TEXTURE_2D, 0, gl::DEPTH_COMPONENT, gl::DEPTH_COMPONENT32, width, height, gl::FLOAT);
         gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
         gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
         gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE);
@@ -105,6 +106,10 @@ pub trait FramebufferObject {
         gl::viewport(0, 0, width as i32, height as i32);
     }
 
+    fn check_framebuffer() {
+        gl::check_framebuffer_status(gl::FRAMEBUFFER);
+    }
+
     fn bind(&mut self);
 }
 
@@ -117,11 +122,14 @@ impl ReflectionFBO {
     fn new() -> Self {
         let fbo_id = Self::create_frame_buffer(true);
         let color_texture = Self::create_color_texture_attachment(ReflectionFBO::WIDTH, ReflectionFBO::HEIGHT);
-        let depth_renderbuffer = Self::create_depth_renderbuffer_attachment(ReflectionFBO::WIDTH, ReflectionFBO::HEIGHT);
+        // a renderbuffer object cannot be sampled from within a shader
+        // the only way to read it would by from code by using something like glReadBuffer, glReadPixels etc
+        //let depth_renderbuffer = Self::create_depth_renderbuffer_attachment(ReflectionFBO::WIDTH, ReflectionFBO::HEIGHT);
+        Self::check_framebuffer();
         ReflectionFBO {
             fbo_id,
             color_texture,
-            depth_renderbuffer,
+            //depth_renderbuffer,
         }
     }
 }
@@ -136,7 +144,7 @@ impl Drop for ReflectionFBO {
     fn drop(&mut self) {
         gl::delete_framebuffer(self.fbo_id);
         gl::delete_texture(self.color_texture);
-        gl::delete_renderbuffer(self.depth_renderbuffer);
+        //gl::delete_renderbuffer(self.depth_renderbuffer);
     }    
 }
 
@@ -148,6 +156,7 @@ impl RefractionFBO {
         let fbo_id = Self::create_frame_buffer(true);
         let color_texture = Self::create_color_texture_attachment(RefractionFBO::WIDTH, RefractionFBO::HEIGHT);
         let depth_texture = Self::create_depth_texture_attachment(RefractionFBO::WIDTH, RefractionFBO::HEIGHT);
+        Self::check_framebuffer();
         RefractionFBO {
             fbo_id,
             color_texture,
@@ -176,6 +185,7 @@ impl ShadowMapFBO {
     fn new() -> Self {
         let fbo_id = Self::create_frame_buffer(false);
         let depth_texture = Self::create_depth_texture_attachment_for_shadows(ShadowMapFBO::SHADOW_MAP_SIZE, ShadowMapFBO::SHADOW_MAP_SIZE);
+        Self::check_framebuffer();
         ShadowMapFBO {
             fbo_id,
             depth_texture,
@@ -187,4 +197,11 @@ impl FramebufferObject for ShadowMapFBO {
     fn bind(&mut self) {
         Self::bind_framebuffer(self.fbo_id, ShadowMapFBO::SHADOW_MAP_SIZE, ShadowMapFBO::SHADOW_MAP_SIZE);
     }
+}
+
+impl Drop for ShadowMapFBO {
+    fn drop(&mut self) {
+        gl::delete_framebuffer(self.fbo_id);        
+        gl::delete_texture(self.depth_texture);        
+    }    
 }

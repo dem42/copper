@@ -491,6 +491,21 @@ pub fn bind_framebuffer(fbo_type: types::GLenum, fbo_id: u32) {
     }
 }
 
+pub fn check_framebuffer_status(fbo: types::GLenum) {
+    unsafe {
+        let status = CheckFramebufferStatus(fbo);
+        let status_str = status.to_string();
+        if status != FRAMEBUFFER_COMPLETE {
+            panic!("Error checking buffer. The buffer status is {}", match status {
+                FRAMEBUFFER_INCOMPLETE_ATTACHMENT => "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT",                
+                FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT => "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT",
+                FRAMEBUFFER_UNSUPPORTED => "GL_FRAMEBUFFER_UNSUPPORTED",
+                _ => &status_str,
+            }); 
+        }
+    }
+}
+
 pub fn draw_buffers(color_buffers: &[types::GLenum]) {
     unsafe {
         DrawBuffers(color_buffers.len() as i32, color_buffers.as_ptr());
