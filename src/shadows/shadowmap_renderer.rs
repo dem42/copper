@@ -24,6 +24,7 @@ pub struct ShadowMapRenderer {
     bias: Matrix4f,
     vp_matrix: Matrix4f,
     mvp_matrix: Matrix4f,
+    test_proj_matrix: Matrix4f,
 }
 
 impl ShadowMapRenderer {
@@ -36,6 +37,7 @@ impl ShadowMapRenderer {
         let shadow_shader = ShadowShader::new();
         let vp_matrix = Matrix4f::identity();
         let mvp_matrix = Matrix4f::identity();
+        let proj_mat = Matrix4f::create_projection_matrix(Display::NEAR, Display::FAR, Display::FOV_HORIZONTAL, aspect_ratio);
         ShadowMapRenderer {
             shadow_shader,
             shadow_box,
@@ -44,6 +46,7 @@ impl ShadowMapRenderer {
             bias,
             vp_matrix,
             mvp_matrix,
+            test_proj_matrix: proj_mat,
         }
     }
 
@@ -52,11 +55,17 @@ impl ShadowMapRenderer {
         self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);        
         self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
         Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width, self.shadow_box.height, self.shadow_box.length);
+
+        gl::enable(gl::DEPTH_TEST);
+        gl::clear(gl::DEPTH_BUFFER_BIT);
         self.shadow_shader.start();
 
         self.vp_matrix.make_identity();
-        self.vp_matrix.multiply_in_place(&self.ortho_proj_mat);
-        self.vp_matrix.multiply_in_place(&self.world_to_lightspace);        
+        // self.vp_matrix.multiply_in_place(&self.ortho_proj_mat);
+        // self.vp_matrix.multiply_in_place(&self.world_to_lightspace);
+        self.vp_matrix.multiply_in_place(&self.test_proj_matrix);
+        let cam_view = Matrix4f::create_view_matrix(camera);
+        self.vp_matrix.multiply_in_place(&cam_view);
     }
 
     pub fn prepare_textured_model(&mut self, model: &TexturedModel) {
