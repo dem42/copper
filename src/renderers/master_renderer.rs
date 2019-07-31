@@ -6,15 +6,7 @@ use crate::display::{
     WallClock,
 };
 use crate::gl;
-use crate::entities::{
-    Entity,
-    Camera,
-    Light,
-    Terrain,
-    Player,
-    Skybox,
-    WaterTile,
-};
+use crate::entities::*;
 use crate::math::{
     Matrix4f,
     Vector3f,
@@ -29,6 +21,7 @@ use super::normal_map_entity_renderer::NormalMapEntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
 use super::skybox_renderer::SkyboxRenderer;
 use super::water_renderer::WaterRenderer;
+use super::debug_renderer::DebugRenderer;
 
 pub struct MasterRenderer {    
     entity_renderer: EntityRenderer,
@@ -37,6 +30,7 @@ pub struct MasterRenderer {
     skybox_renderer: SkyboxRenderer,
     water_renderer: WaterRenderer,
     shadowmap_renderer: ShadowMapRenderer,
+    debug_renderer: DebugRenderer,
 }
 
 impl MasterRenderer {
@@ -50,7 +44,8 @@ impl MasterRenderer {
         let skybox_renderer = SkyboxRenderer::new(projection_matrix);
         let water_renderer = WaterRenderer::new(projection_matrix, &MasterRenderer::SKY_COLOR);
         let shadowmap_renderer = ShadowMapRenderer::new(aspect_ratio);
-        
+        let debug_renderer = DebugRenderer::new(projection_matrix);
+
         MasterRenderer {
             entity_renderer,
             normal_map_entity_renderer,
@@ -58,11 +53,12 @@ impl MasterRenderer {
             skybox_renderer,
             water_renderer,
             shadowmap_renderer,
+            debug_renderer,
         }
     }
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers) {
+                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers, debug_entity: &DebugEntity) {
 
         self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights);
 
@@ -73,6 +69,9 @@ impl MasterRenderer {
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
+
+        let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
+        self.debug_renderer.render(debug_entity, camera, obb_ref);        
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 

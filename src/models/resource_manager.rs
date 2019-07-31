@@ -11,6 +11,7 @@ use super::{
         WaterModel,
         ParticleModel,
         ParticleTexture,
+        DynamicVertexIndexedModel,
     },
     terrain_generator::HeightsGenerator,
 };
@@ -41,6 +42,7 @@ pub struct ResourceManager {
     skybox_model: Option<SkyboxModel>,
     water_model: Option<WaterModel>,
     particle_model: Option<ParticleModel>,
+    debug_model: Option<DynamicVertexIndexedModel>,
 
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
@@ -466,5 +468,30 @@ impl ResourceManager {
 
     pub fn particle_texture(&self, texture_prop: ParticleTextureProps) -> ParticleTexture {
         self.particle_textures.get(&texture_prop).expect("Must init_particle_textures before fetching").clone()
+    }
+
+    pub fn init_debug_cuboid_model(&mut self) {
+        if let None = self.debug_model {
+            let indices = [
+                0, 1, 2,
+                0, 2, 3,
+                0, 1, 5,
+                0, 4, 5,
+                0, 3, 7,
+                0, 7, 4,
+                6, 5, 4,
+                6, 7, 4,
+                6, 2, 3,
+                6, 7, 3,
+                6, 2, 1,
+                6, 5, 1,
+            ];
+            let model = self.loader.load_dynamic_model_with_indices_to_vao(8, &indices, 3);
+            self.debug_model = Some(model);
+        }
+    }
+
+    pub fn debug_cuboid_model(&self) -> DynamicVertexIndexedModel {
+        self.debug_model.clone().expect("Need to call init_debug_cuboid_model before accessing the model")
     }
 }

@@ -6,9 +6,11 @@ pub mod gui_renderer;
 pub mod skybox_renderer;
 pub mod water_renderer;
 pub mod particle_renderer;
+pub mod debug_renderer;
 
 pub use self::master_renderer::MasterRenderer;
 pub use self::gui_renderer::GuiRenderer;
 pub use self::skybox_renderer::SkyboxRenderer;
 pub use self::water_renderer::WaterRenderer;
 pub use self::particle_renderer::ParticleRenderer;
+pub use self::debug_renderer::DebugRenderer;

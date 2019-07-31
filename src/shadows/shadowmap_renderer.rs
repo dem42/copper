@@ -18,7 +18,7 @@ use super::shadow_shader::ShadowShader;
 
 pub struct ShadowMapRenderer {
     shadow_shader: ShadowShader,
-    shadow_box: ShadowBox,
+    pub shadow_box: ShadowBox,
     world_to_lightspace: Matrix4f,
     ortho_proj_mat: Matrix4f,
     bias: Matrix4f,
@@ -108,7 +108,7 @@ impl ShadowMapRenderer {
         self.world_to_lightspace.make_identity();        
         let angles = Vector3f::new(pitch, yaw, 0.0);
         self.world_to_lightspace.rotate_tait_bryan_xyz(&angles);
-        let center = &self.shadow_box.world_space_center;
+        let center = &self.shadow_box.world_space_center;// + Vector3f::new(0.0, 0.0, -2.0*ShadowBox::OFFSET);
         self.world_to_lightspace.translate(&(-center));
     }
 
@@ -122,5 +122,4 @@ impl ShadowMapRenderer {
         bias.translate(&s);
         bias
     }
-
 }

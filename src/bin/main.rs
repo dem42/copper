@@ -30,6 +30,7 @@ use copper::entities::{
     Ground,
     Skybox,
     WaterTile,
+    DebugEntity,
 };
 use copper::math::{
     Vector2f,
@@ -50,6 +51,7 @@ struct Scene {
     player: Player, 
     gui_model: GuiModel, 
     water: Vec<WaterTile>,
+    debug_entity: DebugEntity,
 }
 
 fn main() {
@@ -88,15 +90,15 @@ fn main() {
     let guis = vec!{
         GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
-        GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
+        //GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
     };
 
 
-    let mut batch_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
+    let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();
         
     let mut lights = vec!{
-        Light::new_infinite(Vector3f::new(0.0,10_000.0,-7_000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
+        Light::new_infinite(&scene.player.entity.position + Vector3f::new(0.0, 10000.0, 0.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
         Light::new_point(scene.ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(scene.ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(scene.ground.create_pos_above_terrain(120.0,14.0,-240.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        
@@ -169,8 +171,8 @@ fn main() {
 
         skybox.increase_rotation(&display);
 
-        batch_renderer.render(&lights, &mut camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
-            &scene.player, &scene.water, &skybox, &display, &mut framebuffers);
+        master_renderer.render(&lights, &mut camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
+            &scene.player, &scene.water, &skybox, &display, &mut framebuffers, &scene.debug_entity);
 
         particle_master.render(&camera);
 
@@ -223,6 +225,8 @@ fn init_resources(resource_manager: &mut ResourceManager) {
 
     resource_manager.init_particle_model();
     resource_manager.init_particle_textures();
+    // debug entity
+    resource_manager.init_debug_cuboid_model();
 }
 
 fn create_scene(resource_manager: &ResourceManager) -> Scene {
@@ -289,12 +293,15 @@ fn create_scene(resource_manager: &ResourceManager) -> Scene {
     normal_mapped_entities.push(Entity::new(resource_manager.model(ModelType::Barrel), ground.create_pos_above_terrain(150.0, 10.0, -255.0), Vector3f::zero(), 0.5));
     normal_mapped_entities.push(Entity::new(resource_manager.model(ModelType::Boulder), ground.create_pos_above_terrain(140.0, 10.0, -255.0), Vector3f::zero(), 0.5));
 
+    let debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
+
     Scene {
         entities, 
         normal_mapped_entities, 
         ground, 
         player, 
         gui_model: resource_manager.gui_model(), 
-        water: water_tiles
+        water: water_tiles,
+        debug_entity,
     }
 }

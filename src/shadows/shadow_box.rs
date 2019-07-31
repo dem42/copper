@@ -29,11 +29,12 @@ pub struct ShadowBox {
     pub height: f32,
     pub length: f32,
     pub world_space_center: Vector3f,
+    pub obb_corners: [Vector3f; 8],
 }
 
 impl ShadowBox {
-    const OFFSET: f32 = 10.0;
-    pub const SHADOW_DISTANCE: f32 = 100.0;
+    pub const OFFSET: f32 = 10.0;
+    pub const SHADOW_DISTANCE: f32 = 300.0;
 
     pub fn new(aspect_ratio: f32, fov_deg: f32, near: f32, far: f32) -> Self {
        let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio, fov_deg, near.abs(), far.abs());
@@ -49,6 +50,7 @@ impl ShadowBox {
             height: 0.0,
             length: 0.0,
             world_space_center: Vector3f::zero(),
+            obb_corners: Default::default(),
         }
     }
 
@@ -57,13 +59,13 @@ impl ShadowBox {
     // a composition of translation and rotation which the transform is a rigid transformation which means it preserves distance between points
     pub fn update(&mut self, camera: &Camera, light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {        
         let frustum_corners_ws = self.get_frustum_corners_ws(camera);
-        let obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
+        self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
 
-        self.width = distance(&obb_corners[0], &obb_corners[1]);
-        self.height = distance(&obb_corners[0], &obb_corners[4]);
-        self.length = distance(&obb_corners[0], &obb_corners[3]);
+        self.width = distance(&self.obb_corners[0], &self.obb_corners[1]);
+        self.height = distance(&self.obb_corners[0], &self.obb_corners[4]);
+        self.length = distance(&self.obb_corners[0], &self.obb_corners[3]);
 
-        self.world_space_center = 0.5 * (&obb_corners[0] + &obb_corners[6]);
+        self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);
     }
 
     fn compute_frustum_sizes(aspect_ratio: f32, fov_deg: f32, near_dist: f32, far_dist: f32) -> (f32, f32, f32, f32)  {

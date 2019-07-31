@@ -63,6 +63,17 @@ impl ModelLoader {
         RawModel::new(vao_id, positions.len() / 2)
     }
 
+    pub fn load_dynamic_model_with_indices_to_vao(&mut self, unique_vertex_count: usize, indices: &[u32], dimension: u32) -> DynamicVertexIndexedModel {
+        let vao_id = self.create_vao(); 
+        self.bind_indices_buffer(indices);     
+        let stream_draw_vbo = self.create_empty_float_vbo_for_attrib(RawModel::POS_ATTRIB, unique_vertex_count, dimension);
+        self.unbind_vao();
+        DynamicVertexIndexedModel {
+            raw_model: RawModel::new(vao_id, indices.len()),
+            stream_draw_vbo,
+        }
+    }
+
     pub fn load_quads_mesh_to_vao(&mut self, positions: &[f32], texture_coords: &[f32]) -> RawModel {
         let vao_id = self.create_vao(); 
         self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 2, positions);        
@@ -148,6 +159,16 @@ impl ModelLoader {
         self.vbo_list.push(vbo_id);
         gl::bind_buffer(gl::ARRAY_BUFFER, vbo_id);
         gl::buffer_data_unitialized::<f32>(gl::ARRAY_BUFFER, float_count, gl::STREAM_DRAW);
+        gl::bind_buffer(gl::ARRAY_BUFFER, 0);
+        vbo_id
+    }
+
+    pub fn create_empty_float_vbo_for_attrib(&mut self, attribute_num: u32, item_count: usize, coord_size: u32) -> u32 {
+        let vbo_id = gl::gen_buffer();
+        self.vbo_list.push(vbo_id);
+        gl::bind_buffer(gl::ARRAY_BUFFER, vbo_id);
+        gl::buffer_data_unitialized::<f32>(gl::ARRAY_BUFFER, item_count * (coord_size as usize), gl::STREAM_DRAW);
+        gl::vertex_attrib_pointer(attribute_num, coord_size, gl::FLOAT);
         gl::bind_buffer(gl::ARRAY_BUFFER, 0);
         vbo_id
     }
@@ -306,6 +327,12 @@ pub struct WaterModel {
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub struct ParticleModel {
+    pub raw_model: RawModel,
+    pub stream_draw_vbo: u32,
+}
+
+#[derive(Clone)]
+pub struct DynamicVertexIndexedModel {
     pub raw_model: RawModel,
     pub stream_draw_vbo: u32,
 }
