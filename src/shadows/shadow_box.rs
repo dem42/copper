@@ -30,6 +30,7 @@ pub struct ShadowBox {
     pub length: f32,
     pub world_space_center: Vector3f,
     pub obb_corners: [Vector3f; 8],
+    pub frustum_corners: [Vector3f; 8],
 }
 
 impl ShadowBox {
@@ -51,6 +52,7 @@ impl ShadowBox {
             length: 0.0,
             world_space_center: Vector3f::zero(),
             obb_corners: Default::default(),
+            frustum_corners: Default::default(),
         }
     }
 
@@ -59,6 +61,7 @@ impl ShadowBox {
     // a composition of translation and rotation which the transform is a rigid transformation which means it preserves distance between points
     pub fn update(&mut self, camera: &Camera, light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {        
         let frustum_corners_ws = self.get_frustum_corners_ws(camera);
+        self.frustum_corners = frustum_corners_ws.clone();
         self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
 
         self.width = distance(&self.obb_corners[0], &self.obb_corners[1]);
@@ -112,7 +115,7 @@ impl ShadowBox {
         corners[7].x = -self.farplane_width / 2.0;
         corners[7].y = self.farplane_height / 2.0;
         corners[7].z = self.far_plane;
-
+        
         let ws_to_vs = Matrix4f::create_view_matrix(camera);
         let vs_to_ws = ws_to_vs.inverse();
 
@@ -127,7 +130,8 @@ impl ShadowBox {
     }
 
     fn calc_bounding_cuboid_corners_ws(mut corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) -> [Vector3f; 8] {
-        let camera_rotation = Matrix4f::calculate_rotation_from_rpy(0.0, light_direction_pitch_deg, light_direction_yaw_deg);
+        //let camera_rotation = Matrix4f::calculate_rotation_from_rpy(0.0, light_direction_pitch_deg, light_direction_yaw_deg);
+        let camera_rotation = Matrix4f::identity();
         
         let mut cuboid_faces: [Vector4f; 6] = Default::default();
         for i in 0..3 {            

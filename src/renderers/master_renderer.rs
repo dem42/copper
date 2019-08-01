@@ -70,7 +70,7 @@ impl MasterRenderer {
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
-        let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
+        let obb_ref = &self.shadowmap_renderer.shadow_box.frustum_corners;
         self.debug_renderer.render(debug_entity, camera, obb_ref);        
     }
 

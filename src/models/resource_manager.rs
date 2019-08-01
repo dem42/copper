@@ -472,19 +472,37 @@ impl ResourceManager {
 
     pub fn init_debug_cuboid_model(&mut self) {
         if let None = self.debug_model {
-            let indices = [
+            let indices_cuboid = [
                 0, 1, 2,
-                0, 2, 3,
+                0, 3, 2,
                 0, 1, 5,
                 0, 4, 5,
                 0, 3, 7,
-                0, 7, 4,
+                0, 4, 7,
                 6, 5, 4,
                 6, 7, 4,
                 6, 2, 3,
                 6, 7, 3,
                 6, 2, 1,
                 6, 5, 1,
+            ];
+            let indices = [
+                2, 1, 6,
+                2, 7, 6,
+                2, 1, 0,
+                2, 3, 0,
+                2, 7, 5,
+                2, 3, 5,
+                4, 0, 3,
+                4, 5, 3,
+                4, 6, 7,
+                4, 5, 7,
+                4, 6, 1,
+                4, 0, 1,
+            ];
+            let indices_small = [
+                2, 1, 0,
+                2, 3, 0,                
             ];
             let model = self.loader.load_dynamic_model_with_indices_to_vao(8, &indices, 3);
             self.debug_model = Some(model);

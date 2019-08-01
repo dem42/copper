@@ -72,10 +72,10 @@ impl DebugRenderer {
         gl::bind_buffer(gl::ARRAY_BUFFER, vbo);
         gl::buffer_data_unitialized::<f32>(gl::ARRAY_BUFFER, 8 * 3, gl::STREAM_DRAW);
         let mut data: [f32; 8 * 3] = Default::default();
-        for i in 0..vertices.len() {
-            data[3*i] = vertices[i].x / 20.0 + 10.0;
-            data[3*i + 1] = vertices[i].y / 20.0 + 10.0;
-            data[3*i + 2] = vertices[i].z / 20.0 + 10.0;
+        for i in 0..8 {
+            data[3*i] = vertices[i].x;
+            data[3*i + 1] = vertices[i].y;
+            data[3*i + 2] = vertices[i].z;
         }
         gl::buffer_sub_data(gl::ARRAY_BUFFER, 0, &data);
         gl::bind_buffer(gl::ARRAY_BUFFER, 0);

@@ -98,7 +98,7 @@ fn main() {
     let mut gui_renderer = GuiRenderer::new();
         
     let mut lights = vec!{
-        Light::new_infinite(&scene.player.entity.position + Vector3f::new(0.0, 10000.0, 0.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
+        Light::new_infinite(Vector3f::new(0.0, 10000.0, 0.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
         Light::new_point(scene.ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(scene.ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(scene.ground.create_pos_above_terrain(120.0,14.0,-240.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        
