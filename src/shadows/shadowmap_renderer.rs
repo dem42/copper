@@ -30,7 +30,7 @@ pub struct ShadowMapRenderer {
 impl ShadowMapRenderer {
 
     pub fn new(aspect_ratio: f32) -> Self {
-        let shadow_box = ShadowBox::new(aspect_ratio, Display::FOV_HORIZONTAL / 3.0, -30.0, -ShadowBox::SHADOW_DISTANCE);
+        let shadow_box = ShadowBox::new(aspect_ratio, Display::FOV_HORIZONTAL, Display::NEAR, -ShadowBox::SHADOW_DISTANCE);
         let world_to_lightspace = Matrix4f::identity();
         let ortho_proj_mat = Matrix4f::identity();
         let bias = ShadowMapRenderer::create_bias_matrix();

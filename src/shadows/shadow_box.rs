@@ -35,7 +35,7 @@ pub struct ShadowBox {
 
 impl ShadowBox {
     pub const OFFSET: f32 = 10.0;
-    pub const SHADOW_DISTANCE: f32 = 300.0;
+    pub const SHADOW_DISTANCE: f32 = 100.0;
 
     pub fn new(aspect_ratio: f32, fov_deg: f32, near: f32, far: f32) -> Self {
        let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio, fov_deg, near.abs(), far.abs());
@@ -130,21 +130,21 @@ impl ShadowBox {
     }
 
     fn calc_bounding_cuboid_corners_ws(mut corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) -> [Vector3f; 8] {
-        //let camera_rotation = Matrix4f::calculate_rotation_from_rpy(0.0, light_direction_pitch_deg, light_direction_yaw_deg);
-        let camera_rotation = Matrix4f::identity();
+        let light_orientation = Matrix4f::calculate_rotation_from_rpy(0.0, light_direction_pitch_deg, light_direction_yaw_deg);
+        //let camera_rotation = Matrix4f::identity();
         
         let mut cuboid_faces: [Vector4f; 6] = Default::default();
         for i in 0..3 {            
-            cuboid_faces[2*i].x = camera_rotation[i][0];
-            cuboid_faces[2*i].y = camera_rotation[i][1];
-            cuboid_faces[2*i].z = camera_rotation[i][2];
+            cuboid_faces[2*i].x = light_orientation[i][0];
+            cuboid_faces[2*i].y = light_orientation[i][1];
+            cuboid_faces[2*i].z = light_orientation[i][2];
             cuboid_faces[2*i].w = 0.0;
             cuboid_faces[2*i].normalize();
             cuboid_faces[2*i].w = f32::MAX;
 
-            cuboid_faces[2*i + 1].x = camera_rotation[i][0];
-            cuboid_faces[2*i + 1].y = camera_rotation[i][1];
-            cuboid_faces[2*i + 1].z = camera_rotation[i][2];
+            cuboid_faces[2*i + 1].x = light_orientation[i][0];
+            cuboid_faces[2*i + 1].y = light_orientation[i][1];
+            cuboid_faces[2*i + 1].z = light_orientation[i][2];
             cuboid_faces[2*i + 1].w = 0.0;
             cuboid_faces[2*i + 1].normalize();
             cuboid_faces[2*i + 1].w = f32::MIN;

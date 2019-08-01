@@ -504,7 +504,7 @@ impl ResourceManager {
                 2, 1, 0,
                 2, 3, 0,                
             ];
-            let model = self.loader.load_dynamic_model_with_indices_to_vao(8, &indices, 3);
+            let model = self.loader.load_dynamic_model_with_indices_to_vao(8, &indices_cuboid, 3);
             self.debug_model = Some(model);
         }
     }
