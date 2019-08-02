@@ -11,10 +11,12 @@ out vec3 surface_normal;
 out vec3 light_direction[NUM_LIGHTS];
 out vec3 to_camera_dir;
 out float visibility;
+out vec4 shadow_coords;
 
 uniform mat4 transform;
 uniform mat4 projection_matrix;
 uniform mat4 view_matrix;
+uniform mat4 to_shadowmap_space;
 
 uniform vec3 light_pos[NUM_LIGHTS];
 
@@ -27,6 +29,8 @@ uniform vec4 clip_plane;
 
 void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
+    shadow_coords = to_shadowmap_space * world_position;
+
     gl_ClipDistance[0] = dot(world_position, clip_plane);
 
     vec4 eye_space_position = view_matrix * world_position;

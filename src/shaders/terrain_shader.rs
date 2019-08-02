@@ -29,6 +29,8 @@ pub struct TerrainShader {
     location_blend_map_sampler: i32,
     location_attenuation: [i32; NUM_LIGHTS],
     location_clip_plane: i32,
+    location_to_shadowmap_space: i32,
+    location_shadowmap: i32,
 }
 
 impl TerrainShader {
@@ -41,7 +43,7 @@ impl TerrainShader {
             mut location_light_color,
             mut location_shine_damper,
             mut location_reflectivity,
-            mut location_sky_color,            
+            mut location_sky_color,
         ) = Default::default();
 
         let (
@@ -52,6 +54,8 @@ impl TerrainShader {
             mut location_blend_map_sampler,
             mut location_attenuation,
             mut location_clip_plane,
+            mut location_to_shadowmap_space,
+            mut location_shadowmap,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -90,6 +94,8 @@ impl TerrainShader {
                     location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));
                 }
                 location_clip_plane = shader_prog.get_uniform_location("clip_plane");
+                location_to_shadowmap_space = shader_prog.get_uniform_location("to_shadowmap_space");
+                location_shadowmap = shader_prog.get_uniform_location("shadow_map");
         });
 
         TerrainShader {
@@ -109,6 +115,8 @@ impl TerrainShader {
             location_blend_map_sampler,
             location_attenuation,
             location_clip_plane,
+            location_to_shadowmap_space,
+            location_shadowmap,
         }
     }
 
@@ -126,6 +134,7 @@ impl TerrainShader {
         ShaderProgram::load_int(self.location_g_sampler, 2);
         ShaderProgram::load_int(self.location_b_sampler, 3);
         ShaderProgram::load_int(self.location_blend_map_sampler, 4);
+        ShaderProgram::load_int(self.location_shadowmap, 5);
     }
 
     pub fn load_sky_color(&mut self, sky_color: &Vector3f) {
@@ -167,5 +176,9 @@ impl TerrainShader {
 
     pub fn load_clip_plane(&mut self, clip_plane: &Vector4f) {
         ShaderProgram::load_vector4d(self.location_clip_plane, clip_plane);
+    }
+
+    pub fn load_to_shadowmap_space(&mut self, to_shadowmap_matrix: &Matrix4f) {
+        ShaderProgram::load_matrix(self.location_to_shadowmap_space, to_shadowmap_matrix);
     }
 }

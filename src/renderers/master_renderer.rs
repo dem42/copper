@@ -66,7 +66,7 @@ impl MasterRenderer {
         display.restore_default_framebuffer();
 
         let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane, framebuffers.shadowmap_fbo.depth_texture);
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
@@ -115,18 +115,18 @@ impl MasterRenderer {
         
         camera.set_to_reflected_ray_camera_origin(water_height);
         framebuffers.reflection_fbo.bind();
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane, framebuffers.shadowmap_fbo.depth_texture);
         camera.set_to_reflected_ray_camera_origin(water_height);
 
         // we should also move camera before refraction to account for refracted angle?
         framebuffers.refraction_fbo.bind();
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane, framebuffers.shadowmap_fbo.depth_texture);
 
         gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?        
     }
 
     fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-                player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f) {
+                player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f, shadow_map_texture: u32) {
         self.prepare();
 
         // render entites
@@ -161,7 +161,7 @@ impl MasterRenderer {
         self.normal_map_entity_renderer.stop_render(); 
 
         // render terrain
-        self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR);
+        self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, self.shadowmap_renderer.get_to_shadow(), shadow_map_texture);
         for terrain in terrains.iter() {
             self.terrain_renderer.prepare_terrain(terrain, clip_plane);
             self.terrain_renderer.render(terrain);

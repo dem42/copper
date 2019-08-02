@@ -98,6 +98,14 @@ impl ShadowMapRenderer {
         self.shadow_shader.stop();
     }
 
+    pub fn get_to_shadow(&self) -> Matrix4f {
+        let mut res = Matrix4f::identity();
+        res.multiply_in_place(&self.bias);
+        res.multiply_in_place(&self.ortho_proj_mat);
+        res.multiply_in_place(&self.world_to_lightspace);
+        res
+    }
+
     fn calc_light_pitch_yaw_dg(to_light_direction: &Vector3f) -> (f32, f32) {
         let yaw = (-to_light_direction.x).atan2(-to_light_direction.z);
         let pitch = (-to_light_direction.y / to_light_direction.length()).asin();
@@ -106,7 +114,7 @@ impl ShadowMapRenderer {
 
     fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
         self.world_to_lightspace.make_identity();        
-        let angles = Vector3f::new(pitch, yaw, 0.0);
+        let angles = Vector3f::new(-pitch, -yaw, 0.0);
         self.world_to_lightspace.rotate_tait_bryan_xyz(&angles);
         let center = &self.shadow_box.world_space_center;// + Vector3f::new(0.0, 0.0, -2.0*ShadowBox::OFFSET);
         self.world_to_lightspace.translate(&(-center));

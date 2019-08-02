@@ -31,16 +31,20 @@ impl TerrainRenderer {
         }
     }
 
-    pub fn start_render(&mut self, lights: &Vec<Light>, camera: &Camera, sky_color: &Vector3f) {
+    pub fn start_render(&mut self, lights: &Vec<Light>, camera: &Camera, sky_color: &Vector3f, to_shadowmap_space: Matrix4f, shadow_map_texture: u32) {
         self.shader.start();
         // we do this more than once because we may want to change the light, view, sky color
         // but we do them once per model type, because the type has one shader
         self.shader.load_lights(lights);
         self.shader.load_view_matrix(camera);  
-        self.shader.load_sky_color(sky_color);  
+        self.shader.load_sky_color(sky_color);
+        self.shader.load_to_shadowmap_space(&to_shadowmap_space);
+
+        gl::active_texture(gl::TEXTURE5);
+        gl::bind_texture(gl::TEXTURE_2D, shadow_map_texture);
     }
 
-    pub fn stop_render(&mut self) {        
+    pub fn stop_render(&mut self) {          
         self.shader.stop();
     }
 

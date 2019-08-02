@@ -8,6 +8,7 @@ in vec3 light_direction[NUM_LIGHTS];
 in vec3 to_camera_dir;
 // fog stuff
 in float visibility;
+in vec4 shadow_coords;
 
 // rgba
 out vec4 out_Color;
@@ -17,6 +18,8 @@ uniform sampler2D r_sampler;
 uniform sampler2D g_sampler;
 uniform sampler2D b_sampler;
 uniform sampler2D blend_map_sampler;
+uniform sampler2D shadow_map;
+
 uniform vec3 light_color[NUM_LIGHTS];
 
 uniform float shine_damper;
@@ -41,6 +44,10 @@ void adjust_brightness(inout float diffuse_brightness, inout float specular_brig
 
 void main(void) {
 
+    // compare depth with shadowmap depth to figure out if this piece of terrain is in shadow or not (absence of light due to something blocking it)
+    float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy).r;
+    float light_factor = 1.0 - step(obj_depth_nearest_light, shadow_coords.z);
+    
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)
     vec4 blend_map_col = texture(blend_map_sampler, pass_tex_coord);
      // our bland map pixels are only either some val of r or g or b so this will be <= 1
@@ -79,8 +86,9 @@ void main(void) {
         total_diffuse += (brightness * light_color[i]) / attenuation_factor; // add alpha of 1
         total_specular += (pow(spec_brightness, shine_damper) * reflectivity * light_color[i]) / attenuation_factor;
     }
-    total_diffuse = max(total_diffuse, 0.2); // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
+    total_diffuse = max(total_diffuse, 0.2) * light_factor; // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
     
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * blended_texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
+    out_Color = mix(out_Color, vec4(obj_depth_nearest_light), 0.999);
 }
