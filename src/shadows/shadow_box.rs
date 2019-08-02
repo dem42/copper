@@ -9,9 +9,11 @@ use crate::math::{
     Matrix4f,
     Vector3f,
     Vector4f,
-    distance,    
+    distance,  
+    f32_min,  
+    f32_max,  
 };
-use std::{
+use std::{    
     f32
 };
 
@@ -62,13 +64,16 @@ impl ShadowBox {
     pub fn update(&mut self, camera: &Camera, light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {        
         let frustum_corners_ws = self.get_frustum_corners_ws(camera);
         self.frustum_corners = frustum_corners_ws.clone();
-        self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
 
-        self.width = distance(&self.obb_corners[0], &self.obb_corners[1]);
-        self.height = distance(&self.obb_corners[0], &self.obb_corners[4]);
-        self.length = distance(&self.obb_corners[0], &self.obb_corners[3]);
+        self.update_shadow_box_size(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
 
-        self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);
+        // self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, light_direction_pitch_deg, light_direction_yaw_deg);
+
+        // self.width = distance(&self.obb_corners[0], &self.obb_corners[1]);
+        // self.height = distance(&self.obb_corners[0], &self.obb_corners[4]);
+        // self.length = distance(&self.obb_corners[0], &self.obb_corners[3]);
+
+        // self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);
     }
 
     fn compute_frustum_sizes(aspect_ratio: f32, fov_deg: f32, near_dist: f32, far_dist: f32) -> (f32, f32, f32, f32)  {
@@ -127,6 +132,35 @@ impl ShadowBox {
             corners[i].set_from(&res);
         }
         corners
+    }
+
+    fn update_shadow_box_size(&mut self, corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {
+        let light_orientation = Matrix4f::calculate_rotation_from_rpy(0.0, -light_direction_pitch_deg, -light_direction_yaw_deg);
+        let light_orient_inv = light_orientation.transpose();
+
+        // we express every frustum in lightspace
+        // in lightspace the cuboid is axis alighned so to figure out the corners of the cuboid we just need to figure out the min,max values
+        let mut temp_v4 = Vector4f::new(0.0, 0.0, 0.0, 0.0);
+        let mut min_v = Vector3f::new(f32::MAX, f32::MAX, f32::MAX);
+        let mut max_v = Vector3f::new(f32::MIN, f32::MIN, f32::MIN);
+        for i in 0..corners.len() {
+            temp_v4.set_from(&corners[i]);
+            temp_v4.w = 1.0; // transform points
+            let res = light_orientation.transform(&temp_v4);
+            min_v.x = f32_min(min_v.x, res.x);
+            min_v.y = f32_min(min_v.y, res.y);
+            min_v.z = f32_min(min_v.z, res.z);
+            max_v.x = f32_max(max_v.x, res.x);
+            max_v.y = f32_max(max_v.y, res.y);
+            max_v.z = f32_max(max_v.z, res.z);
+        }
+
+        self.width = max_v.x - min_v.x;
+        self.height = max_v.y - min_v.y;
+        self.length = max_v.z - min_v.z;
+
+        let world_space_v4 = Vector4f::new(0.5 * (max_v.x + min_v.x), 0.5 * (max_v.y + min_v.y), 0.5 * (max_v.z + min_v.z), 1.0);
+        self.world_space_center = light_orient_inv.transform(&world_space_v4).xyz();
     }
 
     fn calc_bounding_cuboid_corners_ws(mut corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) -> [Vector3f; 8] {

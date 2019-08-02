@@ -7,7 +7,7 @@ use super::{
 use std::f32;
 use super::super::entities::Camera;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrix4f {
     data: [[f32; 4]; 4],
 }
@@ -203,7 +203,7 @@ impl Matrix4f {
 
     fn abjugate_mat(&self) -> Matrix4f {
         let mut cofactor = self.cofactor_mat();
-        cofactor.transpose();
+        cofactor.transpose_ip();
         cofactor
     }
 
@@ -217,7 +217,7 @@ impl Matrix4f {
         res
     }
 
-    pub fn transpose(&mut self) {
+    pub fn transpose_ip(&mut self) {
         for i in 0..3 {
             for j in (i+1)..4 {
                 let temp = self.data[i][j];
@@ -225,6 +225,12 @@ impl Matrix4f {
                 self.data[j][i] = temp;
             }
         }        
+    }
+
+    pub fn transpose(&self) -> Matrix4f {
+        let mut res = self.clone();
+        res.transpose_ip();
+        res
     }
 
     pub fn inverse(&self) -> Matrix4f {

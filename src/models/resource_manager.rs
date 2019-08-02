@@ -486,24 +486,21 @@ impl ResourceManager {
                 6, 2, 1,
                 6, 5, 1,
             ];
-            let indices = [
-                2, 1, 6,
-                2, 7, 6,
-                2, 1, 0,
-                2, 3, 0,
-                2, 7, 5,
-                2, 3, 5,
-                4, 0, 3,
-                4, 5, 3,
-                4, 6, 7,
-                4, 5, 7,
-                4, 6, 1,
-                4, 0, 1,
-            ];
-            let indices_small = [
-                2, 1, 0,
-                2, 3, 0,                
-            ];
+            // to draw a frustum which has a different order of corners
+            // let indices = [
+            //     2, 1, 6,
+            //     2, 7, 6,
+            //     2, 1, 0,
+            //     2, 3, 0,
+            //     2, 7, 5,
+            //     2, 3, 5,
+            //     4, 0, 3,
+            //     4, 5, 3,
+            //     4, 6, 7,
+            //     4, 5, 7,
+            //     4, 6, 1,
+            //     4, 0, 1,
+            // ];
             let model = self.loader.load_dynamic_model_with_indices_to_vao(8, &indices_cuboid, 3);
             self.debug_model = Some(model);
         }

@@ -39,6 +39,25 @@ pub fn distance(p1: &Vector3f, p2: &Vector3f) -> f32 {
     sq_sum.sqrt()
 }
 
+// f32 is not eq so we can't use cmp (NaN stuff) .. but it we assume that we never have NaN then the following is good
+#[inline]
+pub fn f32_min(a: f32, b: f32) -> f32 {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+pub fn f32_max(a: f32, b: f32) -> f32 {
+    if a < b {
+        b
+    } else {
+        a
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
