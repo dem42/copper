@@ -66,8 +66,17 @@ pub mod test_utils {
     }
 
     macro_rules! assert_f32_eq {
-        ($left:expr, $right:expr, $eps:expr) => (assert!(($left - $right).abs() < $eps, format!("Left: {}, Right: {}.", $left, $right)););
-        ($left:expr, $right:expr, $eps:expr, $msg:expr) => (assert!(($left - $right).abs() < $eps, format!("{}. Left: {}, Right: {}.", $msg, $left, $right));)
+        ($left:expr, $right:expr, absolute=$eps_abs:expr, relative=$eps_rel:expr) => (assert_f32_eq!($left, $right, $eps_abs, $eps_rel, "Floats not equal"););
+        ($left:expr, $right:expr, $eps_abs:expr, $eps_rel:expr, $msg:expr) => ({
+            let absolute_error = ($left - $right).abs();
+            assert!(absolute_error < $eps_abs, format!("{}. Left: {}, Right: {}. Absolute error: {} >= {}", $msg, $left, $right, absolute_error, $eps_abs));
+            if $left != 0.0 {
+                let relative_error = (absolute_error / $left).abs();
+                assert!(relative_error < $eps_rel, format!("{}. Left: {}, Right: {}. Relative error: {} >= {}", $msg, $left, $right, relative_error, $eps_rel));
+            }
+        });
+        ($left:expr, $right:expr, $eps:expr, $msg:expr) => (assert_f32_eq!($left, $right, $eps, $eps, $msg););
+        ($left:expr, $right:expr, $eps:expr) => (assert_f32_eq!($left, $right, $eps, $eps, "Floats not equal"););
     }
 }
 
