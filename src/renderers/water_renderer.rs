@@ -16,6 +16,7 @@ use crate::math::{
     Vector3f,
 };
 use crate::shaders::WaterShader;
+use super::master_renderer::RenderGroup;
 
 pub struct WaterRenderer {
     shader: WaterShader,
@@ -39,6 +40,8 @@ impl WaterRenderer {
     }
 
     pub fn render(&mut self, water_tiles: &Vec<WaterTile>, framebuffers: &Framebuffers, camera: &Camera, display: &Display, lights: &Vec<Light>) {
+        gl::helper::push_debug_group(RenderGroup::DRAW_WATER.id, RenderGroup::DRAW_WATER.name);
+
         self.shader.start();
         self.shader.load_camera(camera);
         
@@ -79,6 +82,8 @@ impl WaterRenderer {
 
         gl::disable(gl::BLEND);
         self.shader.stop();
+
+        gl::helper::pop_debug_group();
     }
 
     fn update_wave_factor(&mut self, display: &Display) {

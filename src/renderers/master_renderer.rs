@@ -35,7 +35,9 @@ impl RenderGroup {
     pub const DRAW_NORMAL_MAP_ENTITIES: RenderGroup = RenderGroup {id: 3, name: "NormalMapEntityDrawPass"};
     pub const DRAW_TERRAIN: RenderGroup = RenderGroup {id: 4, name: "TerrainDraw"};
     pub const DRAW_SKYBOX: RenderGroup = RenderGroup {id: 5, name: "Skybox"};
-    pub const DRAW_GUI: RenderGroup = RenderGroup {id: 6, name: "GuiOverlayDraw"};
+    pub const DRAW_WATER: RenderGroup = RenderGroup {id: 6, name: "WaterSurfaceDraw"};
+    pub const PARTICLE_EFFECTS_PASS: RenderGroup = RenderGroup {id: 7, name: "ParticleEffects"};
+    pub const DRAW_GUI: RenderGroup = RenderGroup {id: 8, name: "GuiOverlayDraw"};
 }
 
 pub struct MasterRenderer {    
@@ -85,8 +87,8 @@ impl MasterRenderer {
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
-        let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
-        self.debug_renderer.render(debug_entity, camera, obb_ref);        
+        // let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
+        // self.debug_renderer.render(debug_entity, camera, obb_ref);        
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 

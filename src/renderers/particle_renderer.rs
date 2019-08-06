@@ -12,6 +12,7 @@ use crate::models::{
 };
 use crate::particles::Particle;
 use crate::shaders::ParticleShader;
+use super::master_renderer::RenderGroup;
 
 pub struct ParticleRenderer {
     shader: ParticleShader,
@@ -31,6 +32,7 @@ impl ParticleRenderer {
     } 
 
     pub fn render(&mut self, particles: &HashMap<ParticleTexturedModel, Vec<Particle>>, camera: &Camera) {
+        gl::helper::push_debug_group(RenderGroup::PARTICLE_EFFECTS_PASS.id, RenderGroup::PARTICLE_EFFECTS_PASS.name);
         self.prepare();
 
         let view_mat = Matrix4f::create_view_matrix(camera);
@@ -69,6 +71,7 @@ impl ParticleRenderer {
         }
 
         self.finish_rendering();
+        gl::helper::pop_debug_group();
     }
 
     fn bind_texture(&mut self, texture: &ParticleTexture) {
