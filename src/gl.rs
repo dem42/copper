@@ -624,13 +624,12 @@ pub mod helper {
             msg);
     }
 
-    pub fn push_debug_group(id: u32, group_label: &'static str) -> Result<(), Error> {
-        let group_label_nul_term = CString::new(group_label)?;
+    pub fn push_debug_group(id: u32, group_label: &str) {
+        let group_label_nul_term = CString::new(group_label).expect("The group label must not contain 0 bytes, because we are trying to convert it to nul-term str");
         unsafe {
             // -1 means that the string is nul terminated which CStrings are
             PushDebugGroup(DEBUG_SOURCE_APPLICATION, id, -1, group_label_nul_term.as_ptr());
         }
-        Ok(())
     }
 
     pub fn pop_debug_group() {        

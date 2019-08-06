@@ -15,6 +15,7 @@ use crate::shaders::{
     GuiShader,
     TextShader,
 };
+use super::master_renderer::RenderGroup;
 
 pub struct GuiRenderer {
     gui_shader: GuiShader,
@@ -30,7 +31,8 @@ impl GuiRenderer {
     }
 
     pub fn render(&mut self, guis: &Vec<GuiPanel>, gui_model: &RawModel, texts: &Vec<GuiText>) {
-
+        gl::helper::push_debug_group(RenderGroup::DRAW_GUI.id, RenderGroup::DRAW_GUI.name);
+        
         // turn on alpha blending
         gl::enable(gl::BLEND);
         // linear blending
@@ -81,7 +83,9 @@ impl GuiRenderer {
 
         gl::enable(gl::DEPTH_TEST);
         gl::disable(gl::BLEND);
-        gl::bind_texture(gl::TEXTURE_2D, 0);        
+        gl::bind_texture(gl::TEXTURE_2D, 0);
+
+        gl::helper::pop_debug_group();
     }
 
     fn group_text_by_font(texts: &Vec<GuiText>) -> HashMap<&FontType, Vec<&GuiText>> {

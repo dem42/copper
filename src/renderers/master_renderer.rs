@@ -23,6 +23,21 @@ use super::skybox_renderer::SkyboxRenderer;
 use super::water_renderer::WaterRenderer;
 use super::debug_renderer::DebugRenderer;
 
+pub struct RenderGroup {
+    pub id: u32,
+    pub name: &'static str,
+}
+
+impl RenderGroup {    
+    pub const SHADOW_MAP_PASS: RenderGroup = RenderGroup {id: 0, name: "ShadowMapPass"};
+    pub const REFLECT_REFRACT_PASS: RenderGroup = RenderGroup {id: 1, name: "ReflectRefractPass"};
+    pub const DRAW_ENTITIES: RenderGroup = RenderGroup {id: 2, name: "EntityDrawPass"};
+    pub const DRAW_NORMAL_MAP_ENTITIES: RenderGroup = RenderGroup {id: 3, name: "NormalMapEntityDrawPass"};
+    pub const DRAW_TERRAIN: RenderGroup = RenderGroup {id: 4, name: "TerrainDraw"};
+    pub const DRAW_SKYBOX: RenderGroup = RenderGroup {id: 5, name: "Skybox"};
+    pub const DRAW_GUI: RenderGroup = RenderGroup {id: 6, name: "GuiOverlayDraw"};
+}
+
 pub struct MasterRenderer {    
     entity_renderer: EntityRenderer,
     normal_map_entity_renderer: NormalMapEntityRenderer,
@@ -77,7 +92,7 @@ impl MasterRenderer {
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
                 normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>) {
         
-        gl::helper::push_debug_group(0, "Shadowmap").expect("Group name must be correct");
+        gl::helper::push_debug_group(RenderGroup::SHADOW_MAP_PASS.id, RenderGroup::SHADOW_MAP_PASS.name);
 
         framebuffers.shadowmap_fbo.bind();
         self.shadowmap_renderer.start_render(camera, &lights[0]);
@@ -109,6 +124,8 @@ impl MasterRenderer {
     fn do_water_render_passes(&mut self, water_tiles: &Vec<WaterTile>, camera: &mut Camera, framebuffers: &mut Framebuffers,
                 entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, lights: &Vec<Light>,
                 skybox: &Skybox, display: &Display) {
+
+        gl::helper::push_debug_group(RenderGroup::REFLECT_REFRACT_PASS.id, RenderGroup::REFLECT_REFRACT_PASS.name);
         // enable clip plane                    
         gl::enable(gl::CLIP_DISTANCE0); 
 
@@ -126,11 +143,15 @@ impl MasterRenderer {
         framebuffers.refraction_fbo.bind();
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane, framebuffers.shadowmap_fbo.depth_texture);
 
-        gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?        
+        gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?   
+
+        gl::helper::pop_debug_group();     
     }
 
     fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
                 player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f, shadow_map_texture: u32) {
+
+        gl::helper::push_debug_group(RenderGroup::DRAW_ENTITIES.id, RenderGroup::DRAW_ENTITIES.name);
         self.prepare();
 
         // render entites
@@ -150,7 +171,9 @@ impl MasterRenderer {
         self.entity_renderer.unprepare_textured_model(&player.entity.model);
 
         self.entity_renderer.stop_render();
+        gl::helper::pop_debug_group();     
 
+        gl::helper::push_debug_group(RenderGroup::DRAW_NORMAL_MAP_ENTITIES.id, RenderGroup::DRAW_NORMAL_MAP_ENTITIES.name);
         // render normal mapped entites
         self.normal_map_entity_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR);
         let groups_by_tex = MasterRenderer::group_entities_by_tex(normal_mapped_entities);
@@ -163,8 +186,10 @@ impl MasterRenderer {
             self.normal_map_entity_renderer.unprepare_textured_model(textured_model);
         }
         self.normal_map_entity_renderer.stop_render(); 
+        gl::helper::pop_debug_group();
 
         // render terrain
+        gl::helper::push_debug_group(RenderGroup::DRAW_TERRAIN.id, RenderGroup::DRAW_TERRAIN.name);
         self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, self.shadowmap_renderer.get_to_shadow(), shadow_map_texture);
         for terrain in terrains.iter() {
             self.terrain_renderer.prepare_terrain(terrain, clip_plane);
@@ -172,8 +197,11 @@ impl MasterRenderer {
             self.terrain_renderer.unprepare_terrain();
         }
         self.terrain_renderer.stop_render();
+        gl::helper::pop_debug_group();
 
+        gl::helper::push_debug_group(RenderGroup::DRAW_SKYBOX.id, RenderGroup::DRAW_SKYBOX.name);
         self.skybox_renderer.render(camera, skybox, &MasterRenderer::SKY_COLOR, wall_clock, clip_plane);
+        gl::helper::pop_debug_group();
     }
     
     fn prepare(&self) {
