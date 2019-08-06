@@ -623,4 +623,20 @@ pub mod helper {
             severity,
             msg);
     }
+
+    pub fn push_debug_group(id: u32, group_label: &'static str) -> Result<(), Error> {
+        let group_label_nul_term = CString::new(group_label)?;
+        unsafe {
+            // -1 means that the string is nul terminated which CStrings are
+            PushDebugGroup(DEBUG_SOURCE_APPLICATION, id, -1, group_label_nul_term.as_ptr());
+        }
+        Ok(())
+    }
+
+    pub fn pop_debug_group() {        
+        unsafe {
+            // -1 means that the string is nul terminated which CStrings are
+            PopDebugGroup();
+        }
+    }
 }

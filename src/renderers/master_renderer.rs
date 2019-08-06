@@ -77,6 +77,8 @@ impl MasterRenderer {
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
                 normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>) {
         
+        gl::helper::push_debug_group(0, "Shadowmap").expect("Group name must be correct");
+
         framebuffers.shadowmap_fbo.bind();
         self.shadowmap_renderer.start_render(camera, &lights[0]);
 
@@ -99,7 +101,9 @@ impl MasterRenderer {
         self.shadowmap_renderer.render_entity(&player.entity);
         self.shadowmap_renderer.cleanup_textured_model();
 
-        self.shadowmap_renderer.stop_render();        
+        self.shadowmap_renderer.stop_render();
+
+        gl::helper::pop_debug_group();
     }
 
     fn do_water_render_passes(&mut self, water_tiles: &Vec<WaterTile>, camera: &mut Camera, framebuffers: &mut Framebuffers,

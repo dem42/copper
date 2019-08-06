@@ -71,7 +71,8 @@ pub mod test_utils {
             let absolute_error = ($left - $right).abs();
             assert!(absolute_error < $eps_abs, format!("{}. Left: {}, Right: {}. Absolute error: {} >= {}", $msg, $left, $right, absolute_error, $eps_abs));
             if $left != 0.0 {
-                let relative_error = (absolute_error / $left).abs();
+                let maxi = if $left < $right { $right } else { $left };
+                let relative_error = (absolute_error / maxi).abs();
                 assert!(relative_error < $eps_rel, format!("{}. Left: {}, Right: {}. Relative error: {} >= {}", $msg, $left, $right, relative_error, $eps_rel));
             }
         });
