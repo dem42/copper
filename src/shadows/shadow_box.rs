@@ -134,6 +134,55 @@ impl ShadowBox {
         corners
     }
 
+    
+    fn update_size_odd(&mut self, camera: &Camera, light_view_mat: &Matrix4f) {
+        let camera_rot_matrix = Self::calc_camera_rot(camera);
+        let fwd = Vector4f::new(0.0, 0.0, -1.0, 0.0);
+        let forward_vec = camera_rot_matrix.transform(&fwd).xyz();
+
+        let to_far = Self::SHADOW_DISTANCE * forward_vec.clone();
+        let to_near = (-self.near_plane) * forward_vec.clone();
+        let center_near = &camera.position + to_near;
+        let center_far = &camera.position + to_far;
+        let points = self.calc_frustum_vertices(light_view_mat, &camera_rot_matrix, &forward_vec, &center_near, &center_far);
+    }
+
+    fn calc_frustum_vertices(&self, light_view_mat: &Matrix4f, rotation: &Matrix4f, forward_vec: &Vector3f, center_near: &Vector3f, center_far: &Vector3f) -> [Vector4f; 8] {
+        let mut res: [Vector4f; 8] = Default::default();
+        let up = Vector4f::new(0.0, 1.0, 0.0, 0.0);
+        let up_vec = rotation.transform(&up).xyz();
+        let right_vec = forward_vec.cross_prod(&up_vec);
+        let down_vec = &up_vec * -1.0;
+        let left_vec = &right_vec * -1.0;
+        
+        let far_top = center_far + (&up_vec * self.farplane_height);
+        let far_bottom = center_far + (&down_vec * self.farplane_height);
+
+        let near_top = center_near + (&up_vec * self.nearplane_height);
+        let near_bottom = center_near + (&down_vec * self.nearplane_height);
+
+        res[0] = Self::calc_lightspace_frustum_corner(&far_top, &right_vec, self.farplane_width, light_view_mat);
+        res[1] = Self::calc_lightspace_frustum_corner(&far_top, &left_vec, self.farplane_width, light_view_mat);
+        res[2] = Self::calc_lightspace_frustum_corner(&far_bottom, &right_vec, self.farplane_width, light_view_mat);
+        res[3] = Self::calc_lightspace_frustum_corner(&far_bottom, &left_vec, self.farplane_width, light_view_mat);
+        res[4] = Self::calc_lightspace_frustum_corner(&near_top, &right_vec, self.nearplane_width, light_view_mat);
+        res[5] = Self::calc_lightspace_frustum_corner(&near_top, &left_vec, self.nearplane_width, light_view_mat);
+        res[6] = Self::calc_lightspace_frustum_corner(&near_bottom, &right_vec, self.nearplane_width, light_view_mat);
+        res[7] = Self::calc_lightspace_frustum_corner(&near_bottom, &left_vec, self.nearplane_width, light_view_mat);
+
+        res
+    }
+
+    fn calc_lightspace_frustum_corner(start_ptn: &Vector3f, direction: &Vector3f, width: f32, light_view_mat: &Matrix4f) -> Vector4f {
+        let point = start_ptn + (direction * width);
+        let point = Vector4f::from_point(&point);
+        light_view_mat.transform(&point)
+    }
+ 
+    fn calc_camera_rot(camera: &Camera) -> Matrix4f {
+        Matrix4f::calculate_rotation_from_rpy(0.0, -camera.yaw, -camera.pitch)
+    }
+
     fn update_shadow_box_size(&mut self, corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {
         let light_orientation = Matrix4f::calculate_rotation_from_rpy(0.0, -light_direction_pitch_deg, -light_direction_yaw_deg);
         let light_orient_inv = light_orientation.transpose();
