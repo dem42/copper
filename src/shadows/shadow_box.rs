@@ -134,6 +134,11 @@ impl ShadowBox {
         corners
     }
 
+    pub fn update_odd(&mut self, camera: &Camera, light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {
+        let light_orientation = Matrix4f::calculate_rotation_from_rpy(0.0, -light_direction_pitch_deg, -light_direction_yaw_deg);
+        self.update_size_odd(camera, &light_orientation);
+    }
+
     
     fn update_size_odd(&mut self, camera: &Camera, light_view_mat: &Matrix4f) {
         let camera_rot_matrix = Self::calc_camera_rot(camera);
@@ -145,6 +150,26 @@ impl ShadowBox {
         let center_near = &camera.position + to_near;
         let center_far = &camera.position + to_far;
         let points = self.calc_frustum_vertices(light_view_mat, &camera_rot_matrix, &forward_vec, &center_near, &center_far);
+
+        let mut min_v = Vector4f::new(f32::MAX, f32::MAX, f32::MAX, 0.0);
+        let mut max_v = Vector4f::new(f32::MIN, f32::MIN, f32::MIN, 0.0);
+        for pt in points.into_iter() {
+            min_v.x = f32_min(min_v.x, pt.x);
+            min_v.y = f32_min(min_v.y, pt.y);
+            min_v.z = f32_min(min_v.z, pt.z);
+            max_v.x = f32_max(max_v.x, pt.x);
+            max_v.y = f32_max(max_v.y, pt.y);
+            max_v.z = f32_max(max_v.z, pt.z);
+        }
+        max_v.z += Self::OFFSET;
+        self.width = max_v.x - min_v.x;
+        self.height = max_v.y - min_v.y;
+        self.length = max_v.z - min_v.z;
+
+        let mut cen = 0.5 * (max_v + min_v);
+        cen.w = 1.0;
+        let inv_light = light_view_mat.inverse();
+        self.world_space_center = inv_light.transform(&cen).xyz();
     }
 
     fn calc_frustum_vertices(&self, light_view_mat: &Matrix4f, rotation: &Matrix4f, forward_vec: &Vector3f, center_near: &Vector3f, center_far: &Vector3f) -> [Vector4f; 8] {

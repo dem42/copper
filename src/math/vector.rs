@@ -96,6 +96,30 @@ impl AddAssign<&Vector3f> for Vector4f {
     }
 }
 
+impl Add<Vector4f> for Vector4f {
+    type Output = Vector4f;
+
+    fn add(mut self, other: Vector4f) -> Vector4f {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+        self.w += other.w;
+        self
+    }
+}
+
+impl Mul<Vector4f> for f32 {
+    type Output = Vector4f;
+
+    fn mul(self, mut other: Vector4f) -> Vector4f {
+        other.x *= self;
+        other.y *= self;
+        other.z *= self;
+        other.w *= self;
+        other
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Vector3f {
     pub x: f32,
