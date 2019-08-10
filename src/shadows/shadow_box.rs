@@ -134,9 +134,8 @@ impl ShadowBox {
         corners
     }
 
-    pub fn update_odd(&mut self, camera: &Camera, light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {
-        let light_orientation = Matrix4f::calculate_rotation_from_rpy(0.0, -light_direction_pitch_deg, -light_direction_yaw_deg);
-        self.update_size_odd(camera, &light_orientation);
+    pub fn update_odd(&mut self, camera: &Camera, light_view_mat: &Matrix4f) {        
+        self.update_size_odd(camera, &light_view_mat);
     }
 
     
@@ -161,7 +160,7 @@ impl ShadowBox {
             max_v.y = f32_max(max_v.y, pt.y);
             max_v.z = f32_max(max_v.z, pt.z);
         }
-        max_v.z += Self::OFFSET;
+        //max_v.z += Self::OFFSET;
         self.width = max_v.x - min_v.x;
         self.height = max_v.y - min_v.y;
         self.length = max_v.z - min_v.z;

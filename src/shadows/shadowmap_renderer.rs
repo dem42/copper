@@ -54,7 +54,7 @@ impl ShadowMapRenderer {
         let (light_pitch_dg, light_yaw_dg) = ShadowMapRenderer::calc_light_pitch_yaw_dg(&sun.position);
         // testing with thinmatrix impl
         // self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);
-        self.shadow_box.update_odd(camera, light_pitch_dg, light_yaw_dg);
+        self.shadow_box.update_odd(camera, &self.world_to_lightspace);
         self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
         Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width, self.shadow_box.height, self.shadow_box.length);
 
@@ -116,8 +116,8 @@ impl ShadowMapRenderer {
 
     fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
         self.world_to_lightspace.make_identity();        
-        let angles = Vector3f::new(-pitch, -yaw, 0.0);
-        self.world_to_lightspace.rotate_tait_bryan_xyz(&angles);
+        let angles = Vector3f::new(pitch, -yaw, 0.0);
+        self.world_to_lightspace.rotate_tait_bryan_zyx(&angles);
         let center = &self.shadow_box.world_space_center;// + Vector3f::new(0.0, 0.0, -2.0*ShadowBox::OFFSET);
         self.world_to_lightspace.translate(&(-center));
     }
