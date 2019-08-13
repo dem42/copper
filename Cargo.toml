@@ -2,18 +2,10 @@
 name = "copper"
 version = "0.1.0"
 authors = ["martin <martin.papanek@gmail.com>"]
-build = "build.rs"
 edition = "2018"
 
 [dependencies]
 libc = "0.2.0"
 texture_lib = { path = "texture_lib" }
 rand = "=0.6.1"
-
-[dependencies.glfw]
-git = "https://github.com/bjz/glfw-rs.git"
-default-features = false
-version = "0.30.0"
-
-[build-dependencies]
-gl_generator = "0.10.0"
+gl = { path = "gl" }

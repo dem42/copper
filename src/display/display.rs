@@ -1,7 +1,18 @@
-use glfw::{
+use gl::glfw::{
     Action,
     Context,
+    FAIL_ON_ERRORS,
+    flush_messages,
+    Glfw,
+    init,
+    MouseButtonLeft,
+    MouseButtonMiddle,    
+    MouseButtonRight,
+    OpenGlProfileHint,
+    Window,
     WindowEvent,
+    WindowHint,
+    WindowMode,
 };
 use std::time::{
     SystemTime,
@@ -11,7 +22,7 @@ use std::fmt;
 use crate::gl;
 use crate::math::Matrix4f;
 
-pub use glfw::Key;
+pub use gl::glfw::Key;
 
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 720;
@@ -87,8 +98,8 @@ pub struct Display {
     pub mouse_pos: MousePosData,
     pub wall_clock: WallClock,
     pub projection_matrix: Matrix4f,
-    glfw: glfw::Glfw,
-    window: glfw::Window,
+    glfw: Glfw,
+    window: Window,
     events: Receiver<(f64, WindowEvent)>,
     last_frame_sys_time: SystemTime,
     mouse_select_active: bool,
@@ -97,7 +108,7 @@ pub struct Display {
 impl Keyboard for Display {
     fn is_pressed(&self, key: Key) -> bool {
         match self.window.get_key(key) {
-            glfw::Action::Press => true,
+            Action::Press => true,
             _ => false,
         }
     }
@@ -114,12 +125,12 @@ impl Display {
     pub const FAR: f32 = -1000.0;
 
     pub fn create() -> Display {        
-        let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-        glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
-        glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
-        glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+        let mut glfw = init(FAIL_ON_ERRORS).unwrap();
+        glfw.window_hint(WindowHint::ContextVersion(4, 3));
+        glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
+        glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
 
-        let (mut window, events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", glfw::WindowMode::Windowed)
+        let (mut window, events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         window.make_current();
@@ -158,15 +169,15 @@ impl Display {
         Display::get_aspect_ratio_internal(&self.window)
     }
 
-    fn get_aspect_ratio_internal(window: &glfw::Window) -> f32 {
+    fn get_aspect_ratio_internal(window: &Window) -> f32 {
         let (width, height) = window.get_framebuffer_size();        
         let aspect_ratio = (width as f32) / (height as f32);
         aspect_ratio
     }
  
-    fn print_opengl_info(window: &glfw::Window) {
+    fn print_opengl_info(window: &Window) {
         let gl_version = window.get_context_version();    
-        let is_core_profile = window.get_opengl_profile() == glfw::OpenGlProfileHint::Core as i32;
+        let is_core_profile = window.get_opengl_profile() == OpenGlProfileHint::Core as i32;
         let is_forward_compat = window.is_opengl_forward_compat();
         println!("{}", "*".repeat(10));
         println!("OpenGL version: {}", gl_version);    
@@ -197,7 +208,7 @@ impl Display {
 
         self.mouse_pos.set_prev_to_cur();
 
-        for (_, event) in glfw::flush_messages(&self.events) {
+        for (_, event) in flush_messages(&self.events) {
             Display::handle_window_event(&mut self.mouse_pos, &mut self.mouse_select_active, event);
         }    
     }
@@ -226,12 +237,12 @@ impl Display {
             },
             WindowEvent::MouseButton(button, action, _) => {
                 match (button, action) {
-                    (glfw::MouseButtonLeft, Action::Press) => { mouse_pos.is_left_pressed = true; },
-                    (glfw::MouseButtonLeft, Action::Release) => { mouse_pos.is_left_pressed = false; },
-                    (glfw::MouseButtonRight, Action::Press) => { mouse_pos.is_right_pressed = true; },
-                    (glfw::MouseButtonRight, Action::Release) => { mouse_pos.is_right_pressed = false; },
-                    (glfw::MouseButtonMiddle, Action::Press) => { mouse_pos.is_middle_pressed = true; },
-                    (glfw::MouseButtonMiddle, Action::Release) => { mouse_pos.is_middle_pressed = false; },
+                    (MouseButtonLeft, Action::Press) => { mouse_pos.is_left_pressed = true; },
+                    (MouseButtonLeft, Action::Release) => { mouse_pos.is_left_pressed = false; },
+                    (MouseButtonRight, Action::Press) => { mouse_pos.is_right_pressed = true; },
+                    (MouseButtonRight, Action::Release) => { mouse_pos.is_right_pressed = false; },
+                    (MouseButtonMiddle, Action::Press) => { mouse_pos.is_middle_pressed = true; },
+                    (MouseButtonMiddle, Action::Release) => { mouse_pos.is_middle_pressed = false; },
                     _ => {}
                 }
             },

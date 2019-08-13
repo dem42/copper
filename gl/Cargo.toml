@@ -1,0 +1,14 @@
+[package]
+name = "gl"
+version = "0.1.0"
+authors = ["martin <martin.papanek@gmail.com>"]
+build = "build.rs"
+edition = "2018"
+
+[dependencies.glfw]
+git = "https://github.com/bjz/glfw-rs.git"
+default-features = false
+version = "0.30.0"
+
+[build-dependencies]
+gl_generator = "0.10.0"

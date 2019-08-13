@@ -30,8 +30,7 @@ dependencies = [
 name = "copper"
 version = "0.1.0"
 dependencies = [
- "gl_generator 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "glfw 0.30.0 (git+https://github.com/bjz/glfw-rs.git)",
+ "gl 0.1.0",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "texture_lib 0.1.0",
@@ -59,6 +58,14 @@ dependencies = [
 name = "fuchsia-zircon-sys"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "gl"
+version = "0.1.0"
+dependencies = [
+ "gl_generator 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glfw 0.30.0 (git+https://github.com/bjz/glfw-rs.git)",
+]
 
 [[package]]
 name = "gl_generator"
