@@ -25,7 +25,7 @@ impl DebugRenderer {
     pub fn new(projection_matrix: &Matrix4f) -> Self {     
         let shader = DebugShader::new();
         let mut proj_matrix = Matrix4f::identity();
-        proj_matrix.multiply_in_place(projection_matrix);
+        proj_matrix.post_multiply_in_place(projection_matrix);
         let view_matrix = Matrix4f::identity();
         let mvp_matrix = Matrix4f::identity();
         DebugRenderer {
@@ -51,8 +51,8 @@ impl DebugRenderer {
 
         // load transform matrix into shader        
         self.mvp_matrix.make_identity();
-        self.mvp_matrix.multiply_in_place(&self.proj_matrix);
-        self.mvp_matrix.multiply_in_place(&self.view_matrix);        
+        self.mvp_matrix.post_multiply_in_place(&self.proj_matrix);
+        self.mvp_matrix.post_multiply_in_place(&self.view_matrix);        
         self.shader.load_mvp_matrix(&self.mvp_matrix);
 
         self.update_vbo(&entity.model, vertices);

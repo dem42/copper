@@ -48,7 +48,7 @@ impl Matrix4f {
                 transform_mat.data[i][j] = view_matrix.data[j][i];
             }
         }
-        transform_mat.rotate_tait_bryan_zyx(&Vector3f::new(0.0, 0.0, rotation_z_deg));
+        transform_mat.rotate(&Vector3f::new(0.0, 0.0, rotation_z_deg));
         transform_mat.scale(&Vector3f::new(scale, scale, scale));
         transform_mat
     }
@@ -56,7 +56,7 @@ impl Matrix4f {
     pub fn create_transform_matrix(translation: &Vector3f, rot_xyz_degrees: &Vector3f, scale: f32) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
         transform_mat.translate(translation);
-        transform_mat.rotate_tait_bryan_zyx(rot_xyz_degrees);
+        transform_mat.rotate(rot_xyz_degrees);
         transform_mat.scale(&Vector3f::new(scale, scale, scale));
         transform_mat
     }
@@ -85,34 +85,25 @@ impl Matrix4f {
     // view matrix makes objects move closer to the camera as we move towards them since it includes the negative of the camera translation
     // we dont want the skybox to move as we move around (but we do want it to rotate) so we zero out the translation
     pub fn create_skybox_view_matrix(camera: &Camera, skybox_rotation_deg: f32) -> Matrix4f {        
-        // pitch is the rotation against transverse axis (pointing to right) -> x axis is right
-        // yaw is the rotation against vertical axis (pointing up) -> y axis is up
-        // roll is the rotation against longitudal axis (pointing forward) -> z axis is forward
+        // pitch is the rotation against transverse axis (pointing to right) -> for our object x axis is right
+        // yaw is the rotation against vertical axis (pointing up) -> for our object y axis is up
+        // roll is the rotation against longitudal axis (pointing forward) -> for our object z axis is forward
         let rotation_xyz_degrees = Vector3f::new(camera.pitch, camera.yaw + skybox_rotation_deg, camera.roll);
-        let mut view_mat = Matrix4f::identity(); 
-        // inverse to transform matrix -> first rotate around xyz (not zyx like normal), then translate by negative translation       
-        view_mat.rotate_tait_bryan_xyz(&rotation_xyz_degrees);
+        let mut view_mat = Matrix4f::identity();         
+        view_mat.rotate(&rotation_xyz_degrees);
         view_mat
     }
 
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
         let translation = &camera.position;
-        // pitch is the rotation against transverse axis (pointing to right) -> x axis is right
-        // yaw is the rotation against vertical axis (pointing up) -> y axis is up
-        // roll is the rotation against longitudal axis (pointing forward) -> z axis is forward
+        // pitch is the rotation against transverse axis (pointing to right) -> for out object x axis is right
+        // yaw is the rotation against vertical axis (pointing up) -> for our object y axis is up
+        // roll is the rotation against longitudal axis (pointing forward) -> for our object z axis is forward
         let rotation_xyz_degrees = Vector3f::new(camera.pitch, camera.yaw, camera.roll);
-        let mut view_mat = Matrix4f::identity(); 
-        // inverse to transform matrix -> first rotate around xyz (not zyx like normal), then translate by negative translation       
-        view_mat.rotate_tait_bryan_xyz(&rotation_xyz_degrees);
+        let mut view_mat = Matrix4f::identity();         
+        view_mat.rotate(&rotation_xyz_degrees);
         view_mat.translate(&(-translation));
         view_mat
-    }
-
-    pub fn calculate_rotation_from_rpy(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
-        let mut result = Matrix4f::identity();        
-        let rotation_xyz_degrees = Vector3f::new(pitch, yaw, roll);
-        result.rotate_tait_bryan_zyx(&rotation_xyz_degrees);
-        result
     }
 
     pub fn translate(&mut self, translation: &Vector3f) {
@@ -129,36 +120,16 @@ impl Matrix4f {
         }
     }
 
-    // multiply 3 rotation matrices with each other in zyx order
-    pub fn rotate_tait_bryan_zyx(&mut self, rot_xyz_degrees: &Vector3f) {
+    pub fn get_rotation(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
+        // tait-bryan rotation matrix -> HAS TO BE PRE-MULTIPLIED
+        // will perform an intrinsic rotation about the fixed reference frame of the object
+        // assumes a right-handed coordinate system (OpenGL) -> this affects the rotation matrix signs
+        // the result after the rotation will be the object with the new yaw, pitch, roll in w.r.t its fixed reference frame
         let mut rot_mat = [[0.0f32; 4]; 4];
         rot_mat[3][3] = 1.0;
-        let (sa, ca) = rot_xyz_degrees.x.to_radians().sin_cos();
-        let (sb, cb) = rot_xyz_degrees.y.to_radians().sin_cos();
-        let (sc, cc) = rot_xyz_degrees.z.to_radians().sin_cos();
-        
-        rot_mat[0][0] = cb*cc;
-        rot_mat[0][1] = cc*sa*sb - ca*sc;
-        rot_mat[0][2] = ca*cc*sb + sa*sc;
-
-        rot_mat[1][0] = cb*sc;
-        rot_mat[1][1] = sa*sb*sc + ca*cc;
-        rot_mat[1][2] = ca*sb*sc - cc*sa;
-
-        rot_mat[2][0] = -sb;
-        rot_mat[2][1] = cb*sa;
-        rot_mat[2][2] = ca*cb;
-        let rot = Matrix4f { data: rot_mat };
-        self.multiply_in_place(&rot);
-    }
-
-    // multiply 3 rotation matrices with each other in xyz order
-    pub fn rotate_tait_bryan_xyz(&mut self, rot_xyz_degrees: &Vector3f) {
-        let mut rot_mat = [[0.0f32; 4]; 4];
-        rot_mat[3][3] = 1.0;
-        let (sa, ca) = rot_xyz_degrees.x.to_radians().sin_cos();
-        let (sb, cb) = rot_xyz_degrees.y.to_radians().sin_cos();
-        let (sc, cc) = rot_xyz_degrees.z.to_radians().sin_cos();
+        let (sa, ca) = roll.to_radians().sin_cos();
+        let (sb, cb) = pitch.to_radians().sin_cos();
+        let (sc, cc) = yaw.to_radians().sin_cos();
         
         rot_mat[0][0] = cb*cc;
         rot_mat[0][1] = -cb*sc;
@@ -166,16 +137,46 @@ impl Matrix4f {
 
         rot_mat[1][0] = cc*sa*sb + ca*sc;
         rot_mat[1][1] = -sa*sb*sc + ca*cc;
-        rot_mat[1][2] = -cb*sa; 
+        rot_mat[1][2] = -cb*sa;
 
         rot_mat[2][0] = -ca*cc*sb + sa*sc;
         rot_mat[2][1] = ca*sb*sc + cc*sa;
         rot_mat[2][2] = ca*cb;
-        let rot = Matrix4f { data: rot_mat };
-        self.multiply_in_place(&rot);
+        Matrix4f { 
+            data: rot_mat 
+        }
     }
 
-    pub fn multiply_in_place(&mut self, other: &Matrix4f) {
+    // the inverse rotation cancels this same rotation
+    pub fn get_inverse_rotation(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
+        let mut rot = Self::get_rotation(roll, pitch, yaw);
+        rot.transpose_ip();
+        rot
+    }
+
+    pub fn rotate(&mut self, rot_xyz_degrees: &Vector3f) {
+        let rot_mat = Self::get_rotation(rot_xyz_degrees.x, rot_xyz_degrees.y, rot_xyz_degrees.z);
+        self.pre_multiply_in_place(&rot_mat);
+    }
+
+    pub fn inverse_rotate(&mut self, rot_xyz_degrees: &Vector3f) {
+        let rot_mat = Self::get_inverse_rotation(rot_xyz_degrees.x, rot_xyz_degrees.y, rot_xyz_degrees.z);
+        self.pre_multiply_in_place(&rot_mat);
+    }
+
+    pub fn pre_multiply_in_place(&mut self, other: &Matrix4f) {
+        let mut res_mat = [[0.0f32; 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                for k in 0..4 {
+                    res_mat[i][j] += other.data[k][j] * self.data[i][k];
+                }
+            }
+        }
+        self.data = res_mat;
+    }
+
+    pub fn post_multiply_in_place(&mut self, other: &Matrix4f) {
         let mut res_mat = [[0.0f32; 4]; 4];
         for i in 0..4 {
             for j in 0..4 {

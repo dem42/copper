@@ -91,5 +91,5 @@ void main(void) {
     
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * blended_texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
-    //out_Color = mix(out_Color, vec4(obj_depth_nearest_light), 0.999);
+    out_Color = mix(out_Color, vec4(obj_depth_nearest_light), 0.999);
 }

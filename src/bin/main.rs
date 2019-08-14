@@ -90,7 +90,7 @@ fn main() {
     let guis = vec!{
         GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
-        //GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
+        GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
     };
 
 

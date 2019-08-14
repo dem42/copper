@@ -63,8 +63,8 @@ impl ShadowMapRenderer {
         self.shadow_shader.start();
 
         self.vp_matrix.make_identity();
-        self.vp_matrix.multiply_in_place(&self.ortho_proj_mat);
-        self.vp_matrix.multiply_in_place(&self.world_to_lightspace);
+        self.vp_matrix.post_multiply_in_place(&self.ortho_proj_mat);
+        self.vp_matrix.post_multiply_in_place(&self.world_to_lightspace);
         // self.vp_matrix.multiply_in_place(&self.test_proj_matrix);
         // let cam_view = Matrix4f::create_view_matrix(camera);
         // self.vp_matrix.multiply_in_place(&cam_view);
@@ -83,9 +83,9 @@ impl ShadowMapRenderer {
 
     pub fn render_entity(&mut self, entity: &Entity) {
         self.mvp_matrix.make_identity();
-        self.mvp_matrix.multiply_in_place(&self.vp_matrix);
+        self.mvp_matrix.post_multiply_in_place(&self.vp_matrix);
         let transform_mat = Matrix4f::create_transform_matrix(&entity.position, &entity.rotation_deg, entity.scale);
-        self.mvp_matrix.multiply_in_place(&transform_mat);
+        self.mvp_matrix.post_multiply_in_place(&transform_mat);
         self.shadow_shader.load_mvp_matrix(&self.mvp_matrix);
 
         gl::draw_elements(gl::TRIANGLES, entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);            
@@ -102,9 +102,9 @@ impl ShadowMapRenderer {
 
     pub fn get_to_shadow(&self) -> Matrix4f {
         let mut res = Matrix4f::identity();
-        res.multiply_in_place(&self.bias);
-        res.multiply_in_place(&self.ortho_proj_mat);
-        res.multiply_in_place(&self.world_to_lightspace);
+        res.post_multiply_in_place(&self.bias);
+        res.post_multiply_in_place(&self.ortho_proj_mat);
+        res.post_multiply_in_place(&self.world_to_lightspace);
         res
     }
 
@@ -116,8 +116,8 @@ impl ShadowMapRenderer {
 
     fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
         self.world_to_lightspace.make_identity();        
-        let angles = Vector3f::new(pitch, -yaw, 0.0);
-        self.world_to_lightspace.rotate_tait_bryan_zyx(&angles);
+        let angles = Vector3f::new(pitch, yaw, 0.0);
+        self.world_to_lightspace.rotate(&angles);
         let center = &self.shadow_box.world_space_center;// + Vector3f::new(0.0, 0.0, -2.0*ShadowBox::OFFSET);
         self.world_to_lightspace.translate(&(-center));
     }
