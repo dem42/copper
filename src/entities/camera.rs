@@ -46,11 +46,13 @@ impl Camera {
     fn update_camera_pos(&mut self, player: &Player) {
         let (s, c) = self.pitch.to_radians().sin_cos();
         let (camera_vertical_offset_to_player, camera_horizontal_offset_to_player) = (self.distance_to_player * s, self.distance_to_player * c);        
-        let (s, c) = (player.entity.rotation_deg.y + self.angle_around_player).to_radians().sin_cos();
+
+        self.yaw = player.entity.rotation_deg.y - 180.0 - self.angle_around_player;
+        let (s, c) = (self.yaw).to_radians().sin_cos();        
         let (x_offset, z_offset) = (camera_horizontal_offset_to_player * s, camera_horizontal_offset_to_player * c);
+
         let player_pos = &player.entity.position;
-        self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);
-        self.yaw = 180.0 - player.entity.rotation_deg.y - self.angle_around_player;        
+        self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);            
     }
 
     fn calc_zoom(&mut self, display: &Display) {

@@ -66,8 +66,6 @@ fn main() {
     let mut framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
-    init_resources(&mut resource_manager);
-    
     let mut scene = create_test_scene(&mut resource_manager, &framebuffers);
     
     let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
@@ -120,7 +118,7 @@ fn spin_around_normal_mapped_entities(scene: &mut Scene, display: &Display) {
     }
 }
 
-fn init_resources(resource_manager: &mut ResourceManager) {
+fn init_scene_resources(resource_manager: &mut ResourceManager) {
     //resource_manager.init(&Models::TREE);
     resource_manager.init(&Models::FERN);
     //resource_manager.init(&Models::GRASS);
@@ -155,7 +153,9 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
     let mut entities = Vec::new();    
     let mut rng = rand::thread_rng();
     const X_WIDTH: f32 = 1000.0;
-    const Z_WIDTH: f32 = -1000.0;    
+    const Z_WIDTH: f32 = -1000.0;
+
+    init_scene_resources(resource_manager);    
     
     let mut terrains = Vec::new();    
     for i in -2..2 {
@@ -325,8 +325,24 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
     }
 }
 
+fn init_test_scene_resources(resource_manager: &mut ResourceManager) {    
+    resource_manager.init(&Models::PLAYER);
+    
+    resource_manager.init_terrain_textures();
+    resource_manager.init_terrain_model();
 
-fn create_test_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuffers) -> Scene {
+    resource_manager.init_skybox();
+    
+    resource_manager.init_gui_model();
+
+    // debug entity
+    resource_manager.init_debug_cuboid_model();
+}
+
+fn create_test_scene(resource_manager: &mut ResourceManager, _framebuffers: &Framebuffers) -> Scene {
+
+    init_test_scene_resources(resource_manager);
+
     let entities = Vec::new();
     
     let mut terrains = Vec::new();    
@@ -347,7 +363,7 @@ fn create_test_scene(resource_manager: &mut ResourceManager, framebuffers: &Fram
 
     let debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
 
-    let mut camera = Camera::new(-90.0, 10.0);
+    let mut camera = Camera::new(0.0, 10.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
     let skybox = Skybox::new(resource_manager.skybox(), 0.0);
