@@ -23,6 +23,16 @@ impl Matrix4f {
         }
     }
 
+    pub fn zeros() -> Matrix4f {
+        let mut data = [[0.0f32; 4]; 4];
+        for i in 0..4 {
+            data[i][i] = 0.0;
+        }
+        Matrix4f {
+            data,
+        }
+    }
+
     pub fn make_identity(&mut self) {        
         for i in 0..4 {
             for j in 0..4 {
@@ -33,14 +43,14 @@ impl Matrix4f {
 
     pub fn create_gui_transform_matrix(translation: &Vector2f, scale: &Vector2f) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
-        transform_mat.translate(&Vector3f::new(translation.x, translation.y, 0.0));        
         transform_mat.scale(&Vector3f::new(scale.x, scale.y, 1.0));
+        transform_mat.translate(&Vector3f::new(translation.x, translation.y, 0.0));        
         transform_mat
     }
 
     pub fn create_particle_transform_matrix(translation: &Vector3f, rotation_z_deg: f32, scale: f32, view_matrix: &Matrix4f) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
-        transform_mat.translate(translation);
+        transform_mat.scale(&Vector3f::new(scale, scale, scale));                
         // the 3x3 top left corner of view matrix is the camera rotation (no scale .. camera doesnt scale) -> therefore it is an orthonormal transform matrix
         // since it's orthonormal we can cancel it (make it Identity) by multiplying with it's transpose -> so before rotate scale set original rotation to be inverse of view rotation
         for i in 0..3 {
@@ -48,16 +58,16 @@ impl Matrix4f {
                 transform_mat.data[i][j] = view_matrix.data[j][i];
             }
         }
-        transform_mat.rotate(&Vector3f::new(0.0, 0.0, rotation_z_deg));
-        transform_mat.scale(&Vector3f::new(scale, scale, scale));
+        transform_mat.rotate(&Vector3f::new(0.0, 0.0, rotation_z_deg));        
+        transform_mat.translate(translation);
         transform_mat
     }
 
     pub fn create_transform_matrix(translation: &Vector3f, rot_xyz_degrees: &Vector3f, scale: f32) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
-        transform_mat.translate(translation);
-        transform_mat.rotate(rot_xyz_degrees);
         transform_mat.scale(&Vector3f::new(scale, scale, scale));
+        transform_mat.rotate(rot_xyz_degrees);
+        transform_mat.translate(translation);
         transform_mat
     }
 
@@ -99,24 +109,28 @@ impl Matrix4f {
         // pitch is the rotation against transverse axis (pointing to right) -> for out object x axis is right
         // yaw is the rotation against vertical axis (pointing up) -> for our object y axis is up
         // roll is the rotation against longitudal axis (pointing forward) -> for our object z axis is forward
-        let rotation_xyz_degrees = Vector3f::new(camera.pitch, camera.yaw, camera.roll);
-        let mut view_mat = Matrix4f::identity();         
-        view_mat.rotate(&rotation_xyz_degrees);
-        view_mat.translate(&(-translation));
+        let rotation_xyz_degrees = Vector3f::new(camera.pitch, camera.yaw, camera.roll);        
+        let mut view_mat = Matrix4f::identity();
+        view_mat.translate(&(-translation)); 
+        view_mat.inverse_rotate(&rotation_xyz_degrees);
         view_mat
     }
 
+    // translate using the translation matrix
     pub fn translate(&mut self, translation: &Vector3f) {
-        for i in 0..4 {            
-            self.data[i][3] += translation.x * self.data[i][0] + translation.y * self.data[i][1] + translation.z * self.data[i][2]; 
+        for i in 0..3 {
+            for j in 0..4 {                                
+                self.data[i][j] = self.data[i][j] + self.data[3][j] * translation[i];                 
+            }
         }
     }
 
+    // scale using the scale matrix
     pub fn scale(&mut self, scale: &Vector3f) {
-        for i in 0..4 {            
-            self.data[i][0] *= scale.x;
-            self.data[i][1] *= scale.y;
-            self.data[i][2] *= scale.z;
+        for i in 0..3 { 
+            for j in 0..4 {
+                self.data[i][j] = self.data[i][j] * scale[i];            
+            }
         }
     }
 
@@ -292,6 +306,24 @@ impl Mul<Matrix4f> for &Matrix4f {
         }
         other.data = res;
         other     
+    }
+}
+
+impl Mul<&Matrix4f> for &Matrix4f {
+    type Output = Matrix4f;
+
+    fn mul(self, other: &Matrix4f) -> Matrix4f {
+        let mut res = [[0f32; 4]; 4];
+        for i in 0..4 {
+            for j in 0..4 {
+                for k in 0..4 {
+                    res[i][j] += self.data[i][k] * other.data[k][j];
+                }
+            }    
+        }
+        Matrix4f {
+            data: res,
+        }
     }
 }
 
@@ -488,6 +520,60 @@ mod tests {
         for r in 0..4 {
             for c in 0..4 {
                 assert_f32_eq!(result[r][c], expected[r][c], test_constants::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
+            }
+        }
+    }
+
+    #[test]
+    fn translate_transformation() {
+        let mut m1 = Matrix4f {data: [[-1.3, 10.0, 2.8, 2.0], [-2.0, 3.0, -13.0, 9.0], [-1.4, 4.5, 0.0, 3.2], [-1.0, -2.0, 3.0, 5.0]] };        
+        let t = Vector3f::new(3.0, 2.4, -1.2);
+                
+        let mut trans_mat = Matrix4f::identity();
+        for i in 0..3 {
+            trans_mat[i][3] = t[i];
+        }        
+        let expected = &trans_mat * &m1;
+        m1.translate(&t);
+
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(m1[r][c], expected[r][c], test_constants::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
+            }
+        }
+    }
+
+    #[test]
+    fn scale_transformation() {
+        let mut m1 = Matrix4f {data: [[-1.3, 10.0, 2.8, 2.0], [-2.0, 3.0, -13.0, 9.0], [-1.4, 4.5, 0.0, 3.2], [-1.0, -2.0, 3.0, 5.0]] };        
+        let s = Vector3f::new(3.0, 2.4, -1.2);
+                
+        let mut scale_mat = Matrix4f::identity();
+        for i in 0..3 {
+            scale_mat[i][i] = s[i];
+        }
+        let expected = &scale_mat * &m1;
+
+        m1.scale(&s);
+
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(m1[r][c], expected[r][c], test_constants::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
+            }
+        }
+    }
+
+    #[test]
+    fn test_inverse_rotation() {
+        let r = Matrix4f::get_rotation(30.0, -20.0, 150.0);
+        let ri = Matrix4f::get_inverse_rotation(30.0, -20.0, 150.0);
+
+        let res = &r * &ri;
+        let expected = Matrix4f::identity();
+
+        for r in 0..4 {
+            for c in 0..4 {
+                assert_f32_eq!(res[r][c], expected[r][c], test_constants::EPS_MEDIUM, format!("(r,c)=({},{}) mismatch", r, c));
             }
         }
     }

@@ -16,6 +16,10 @@ use crate::models::{
 };
 use crate::renderers::ParticleRenderer;
 use crate::utils::insertion_sort;
+use super::particle_system::{
+    AdvancedParticleSystem,
+    ParticleSystem,
+};
 
 pub struct Particle {
     pub model: ParticleTexturedModel,
@@ -131,5 +135,11 @@ impl ParticleMaster {
 
     pub fn render(&mut self, camera: &Camera) {
         self.particle_renderer.render(&self.particles, camera);
+    }
+
+    pub fn emit_particles(&mut self, particle_systems: &Vec<(AdvancedParticleSystem, Vector3f)>, display: &Display) {
+        for (system, pos) in particle_systems {
+            system.emit_particles(self, pos, display);
+        }
     }
 }

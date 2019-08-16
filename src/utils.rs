@@ -70,9 +70,13 @@ pub mod test_utils {
         ($left:expr, $right:expr, $eps_abs:expr, $eps_rel:expr, $msg:expr) => ({
             let absolute_error = ($left - $right).abs();
             assert!(absolute_error < $eps_abs, format!("{}. Left: {}, Right: {}. Absolute error: {} >= {}", $msg, $left, $right, absolute_error, $eps_abs));
-            if $left != 0.0 {
-                let maxi = if $left < $right { $right } else { $left };
-                let relative_error = (absolute_error / maxi).abs();
+            let (maxi, mini) = if f32::abs($left) < f32::abs($right) { 
+                (f32::abs($right), f32::abs($left))
+            } else { 
+                (f32::abs($left), f32::abs($right))
+            };
+            if mini != 0.0 {        
+                let relative_error = absolute_error / maxi;
                 assert!(relative_error < $eps_rel, format!("{}. Left: {}, Right: {}. Relative error: {} >= {}", $msg, $left, $right, relative_error, $eps_rel));
             }
         });
