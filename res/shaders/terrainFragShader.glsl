@@ -46,7 +46,7 @@ void main(void) {
 
     // compare depth with shadowmap depth to figure out if this piece of terrain is in shadow or not (absence of light due to something blocking it)
     //float obj_depth_nearest_light = texture(shadow_map, vec2(shadow_coords.x, 1 - shadow_coords.y)).r;
-    float obj_depth_nearest_light = texture(shadow_map, (shadow_coords.xy * 0.5) + 0.5).r;
+    float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy).r;
     float light_factor = 1.0 - step(obj_depth_nearest_light, shadow_coords.z);
     
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)

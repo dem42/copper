@@ -153,7 +153,7 @@ impl ShadowBox {
         // let mut min_v = Vector4f::new(f32::MAX, f32::MAX, f32::MAX, 0.0);
         // let mut max_v = Vector4f::new(f32::MIN, f32::MIN, f32::MIN, 0.0);
         let mut min_v = Vector4f::new(0.0, 0.0, 0.0, 0.0);
-        let mut max_v = Vector4f::new(400.0, 400.0, 400.0, 0.0);
+        let mut max_v = Vector4f::new(500.0, 500.0, 500.0, 0.0);
 
         // for pt in points.into_iter() {
         //     min_v.x = f32_min(min_v.x, pt.x);

@@ -51,7 +51,8 @@ impl ParticleRenderer {
             self.particle_data.clear();
 
             for particle in particles {
-                ParticleRenderer::create_always_camera_facing_model_view_mat(particle, &view_mat, &mut self.particle_data);
+                //ParticleRenderer::create_always_camera_facing_model_view_mat(particle, &view_mat, &mut self.particle_data);
+                ParticleRenderer::create_always_camera_facing_model_view_mat2(particle, &view_mat, camera.pitch, camera.yaw, &mut self.particle_data);
                 ParticleRenderer::update_texture_data(particle, &mut self.particle_data);
             }
             self.update_vbo(model_texture.model.stream_draw_vbo);
@@ -103,8 +104,8 @@ impl ParticleRenderer {
         self.shader.stop();
     }
 
-    fn create_always_camera_facing_model_view_mat(particle: &Particle, view_matrix: &Matrix4f, storage_buffer: &mut Vec<f32>) {
-        let model_matrix = Matrix4f::create_particle_transform_matrix(&particle.position, particle.rotation_deg_z, particle.scale, view_matrix);
+    fn create_always_camera_facing_model_view_mat2(particle: &Particle, view_matrix: &Matrix4f, camera_pitch: f32, camera_yaw: f32, storage_buffer: &mut Vec<f32>) {
+        let model_matrix = Matrix4f::create_particle_transform_matrix(&particle.position, particle.rotation_deg_z, particle.scale, camera_pitch, camera_yaw);
         let model_view_matrix = view_matrix * model_matrix;
         // store column wise
         for col in 0..4 {

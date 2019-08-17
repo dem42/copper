@@ -39,7 +39,6 @@ use copper::math::{
 };
 use copper::particles::{
     ParticleMaster,
-    ParticleSystem,
     AdvancedParticleSystem,
     ParticleSystemProps,
 };
@@ -66,7 +65,7 @@ fn main() {
     let mut framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
-    let mut scene = create_test_scene(&mut resource_manager, &framebuffers);
+    let mut scene = create_scene(&mut resource_manager, &framebuffers);
     
     let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();
@@ -198,8 +197,7 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
         entities.push(Entity::new(resource_manager.model(ModelType::ToonRocks), r_pos, r_rot, 1.0));
     }    
 
-    //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, 0.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);    
     let player = Player::new(player_entity);
 
     let mut box_pos = ground.create_pos_on_terrain(0.0, -150.0);
@@ -254,7 +252,7 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
         GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
     };
 
-    let mut lights = vec!{
+    let lights = vec!{
         Light::new_infinite(Vector3f::new(0.0, 10000.0, 0.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
         Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
@@ -355,7 +353,7 @@ fn create_test_scene(resource_manager: &mut ResourceManager, _framebuffers: &Fra
     let ground = Ground { terrains };
 
     //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, 0.0), Vector3f::new(0.0, 0.0, 0.0), 0.3);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, 0.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player = Player::new(player_entity);
     
     let water_tiles = Vec::new();
@@ -363,7 +361,7 @@ fn create_test_scene(resource_manager: &mut ResourceManager, _framebuffers: &Fra
 
     let debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
 
-    let mut camera = Camera::new(0.0, 10.0);
+    let mut camera = Camera::new(20.0, 50.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
     let skybox = Skybox::new(resource_manager.skybox(), 0.0);

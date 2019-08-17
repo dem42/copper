@@ -47,18 +47,13 @@ impl Matrix4f {
         transform_mat.translate(&Vector3f::new(translation.x, translation.y, 0.0));        
         transform_mat
     }
-
-    pub fn create_particle_transform_matrix(translation: &Vector3f, rotation_z_deg: f32, scale: f32, view_matrix: &Matrix4f) -> Matrix4f {        
+    
+    pub fn create_particle_transform_matrix(translation: &Vector3f, rotation_z_deg: f32, scale: f32, camera_pitch: f32, camera_yaw: f32) -> Matrix4f {        
         let mut transform_mat = Matrix4f::identity();
-        transform_mat.scale(&Vector3f::new(scale, scale, scale));                
-        // the 3x3 top left corner of view matrix is the camera rotation (no scale .. camera doesnt scale) -> therefore it is an orthonormal transform matrix
-        // since it's orthonormal we can cancel it (make it Identity) by multiplying with it's transpose -> so before rotate scale set original rotation to be inverse of view rotation
-        for i in 0..3 {
-            for j in 0..3 {
-                transform_mat.data[i][j] = view_matrix.data[j][i];
-            }
-        }
-        transform_mat.rotate(&Vector3f::new(0.0, 0.0, rotation_z_deg));        
+        transform_mat.scale(&Vector3f::new(scale, scale, scale));
+        // make sure particles always angle up with where the camera is in yaw and pitch
+        // that way when we rotate them they will still face it. use signs opposite to the ones used to build create_view_matrix
+        transform_mat.rotate(&Vector3f::new(-camera_pitch, camera_yaw, rotation_z_deg));
         transform_mat.translate(translation);
         transform_mat
     }
@@ -98,7 +93,7 @@ impl Matrix4f {
         // pitch is the rotation against transverse axis (pointing to right) -> for our object x axis is right
         // yaw is the rotation against vertical axis (pointing up) -> for our object y axis is up
         // roll is the rotation against longitudal axis (pointing forward) -> for our object z axis is forward
-        let rotation_xyz_degrees = Vector3f::new(camera.pitch, camera.yaw + skybox_rotation_deg, camera.roll);
+        let rotation_xyz_degrees = Vector3f::new(camera.pitch, -camera.yaw - skybox_rotation_deg, camera.roll);
         let mut view_mat = Matrix4f::identity();         
         view_mat.rotate(&rotation_xyz_degrees);
         view_mat
@@ -109,29 +104,38 @@ impl Matrix4f {
         // pitch is the rotation against transverse axis (pointing to right) -> for out object x axis is right
         // yaw is the rotation against vertical axis (pointing up) -> for our object y axis is up
         // roll is the rotation against longitudal axis (pointing forward) -> for our object z axis is forward
-        let rotation_xyz_degrees = Vector3f::new(camera.pitch, camera.yaw, camera.roll);        
+
+        // ok this is an incredible mess
+        // the positive negative nonesense has to do i think with where the start point for rotations in 3d is
+        // for example if you have a rotation about the y axis (the yaw in this case)
+        // then 0 for that rotation means you are looking down the positive z axis (into the camera)
+        // this is due to right hand rule and that the rotations start at the first axis 
+        // since our camera correctly keeps track of pitch as being relative to z axis positive and since
+        // we want our camera to rotate objects in the inverted direction we have to use -camera.yaw
+        //
+        // the matter is different for the pitch. we say our camera has positive pitch but really pitch is positive
+        // if counter-clockwise and our camera is trying to turn things clockwise. so really our camera should say it has negative pitch
+        // and then the inverted direction is the positive pitch which is what we use here
+        let rotation_xyz_degrees = Vector3f::new(camera.pitch, -camera.yaw, camera.roll);        
         let mut view_mat = Matrix4f::identity();
         view_mat.translate(&(-translation)); 
-        view_mat.inverse_rotate(&rotation_xyz_degrees);
+        // the problem with inverse_rotate is that it is the transpose of tait bryan so the angles we specify with the 
+        // inverse wont correspond to getting the final camera to have our desired pitch and yaw
+        // to get our desired pitch and yaw we have to use tait-bryan or extrinsic euler angles and post multiply
+        view_mat.rotate(&rotation_xyz_degrees);       
         view_mat
     }
 
     // translate using the translation matrix
-    pub fn translate(&mut self, translation: &Vector3f) {
-        for i in 0..3 {
-            for j in 0..4 {                                
-                self.data[i][j] = self.data[i][j] + self.data[3][j] * translation[i];                 
-            }
-        }
+    pub fn translate(&mut self, t: &Vector3f) {
+        let tran_mat = Matrix4f{ data: [[1.0, 0.0, 0.0, t.x], [0.0, 1.0, 0.0, t.y], [0.0, 0.0, 1.0, t.z], [0.0, 0.0, 0.0, 1.0]] };
+        self.pre_multiply_in_place(&tran_mat);
     }
 
     // scale using the scale matrix
-    pub fn scale(&mut self, scale: &Vector3f) {
-        for i in 0..3 { 
-            for j in 0..4 {
-                self.data[i][j] = self.data[i][j] * scale[i];            
-            }
-        }
+    pub fn scale(&mut self, s: &Vector3f) {
+        let scale_mat = Matrix4f { data: [[s.x, 0.0, 0.0, 0.0], [0.0, s.y, 0.0, 0.0], [0.0, 0.0, s.z, 0.0], [0.0, 0.0, 0.0, 1.0]] };
+        self.pre_multiply_in_place(&scale_mat);
     }
 
     pub fn get_rotation(roll: f32, pitch: f32, yaw: f32) -> Matrix4f {
@@ -183,7 +187,7 @@ impl Matrix4f {
         for i in 0..4 {
             for j in 0..4 {
                 for k in 0..4 {
-                    res_mat[i][j] += other.data[k][j] * self.data[i][k];
+                    res_mat[i][j] += other.data[i][k] * self.data[k][j];
                 }
             }
         }
@@ -381,7 +385,7 @@ impl Matrix3f {
 
     fn abjugate_mat(&self) -> Matrix3f {
         let mut cofactor = self.cofactor_mat();
-        cofactor.transpose();
+        cofactor.transpose_ip();
         cofactor
     }
 
@@ -395,7 +399,7 @@ impl Matrix3f {
         res
     }
 
-    pub fn transpose(&mut self) {
+    pub fn transpose_ip(&mut self) {
         for i in 0..2 {
             for j in (i+1)..3 {
                 let temp = self.data[i][j];
