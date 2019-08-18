@@ -209,7 +209,7 @@ impl ShadowBox {
     fn calc_camera_rot(camera: &Camera) -> Matrix4f {
         // the frustum is in camera space so it should use the camera reference frame pitch and yaw
         // it moves with the camera not inversely to the camera
-        Matrix4f::get_rotation(0.0, camera.pitch, camera.yaw)
+        Matrix4f::get_rotation(0.0, -camera.pitch, camera.yaw)
     }
 
     fn update_shadow_box_size(&mut self, corners: [Vector3f; 8], light_direction_pitch_deg: f32, light_direction_yaw_deg: f32) {

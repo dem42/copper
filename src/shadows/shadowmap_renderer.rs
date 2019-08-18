@@ -102,9 +102,9 @@ impl ShadowMapRenderer {
 
     pub fn get_to_shadow(&self) -> Matrix4f {
         let mut res = Matrix4f::identity();
-        res.post_multiply_in_place(&self.bias);
-        res.post_multiply_in_place(&self.ortho_proj_mat);
-        res.post_multiply_in_place(&self.world_to_lightspace);
+        res.pre_multiply_in_place(&self.world_to_lightspace);
+        res.pre_multiply_in_place(&self.ortho_proj_mat);
+        res.pre_multiply_in_place(&self.bias);
         res
     }
 
@@ -116,10 +116,13 @@ impl ShadowMapRenderer {
 
     fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
         self.world_to_lightspace.make_identity();        
-        let angles = Vector3f::new(pitch, yaw, 0.0);
-        self.world_to_lightspace.rotate(&angles);
-        let center = &self.shadow_box.world_space_center;// + Vector3f::new(0.0, 0.0, -2.0*ShadowBox::OFFSET);
+        let center = &self.shadow_box.world_space_center;
         self.world_to_lightspace.translate(&(-center));
+        // check create_view_matrix for explanation of why the signs are so odd here
+        // the idea is again the same as in view matrix .. we want to transform from world coords to this reference frame
+        // so we should take the inverse of the model matrix of light space .. but there are issues with just an inverse as explained in comment to create_view_matrix
+        let angles = Vector3f::new(pitch, -yaw, 0.0);
+        self.world_to_lightspace.rotate(&angles);
     }
 
     // we want to use the lightspace transform in a shader to sample from the depth map
@@ -127,9 +130,10 @@ impl ShadowMapRenderer {
     // but a texture has coords in range [0,1] so we use the bias matrix to apply the conversion directly to the matrix
     fn create_bias_matrix() -> Matrix4f {
         let mut bias = Matrix4f::identity();
-        let s = Vector3f::new(0.5, 0.5, 0.5);
+        let s = Vector3f::new(0.5, 0.5, 1.0);
+        let t = Vector3f::new(0.5, 0.5, 0.0);
         bias.scale(&s);
-        bias.translate(&s);
+        bias.translate(&t);
         bias
     }
 }
