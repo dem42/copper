@@ -169,7 +169,7 @@ impl Vector3f {
     pub fn cross_prod(&self, o: &Vector3f) -> Vector3f {
         let i_axis_coef = self.y * o.z - o.y * self.z;
         let j_axis_coef = self.x * o.z - o.x * self.z;
-        let k_axis_coef = self.x * o.x - o.x * self.y;
+        let k_axis_coef = self.x * o.y - o.x * self.y;
         Vector3f::new(i_axis_coef, -j_axis_coef, k_axis_coef)
     }
 
@@ -295,6 +295,14 @@ impl Mul<f32> for &Vector3f {
 
     fn mul(self, other: f32) -> Vector3f {
         Vector3f {x: self.x * other, y: self.y * other, z: self.z * other}
+    }
+}
+
+impl Mul<&Vector3f> for f32 {
+    type Output = Vector3f;
+
+    fn mul(self, other: &Vector3f) -> Vector3f {
+        Vector3f {x: self * other.x, y: self * other.y, z: self * other.z}
     }
 }
 

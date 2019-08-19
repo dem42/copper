@@ -80,7 +80,7 @@ pub struct HeightsGenerator {
 impl HeightsGenerator {    
     const HEIGHT: usize = 128;
     const WIDTH: usize = 128;
-    const AMPLITUDE: f32 = 90.0;
+    const AMPLITUDE: f32 = 40.0;
     // how many different frequency noises do we want to combine
     const OCTAVES: usize = 3;
     const ROUGHNESS: f32 = 0.05;

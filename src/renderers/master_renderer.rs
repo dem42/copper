@@ -77,7 +77,7 @@ impl MasterRenderer {
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
                 player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers, debug_entity: &DebugEntity) {
 
-        self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights);
+        self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights, terrains);
 
         self.do_water_render_passes(water_tiles, camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights, skybox, display);
         display.restore_default_framebuffer();
@@ -92,7 +92,7 @@ impl MasterRenderer {
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
-                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>) {
+                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>, terrains: &Vec<Terrain>) {
         
         gl::helper::push_debug_group(RenderGroup::SHADOW_MAP_PASS.id, RenderGroup::SHADOW_MAP_PASS.name);
 
@@ -117,6 +117,8 @@ impl MasterRenderer {
         self.shadowmap_renderer.prepare_textured_model(&player.entity.model);
         self.shadowmap_renderer.render_entity(&player.entity);
         self.shadowmap_renderer.cleanup_textured_model();
+
+        self.shadowmap_renderer.render_terrain(terrains);
 
         self.shadowmap_renderer.stop_render();
 

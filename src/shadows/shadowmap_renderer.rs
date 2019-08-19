@@ -3,6 +3,7 @@ use crate::entities::{
     Camera,
     Entity,
     Light,
+    Terrain,
 };
 use crate::gl;
 use crate::math::{
@@ -19,8 +20,7 @@ use super::shadow_shader::ShadowShader;
 pub struct ShadowMapRenderer {
     shadow_shader: ShadowShader,
     pub shadow_box: ShadowBox,
-    world_to_lightspace: Matrix4f,
-    ortho_proj_mat: Matrix4f,
+    world_to_lightspace: Matrix4f,    
     bias: Matrix4f,
     vp_matrix: Matrix4f,
     mvp_matrix: Matrix4f,
@@ -31,8 +31,7 @@ impl ShadowMapRenderer {
 
     pub fn new(aspect_ratio: f32) -> Self {
         let shadow_box = ShadowBox::new(aspect_ratio, Display::FOV_HORIZONTAL, Display::NEAR, -ShadowBox::SHADOW_DISTANCE);
-        let world_to_lightspace = Matrix4f::identity();
-        let ortho_proj_mat = Matrix4f::identity();
+        let world_to_lightspace = Matrix4f::identity();        
         let bias = ShadowMapRenderer::create_bias_matrix();
         let shadow_shader = ShadowShader::new();
         let vp_matrix = Matrix4f::identity();
@@ -41,8 +40,7 @@ impl ShadowMapRenderer {
         ShadowMapRenderer {
             shadow_shader,
             shadow_box,
-            world_to_lightspace,
-            ortho_proj_mat,
+            world_to_lightspace,            
             bias,
             vp_matrix,
             mvp_matrix,
@@ -56,15 +54,14 @@ impl ShadowMapRenderer {
         // self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);
         self.shadow_box.update_odd(camera, &self.world_to_lightspace);
         self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
-        Matrix4f::update_ortho_projection_matrix(&mut self.ortho_proj_mat, self.shadow_box.width, self.shadow_box.height, self.shadow_box.length);
-
+        
         gl::enable(gl::DEPTH_TEST);
         gl::clear(gl::DEPTH_BUFFER_BIT);
         self.shadow_shader.start();
 
         self.vp_matrix.make_identity();
-        self.vp_matrix.post_multiply_in_place(&self.ortho_proj_mat);
-        self.vp_matrix.post_multiply_in_place(&self.world_to_lightspace);
+        self.vp_matrix.pre_multiply_in_place(&self.world_to_lightspace);
+        self.vp_matrix.pre_multiply_in_place(&self.shadow_box.ortho_proj_mat);
         // self.vp_matrix.multiply_in_place(&self.test_proj_matrix);
         // let cam_view = Matrix4f::create_view_matrix(camera);
         // self.vp_matrix.multiply_in_place(&cam_view);
@@ -96,6 +93,27 @@ impl ShadowMapRenderer {
         gl::bind_vertex_array(0);
     }
 
+    pub fn render_terrain(&mut self, terrains: &Vec<Terrain>) {
+        for terrain in terrains.iter() {
+            gl::bind_vertex_array(terrain.model.raw_model.vao_id);
+            gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+            
+            let terrain_pos = Vector3f::new(terrain.x as f32, 0.0, terrain.z as f32);
+            let terrain_rot = Vector3f::new(0.0, 0.0, 0.0);
+            let transform_mat = Matrix4f::create_transform_matrix(&terrain_pos, &terrain_rot, 1.0);
+
+            self.mvp_matrix.make_identity();
+            self.mvp_matrix.pre_multiply_in_place(&transform_mat);
+            self.mvp_matrix.pre_multiply_in_place(&self.vp_matrix);
+
+            self.shadow_shader.load_mvp_matrix(&self.mvp_matrix);
+            gl::draw_elements(gl::TRIANGLES, terrain.model.raw_model.vertex_count, gl::UNSIGNED_INT);
+
+            gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
+        }
+        gl::bind_vertex_array(0);
+    }
+
     pub fn stop_render(&mut self) {
         self.shadow_shader.stop();
     }
@@ -103,7 +121,7 @@ impl ShadowMapRenderer {
     pub fn get_to_shadow(&self) -> Matrix4f {
         let mut res = Matrix4f::identity();
         res.pre_multiply_in_place(&self.world_to_lightspace);
-        res.pre_multiply_in_place(&self.ortho_proj_mat);
+        res.pre_multiply_in_place(&self.shadow_box.ortho_proj_mat);
         res.pre_multiply_in_place(&self.bias);
         res
     }
@@ -130,8 +148,8 @@ impl ShadowMapRenderer {
     // but a texture has coords in range [0,1] so we use the bias matrix to apply the conversion directly to the matrix
     fn create_bias_matrix() -> Matrix4f {
         let mut bias = Matrix4f::identity();
-        let s = Vector3f::new(0.5, 0.5, 1.0);
-        let t = Vector3f::new(0.5, 0.5, 0.0);
+        let s = Vector3f::new(0.5, 0.5, 0.5);
+        let t = Vector3f::new(0.5, 0.5, 0.5);
         bias.scale(&s);
         bias.translate(&t);
         bias

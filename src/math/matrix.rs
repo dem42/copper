@@ -33,6 +33,23 @@ impl Matrix4f {
         }
     }
 
+    pub fn from_column_basis(x: &Vector3f, y: &Vector3f, z: &Vector3f) -> Matrix4f {
+        let mut data = [[0.0f32; 4]; 4];        
+        for i in 0..3 {
+            data[i][0] = x[i];
+        }
+        for i in 0..3 {
+            data[i][1] = y[i];
+        }
+        for i in 0..3 {
+            data[i][2] = z[i];
+        }
+        data[3][3] = 1.0;        
+        Matrix4f {
+            data,
+        }
+    }
+
     pub fn make_identity(&mut self) {        
         for i in 0..4 {
             for j in 0..4 {
@@ -97,6 +114,26 @@ impl Matrix4f {
         let mut view_mat = Matrix4f::identity();         
         view_mat.rotate(&rotation_xyz_degrees);
         view_mat
+    }
+
+    pub fn look_at(eye_position: &Vector3f, scene_center: &Vector3f, up: &Vector3f) -> Matrix4f {
+        let mut forward = scene_center - eye_position;
+        forward.normalize();
+        let mut side = forward.cross_prod(&up);
+        side.normalize();
+        let up = side.cross_prod(&forward);
+        let forward = -forward;
+
+        let mut view_mat = Matrix4f::identity();
+        view_mat.translate(&(-eye_position));
+        let rotation = Matrix4f::from_column_basis(&side, &up, &forward);
+        view_mat.pre_multiply_in_place(&rotation);
+
+        view_mat
+    }
+    
+    pub fn create_view_matrix0(camera: &Camera) -> Matrix4f {
+        Self::look_at(&camera.position, &camera.looking_at, &camera.up)
     }
 
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {

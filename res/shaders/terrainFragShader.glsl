@@ -51,7 +51,11 @@ void main(void) {
     //float obj_depth_nearest_light = texture(shadow_map, vec2(shadow_coords.x, 1 - shadow_coords.y)).r;
     float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy).r;     
     // i dunno what he is thinking comparing depths .. the depth from the texture is not comparable to the one he computes   
-    float light_factor = obj_depth_nearest_light;
+    float light_factor = 1.0;
+    if (shadow_coords.z > obj_depth_nearest_light) {
+        light_factor = 0.6;
+    }
+    
     //float depth = (shadow_coords.z) - obj_depth_nearest_light;
     
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)
@@ -96,5 +100,5 @@ void main(void) {
     
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * blended_texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
-    //out_Color = mix(out_Color, vec4(1.0 - shadow_coords.z), 0.999);
+    //out_Color = mix(out_Color, vec4(shadow_coords.w), 0.999);
 }

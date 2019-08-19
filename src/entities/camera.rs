@@ -10,6 +10,8 @@ pub struct Camera {
     pub roll: f32,
     pub pitch: f32,
     pub yaw: f32,
+    pub looking_at: Vector3f,
+    pub up: Vector3f,
     distance_to_player: f32,
     angle_around_player: f32,
 }
@@ -24,6 +26,8 @@ impl Camera {
             yaw: 0.0,
             distance_to_player,
             angle_around_player: 0.0,
+            looking_at: Vector3f::zero(),
+            up: Vector3f::new(0.0, 1.0, 0.0),
         }    
     }
 
@@ -51,8 +55,9 @@ impl Camera {
         let (x_offset, z_offset) = (camera_horizontal_offset_to_player * s, camera_horizontal_offset_to_player * c);
 
         let player_pos = &player.entity.position;
-        self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);
-        self.yaw = player.entity.rotation_deg.y - 180.0 + self.angle_around_player;
+        self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);        
+        self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
+        self.looking_at = player.entity.position.clone();
     }
 
     fn calc_zoom(&mut self, display: &Display) {
