@@ -65,7 +65,7 @@ fn main() {
     let mut framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
-    let mut scene = create_scene(&mut resource_manager, &framebuffers);
+    let mut scene = create_test_scene(&mut resource_manager, &framebuffers);
     
     let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();

@@ -1,5 +1,8 @@
 use std::f32;
-use crate::math::Vector3f;
+use crate::math::{
+    Quaternion,
+    Vector3f,
+};
 use crate::display::{
     Display,
 };
@@ -56,8 +59,16 @@ impl Camera {
 
         let player_pos = &player.entity.position;
         self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);        
-        self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
+        
+        
         self.looking_at = player.entity.position.clone();
+        let q1 = Quaternion::from_angle_axis(-self.pitch, &Vector3f::new(1.0, 0.0, 0.0));
+        let q2 = Quaternion::from_angle_axis(self.yaw, &Vector3f::new(0.0, 1.0, 0.0));
+        // first rotate by q1 then by q2
+        let comp_q = q1 * q2;
+        self.up = Quaternion::rotate_vector(&Vector3f::new(0.0, 1.0, 0.0), &comp_q);
+
+        self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
     }
 
     fn calc_zoom(&mut self, display: &Display) {

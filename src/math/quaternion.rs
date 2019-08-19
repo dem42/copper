@@ -13,6 +13,7 @@ use std::ops::{
  * using the multiplication operation. The final result can then be turned into a single rotation matrix that represents a rotation
  * that would be the result of all the other rotations. (also no gimbal lock)
  */
+#[derive(Debug, Clone)]
 pub struct Quaternion {
     a: f32,
     v: Vector3f,
@@ -52,23 +53,38 @@ impl Quaternion {
         res
     }
 
+    pub fn normalize(&mut self) {
+        let l = 1.0 / self.length();
+        self.a *= l;
+        for i in 0..3 {
+            self.v[i] *= l;
+        }
+    }
+
     pub fn length(&self) -> f32 {
         (self.a * self.a + self.v.dot_product(&self.v)).sqrt()
+    }
+
+    pub fn conjugate(&self) -> Quaternion {
+        Quaternion {
+            a: self.a,
+            v: -1.0 * &self.v,
+        }
     }
 
     pub fn reciprocal(&self) -> Quaternion {
         let s = self.length();
         let s = 1.0 / (s * s);
-        Quaternion {
-            a: s * self.a,
-            v: s * &self.v,
-        }
+        let mut conj = self.conjugate();
+        conj.a *= s;
+        conj.v = s * conj.v;
+        conj
     }
 
     pub fn rotate_vector(vector: &Vector3f, quaternion: &Quaternion) -> Vector3f {
         let v_as_q = Quaternion { a: 0.0, v: vector.clone() };
         let recip = quaternion.reciprocal();
-        let res = (quaternion * v_as_q) * recip;
+        let res = (quaternion * v_as_q) * recip;        
         res.v
     }
 }
@@ -133,6 +149,7 @@ impl Index<usize> for Quaternion {
 mod tests {
     use super::*;
     use crate::utils::test_utils::*;
+    use crate::math::Vector4f;
 
     #[test]
     fn test_hamilton_product() {
@@ -145,5 +162,43 @@ mod tests {
         for i in 0..4 {
             assert_f32_eq!(expected[i], res[i], test_constants::EPS_MEDIUM, &format!("Mismatch on pos: {}.", i));
         }        
+    }
+
+    #[test]
+    fn test_to_rot_mat() {
+        let mut q = Quaternion::new(4.0, 1.0, 2.0, -3.0);
+        q.normalize();
+        let expected = [0.7302967433402214, 0.18257418583505536, 0.3651483716701107, -0.5477225575051661];
+        for i in 0..4 {
+            assert_f32_eq!(expected[i], q[i], test_constants::EPS_MEDIUM, &format!("Mismatch on pos: {}.", i));
+        }
+        let mat = q.as_rot_mat();
+        let expected = Matrix4f::new([[0.13333333333333353, 0.9333333333333332, 0.33333333333333326, 0.0],
+            [-0.6666666666666666, 0.3333333333333335, -0.6666666666666665, 0.0],
+            [-0.7333333333333332, -0.13333333333333336, 0.6666666666666667, 0.0],
+            [0.0, 0.0, 0.0, 1.0]]
+        );
+        for i in 0..4 {
+            for j in 0..4 {
+                assert_f32_eq!(expected[i][j], mat[i][j], test_constants::EPS_MEDIUM, &format!("Mismatch on: ({},{}).", i, j));
+            }
+        }
+    }
+
+    #[test]
+    fn test_vec_rotation() {
+        let mut q = Quaternion::new(4.0, 1.0, 2.0, -3.0);
+        let tv = Vector3f::new(2.3, 1.2, -0.8);
+        q.normalize();        
+        let mat = q.as_rot_mat();
+
+        let mut expected = mat.transform(&Vector4f::from_point(&tv)).xyz();
+        expected.normalize();
+        let mut result = Quaternion::rotate_vector(&tv, &q);
+        result.normalize();
+
+        for i in 0..3 {
+            assert_f32_eq!(expected[i], result[i], test_constants::EPS_MEDIUM, &format!("Mismatch on: {}.", i));            
+        }
     }
 }

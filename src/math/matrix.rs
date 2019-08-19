@@ -13,6 +13,12 @@ pub struct Matrix4f {
 }
 
 impl Matrix4f {
+    pub fn new(data: [[f32; 4]; 4]) -> Self {
+        Matrix4f {
+            data,
+        }
+    }
+
     pub fn identity() -> Matrix4f {
         let mut data = [[0.0f32; 4]; 4];
         for i in 0..4 {
@@ -132,11 +138,11 @@ impl Matrix4f {
         view_mat
     }
     
-    pub fn create_view_matrix0(camera: &Camera) -> Matrix4f {
+    pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
         Self::look_at(&camera.position, &camera.looking_at, &camera.up)
     }
 
-    pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
+    pub fn create_view_matrix0(camera: &Camera) -> Matrix4f {
         let translation = &camera.position;
         // pitch is the rotation against transverse axis (pointing to right) -> for out object x axis is right
         // yaw is the rotation against vertical axis (pointing up) -> for our object y axis is up
