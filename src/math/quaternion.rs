@@ -20,6 +20,11 @@ pub struct Quaternion {
 }
 
 impl Quaternion {
+
+    pub fn identity() -> Self {
+        Quaternion::new(1.0, 0.0, 0.0, 0.0)
+    }
+
     pub fn new(a: f32, b: f32, c: f32, d: f32) -> Self {
         Quaternion {
             a,

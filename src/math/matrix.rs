@@ -39,7 +39,7 @@ impl Matrix4f {
         }
     }
 
-    pub fn from_column_basis(x: &Vector3f, y: &Vector3f, z: &Vector3f) -> Matrix4f {
+    pub fn change_of_basis_3d(x: &Vector3f, y: &Vector3f, z: &Vector3f) -> Matrix4f {
         let mut data = [[0.0f32; 4]; 4];        
         for i in 0..3 {
             data[i][0] = x[i];
@@ -127,19 +127,30 @@ impl Matrix4f {
         forward.normalize();
         let mut side = forward.cross_prod(&up);
         side.normalize();
-        let up = side.cross_prod(&forward);
+        // up doesnt need to be perpendicular to forward -> so let's find the perp one
+        let mut up = side.cross_prod(&forward);
+        up.normalize();
+        // our eye to scene center should be negative z
+        // that means -foward is the positive which we use to do change of basis
         let forward = -forward;
 
-        let mut view_mat = Matrix4f::identity();
-        view_mat.translate(&(-eye_position));
-        let rotation = Matrix4f::from_column_basis(&side, &up, &forward);
-        view_mat.pre_multiply_in_place(&rotation);
+        // preform change of basis
+        let mut view_mat = Matrix4f::identity();        
+        let mut change_basis = Matrix4f::change_of_basis_3d(&side, &up, &forward);
+        // we want to find the components of vec in look at basis .. that means we want inverse of change of basis
+        // it is orthonormal mat so transpose
+        change_basis.transpose_ip();
 
+        // first move to center of new basis
+        view_mat.translate(&(-eye_position));
+        // then find component of our vector in new basis
+        view_mat.pre_multiply_in_place(&change_basis);
+        
         view_mat
     }
     
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
-        Self::look_at(&camera.position, &camera.looking_at, &camera.up)
+        Self::look_at(&camera.position, &camera.looking_at, &Vector3f::new(0.0, 1.0, 0.0))
     }
 
     pub fn create_view_matrix0(camera: &Camera) -> Matrix4f {

@@ -34,6 +34,7 @@ use copper::entities::{
     DebugEntity,
 };
 use copper::math::{
+    Quaternion,
     Vector2f,
     Vector3f,
 };
@@ -76,6 +77,9 @@ fn main() {
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
         
     while !display.is_close_requested() {
+
+        rotate_debug_entity(&mut scene.debug_entity, &display);
+
         scene.camera.move_camera(&display, &scene.player);
         
         update_mouse_picker_and_move_lamp(&mut mouse_picker, &display, &mut scene);
@@ -115,6 +119,22 @@ fn spin_around_normal_mapped_entities(scene: &mut Scene, display: &Display) {
     for idx in 0..scene.normal_mapped_entities.len() {
         scene.normal_mapped_entities[idx].increase_rotation(0.0, 0.0, SPEED * display.frame_time_sec);
     }
+}
+
+fn rotate_debug_entity(debug_entity: &mut DebugEntity, display: &Display) {
+    let mut comp_q = Quaternion::identity();
+
+    if debug_entity.rotation.x != -20.0 {
+        debug_entity.rotation.x = -20.0;
+        let qc = Quaternion::from_angle_axis(debug_entity.rotation.x, &Vector3f::new(1.0, 0.0, 0.0));
+        comp_q = comp_q * qc;
+    }
+    
+    debug_entity.rotation.y = 6.0 * display.frame_time_sec;     
+    let qc = Quaternion::from_angle_axis(debug_entity.rotation.y, &Vector3f::new(0.0, 1.0, 0.0));
+    comp_q = comp_q * qc;       
+    
+    debug_entity.position = Quaternion::rotate_vector(&debug_entity.position, &comp_q);
 }
 
 fn init_scene_resources(resource_manager: &mut ResourceManager) {
@@ -360,7 +380,8 @@ fn create_test_scene(resource_manager: &mut ResourceManager, _framebuffers: &Fra
     let water_tiles = Vec::new();
     let normal_mapped_entities = Vec::new();
 
-    let debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
+    let mut debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
+    debug_entity.position.y = 10.0;
 
     let mut camera = Camera::new(20.0, 50.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);

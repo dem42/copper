@@ -88,7 +88,8 @@ impl MasterRenderer {
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
         // let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
-        // self.debug_renderer.render(debug_entity, camera, obb_ref);        
+        // self.debug_renderer.render(debug_entity, camera, obb_ref); 
+        self.debug_renderer.render_cube(debug_entity, camera);
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 

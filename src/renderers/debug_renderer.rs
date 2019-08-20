@@ -21,6 +21,17 @@ pub struct DebugRenderer {
 }
 
 impl DebugRenderer {    
+
+    const CUBE_VERTS: [Vector3f; 8] = [
+        Vector3f {x: -0.5, y: -0.5, z: 0.5},
+        Vector3f {x: 0.5, y: -0.5, z: 0.5},
+        Vector3f {x: 0.5, y: 0.5, z: 0.5},
+        Vector3f {x: -0.5, y: 0.5, z: 0.5},
+        Vector3f {x: -0.5, y: -0.5, z: -0.5},
+        Vector3f {x: 0.5, y: -0.5, z: -0.5},
+        Vector3f {x: 0.5, y: 0.5, z: -0.5},
+        Vector3f {x: -0.5, y: 0.5, z: -0.5},
+    ];
     
     pub fn new(projection_matrix: &Matrix4f) -> Self {     
         let shader = DebugShader::new();
@@ -36,6 +47,10 @@ impl DebugRenderer {
         }
     }
     
+    pub fn render_cube(&mut self, entity: &DebugEntity, camera: &Camera, ) {
+        self.render(entity, camera, &Self::CUBE_VERTS);
+    }
+
     pub fn render(&mut self, entity: &DebugEntity, camera: &Camera, vertices: &[Vector3f; 8]) {
         self.shader.start();
         self.view_matrix = Matrix4f::create_view_matrix(camera);
@@ -51,8 +66,11 @@ impl DebugRenderer {
 
         // load transform matrix into shader        
         self.mvp_matrix.make_identity();
-        self.mvp_matrix.post_multiply_in_place(&self.proj_matrix);
-        self.mvp_matrix.post_multiply_in_place(&self.view_matrix);        
+        // dont use rotation for the moment
+        let transform = Matrix4f::create_transform_matrix(&entity.position, &Vector3f::ZERO, 1.0);
+        self.mvp_matrix.pre_multiply_in_place(&transform);
+        self.mvp_matrix.pre_multiply_in_place(&self.view_matrix);        
+        self.mvp_matrix.pre_multiply_in_place(&self.proj_matrix);
         self.shader.load_mvp_matrix(&self.mvp_matrix);
 
         self.update_vbo(&entity.model, vertices);
