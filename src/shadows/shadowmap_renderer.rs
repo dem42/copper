@@ -8,6 +8,7 @@ use crate::entities::{
 use crate::gl;
 use crate::math::{
     Matrix4f,
+    Quaternion,
     Vector3f,
 };
 use crate::models::{
@@ -53,7 +54,8 @@ impl ShadowMapRenderer {
         // testing with thinmatrix impl
         // self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);
         self.shadow_box.update_odd(camera, &self.world_to_lightspace);
-        self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
+        self.update_world_to_lightspace(&sun.position);
+        //self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
         
         gl::enable(gl::DEPTH_TEST);
         gl::clear(gl::DEPTH_BUFFER_BIT);
@@ -132,7 +134,18 @@ impl ShadowMapRenderer {
         (pitch.to_degrees(), yaw.to_degrees())
     }
 
-    fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
+    fn update_world_to_lightspace(&mut self, sun_direction: &Vector3f) {
+        let center = &self.shadow_box.world_space_center;        
+        let mut normalized_sun_dir = sun_direction.clone();
+        normalized_sun_dir.normalize();
+        let sun_position = center + ((ShadowBox::SHADOW_DISTANCE / 2.0) * &normalized_sun_dir);
+        // y axis up could be the same direction as the light .. so we rotate the sun direction by 90degs to get up
+        // what if light is behind ?
+        let up = Quaternion::rotate_vector(&normalized_sun_dir, &Quaternion::from_angle_axis(90.0, &Vector3f::POS_X_AXIS));        
+        self.world_to_lightspace = Matrix4f::look_at(&sun_position, center, &up);
+    }
+
+    fn update_world_to_lightspace0(&mut self, pitch: f32, yaw: f32) {
         self.world_to_lightspace.make_identity();        
         let center = &self.shadow_box.world_space_center;
         self.world_to_lightspace.translate(&(-center));

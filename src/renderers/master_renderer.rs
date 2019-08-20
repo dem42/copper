@@ -89,7 +89,7 @@ impl MasterRenderer {
 
         // let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
         // self.debug_renderer.render(debug_entity, camera, obb_ref); 
-        self.debug_renderer.render_cube(debug_entity, camera);
+        // self.debug_renderer.render_cube(debug_entity, camera);
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
@@ -119,7 +119,7 @@ impl MasterRenderer {
         self.shadowmap_renderer.render_entity(&player.entity);
         self.shadowmap_renderer.cleanup_textured_model();
 
-        self.shadowmap_renderer.render_terrain(terrains);
+        //self.shadowmap_renderer.render_terrain(terrains);
 
         self.shadowmap_renderer.stop_render();
 
