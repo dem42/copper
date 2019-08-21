@@ -150,7 +150,7 @@ impl Matrix4f {
     }
     
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
-        Self::look_at(&camera.position, &camera.looking_at, &Vector3f::new(0.0, 1.0, 0.0))
+        Self::look_at(&camera.position, &camera.looking_at, &camera.up)
     }
 
     pub fn create_view_matrix0(camera: &Camera) -> Matrix4f {

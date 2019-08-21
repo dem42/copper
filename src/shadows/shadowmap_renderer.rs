@@ -141,7 +141,11 @@ impl ShadowMapRenderer {
         let sun_position = center + ((ShadowBox::SHADOW_DISTANCE / 2.0) * &normalized_sun_dir);
         // y axis up could be the same direction as the light .. so we rotate the sun direction by 90degs to get up
         // what if light is behind ?
-        let up = Quaternion::rotate_vector(&normalized_sun_dir, &Quaternion::from_angle_axis(90.0, &Vector3f::POS_X_AXIS));        
+        let mut up = Vector3f::POS_Y_AXIS;
+        if Vector3f::parallel(&up, &normalized_sun_dir) {
+            up = Vector3f::POS_Z_AXIS;
+        }
+        //let up = Quaternion::rotate_vector(&normalized_sun_dir, &Quaternion::from_angle_axis(90.0, &Vector3f::POS_X_AXIS));        
         self.world_to_lightspace = Matrix4f::look_at(&sun_position, center, &up);
     }
 

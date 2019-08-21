@@ -60,9 +60,7 @@ impl Camera {
         self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);        
         
         self.looking_at = player.entity.position.clone();
-        //self.up = Vector3f::new(self.looking_at.x - self.position.x, upy, self.looking_at.z - self.position.z);
-        //self.up.normalize();
-        
+                
         self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
     }
 

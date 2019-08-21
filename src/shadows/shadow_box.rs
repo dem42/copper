@@ -171,13 +171,13 @@ impl ShadowBox {
         self.length = max_v.z - min_v.z;
 
         self.ortho_proj_mat[0][0] = 2.0 / self.width;
-        self.ortho_proj_mat[0][3] = -(max_v.x + min_v.x) / self.width;
+        //self.ortho_proj_mat[0][3] = -(max_v.x + min_v.x) / self.width;
         
         self.ortho_proj_mat[1][1] = 2.0 / self.height;
-        self.ortho_proj_mat[1][3] = -(max_v.y + min_v.y) / self.height;
+        //self.ortho_proj_mat[1][3] = -(max_v.y + min_v.y) / self.height;
 
         self.ortho_proj_mat[2][2] = -2.0 / self.length;
-        self.ortho_proj_mat[2][3] = -(max_v.z + min_v.z) / self.length;
+        //self.ortho_proj_mat[2][3] = -(max_v.z + min_v.z) / self.length;
 
         let mut cen = 0.5 * (max_v + min_v);
         cen.w = 1.0;
