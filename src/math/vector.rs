@@ -11,7 +11,10 @@ pub struct Vector4f {
 }
 
 impl Vector4f {
-    pub const ZERO: Vector4f = Vector4f {x: 0.0, y: 0.0, z: 0.0, w: 0.0};
+    pub const ZERO: Vector4f = Vector4f {x: 0.0, y: 0.0, z: 0.0, w: 0.0};    
+    pub const POS_X_AXIS: Vector4f = Vector4f {x: 1.0, y: 0.0, z: 0.0, w: 0.0};
+    pub const POS_Y_AXIS: Vector4f = Vector4f {x: 0.0, y: 1.0, z: 0.0, w: 0.0};     
+    pub const NEG_Z_AXIS: Vector4f = Vector4f {x: 0.0, y: 0.0, z: -1.0, w: 0.0};
 
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Vector4f {
         Vector4f { x, y, z, w}
@@ -130,8 +133,9 @@ pub struct Vector3f {
 impl Vector3f {
     pub const ZERO: Vector3f = Vector3f {x: 0.0, y: 0.0, z: 0.0};
     pub const POS_X_AXIS: Vector3f = Vector3f {x: 1.0, y: 0.0, z: 0.0};
-    pub const POS_Y_AXIS: Vector3f = Vector3f {x: 0.0, y: 1.0, z: 0.0};
+    pub const POS_Y_AXIS: Vector3f = Vector3f {x: 0.0, y: 1.0, z: 0.0};    
     pub const POS_Z_AXIS: Vector3f = Vector3f {x: 0.0, y: 0.0, z: 1.0};
+    pub const NEG_Z_AXIS: Vector3f = Vector3f {x: 0.0, y: 0.0, z: -1.0};
     
     pub fn new(x: f32, y: f32, z: f32) -> Vector3f {
         Vector3f { x, y, z}

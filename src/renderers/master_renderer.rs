@@ -87,13 +87,13 @@ impl MasterRenderer {
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
-        // let obb_ref = &self.shadowmap_renderer.shadow_box.obb_corners;
-        // self.debug_renderer.render(debug_entity, camera, obb_ref); 
+        let obb_ref = &self.shadowmap_renderer.shadow_box.frustum_corners;
+        self.debug_renderer.render(debug_entity, camera, obb_ref); 
         // self.debug_renderer.render_cube(debug_entity, camera);
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
-                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>, terrains: &Vec<Terrain>) {
+                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>, _terrains: &Vec<Terrain>) {
         
         gl::helper::push_debug_group(RenderGroup::SHADOW_MAP_PASS.id, RenderGroup::SHADOW_MAP_PASS.name);
 
@@ -118,8 +118,6 @@ impl MasterRenderer {
         self.shadowmap_renderer.prepare_textured_model(&player.entity.model);
         self.shadowmap_renderer.render_entity(&player.entity);
         self.shadowmap_renderer.cleanup_textured_model();
-
-        //self.shadowmap_renderer.render_terrain(terrains);
 
         self.shadowmap_renderer.stop_render();
 

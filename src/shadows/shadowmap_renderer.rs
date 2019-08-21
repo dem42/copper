@@ -49,12 +49,12 @@ impl ShadowMapRenderer {
         }
     }
 
-    pub fn start_render(&mut self, camera: &Camera, sun: &Light) {
-        let (light_pitch_dg, light_yaw_dg) = ShadowMapRenderer::calc_light_pitch_yaw_dg(&sun.position);
+    pub fn start_render(&mut self, camera: &Camera, sun: &Light) {        
         // testing with thinmatrix impl
         // self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);
-        self.shadow_box.update_odd(camera, &self.world_to_lightspace);
         self.update_world_to_lightspace(&sun.position);
+        self.shadow_box.update(camera, &self.world_to_lightspace);
+        //self.shadow_box.update_odd(camera, &self.world_to_lightspace);
         //self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
         
         gl::enable(gl::DEPTH_TEST);
@@ -126,12 +126,6 @@ impl ShadowMapRenderer {
         res.pre_multiply_in_place(&self.shadow_box.ortho_proj_mat);
         res.pre_multiply_in_place(&self.bias);
         res
-    }
-
-    fn calc_light_pitch_yaw_dg(to_light_direction: &Vector3f) -> (f32, f32) {
-        let yaw = (-to_light_direction.x).atan2(-to_light_direction.z);
-        let pitch = (-to_light_direction.y / to_light_direction.length()).asin();
-        (pitch.to_degrees(), yaw.to_degrees())
     }
 
     fn update_world_to_lightspace(&mut self, sun_direction: &Vector3f) {

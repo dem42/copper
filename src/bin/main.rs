@@ -66,7 +66,7 @@ fn main() {
     let mut framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
-    let mut scene = create_scene(&mut resource_manager, &framebuffers);
+    let mut scene = create_test_scene(&mut resource_manager, &framebuffers);
     
     let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();
@@ -78,7 +78,7 @@ fn main() {
         
     while !display.is_close_requested() {
 
-        rotate_debug_entity(&mut scene.debug_entity, &display);
+        //rotate_debug_entity(&mut scene.debug_entity, &display);
 
         scene.camera.move_camera(&display, &scene.player);
         
@@ -392,7 +392,8 @@ fn create_test_scene(resource_manager: &mut ResourceManager, _framebuffers: &Fra
     let guis = Vec::new();
 
     let lights = vec!{
-        Light::new_infinite(Vector3f::new(0.0, 10000.0, 0.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
+        //Light::new_infinite(Vector3f::new(0.0, 10000.0, 0.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
+        Light::new_infinite(Vector3f::new(5000.0, 10000.0, -5000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
     };
 
     let particle_systems = Vec::new();

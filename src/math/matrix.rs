@@ -122,7 +122,7 @@ impl Matrix4f {
         view_mat
     }
 
-    pub fn look_at(eye_position: &Vector3f, scene_center: &Vector3f, up: &Vector3f) -> Matrix4f {
+    pub fn camera_change_of_basis(eye_position: &Vector3f, scene_center: &Vector3f, up: &Vector3f) -> Matrix4f {
         let mut forward = scene_center - eye_position;
         forward.normalize();
         let mut side = forward.cross_prod(&up);
@@ -134,9 +134,14 @@ impl Matrix4f {
         // that means -foward is the positive which we use to do change of basis
         let forward = -forward;
 
+        let change_basis = Matrix4f::change_of_basis_3d(&side, &up, &forward);
+        change_basis
+    }
+
+    pub fn look_at(eye_position: &Vector3f, scene_center: &Vector3f, up: &Vector3f) -> Matrix4f {
         // preform change of basis
-        let mut view_mat = Matrix4f::identity();        
-        let mut change_basis = Matrix4f::change_of_basis_3d(&side, &up, &forward);
+        let mut view_mat = Matrix4f::identity();
+        let mut change_basis = Self::camera_change_of_basis(eye_position, scene_center, up); 
         // we want to find the components of vec in look at basis .. that means we want inverse of change of basis
         // it is orthonormal mat so transpose
         change_basis.transpose_ip();
