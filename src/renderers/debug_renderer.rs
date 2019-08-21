@@ -67,7 +67,7 @@ impl DebugRenderer {
         // load transform matrix into shader        
         self.mvp_matrix.make_identity();
         // dont use rotation for the moment
-        let transform = Matrix4f::create_transform_matrix(&entity.position, &Vector3f::ZERO, 1.0);
+        let transform = Matrix4f::create_transform_matrix_with_s(&entity.position, &Vector3f::ZERO, &entity.scale);
         self.mvp_matrix.pre_multiply_in_place(&transform);
         self.mvp_matrix.pre_multiply_in_place(&self.view_matrix);        
         self.mvp_matrix.pre_multiply_in_place(&self.proj_matrix);

@@ -95,7 +95,7 @@ fn main() {
         scene.skybox.increase_rotation(&display);
 
         master_renderer.render(&scene.lights, &mut scene.camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
-            &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &scene.debug_entity);
+            &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut scene.debug_entity);
 
         particle_master.render(&scene.camera);
 

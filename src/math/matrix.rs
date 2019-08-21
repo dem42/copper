@@ -89,6 +89,14 @@ impl Matrix4f {
         transform_mat
     }
 
+    pub fn create_transform_matrix_with_s(translation: &Vector3f, rot_xyz_degrees: &Vector3f, scale: &Vector3f) -> Matrix4f {        
+        let mut transform_mat = Matrix4f::identity();
+        transform_mat.scale(scale);
+        transform_mat.rotate(rot_xyz_degrees);
+        transform_mat.translate(translation);
+        transform_mat
+    }
+
     pub fn create_projection_matrix(near_plane: f32, far_plane: f32, fov_horizontal_degs: f32, aspect_ratio: f32) -> Matrix4f {
         let mut data = [[0.0f32; 4]; 4];
         let tan_fov_half = (fov_horizontal_degs.to_radians() / 2.0).tan();

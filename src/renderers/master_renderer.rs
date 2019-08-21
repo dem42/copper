@@ -75,7 +75,7 @@ impl MasterRenderer {
     }
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers, debug_entity: &DebugEntity) {
+                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers, debug_entity: &mut DebugEntity) {
 
         self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights, terrains);
 
@@ -87,9 +87,11 @@ impl MasterRenderer {
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
-        let obb_ref = &self.shadowmap_renderer.shadow_box.frustum_corners;
-        self.debug_renderer.render(debug_entity, camera, obb_ref); 
-        // self.debug_renderer.render_cube(debug_entity, camera);
+        //let obb_ref = &self.shadowmap_renderer.shadow_box.frustum_corners;
+        //self.debug_renderer.render(debug_entity, camera, obb_ref); 
+        debug_entity.position = self.shadowmap_renderer.shadow_box.world_space_center.clone();
+        debug_entity.scale = 0.1 * Vector3f::new(self.shadowmap_renderer.shadow_box.width, self.shadowmap_renderer.shadow_box.height, self.shadowmap_renderer.shadow_box.length);
+        self.debug_renderer.render_cube(debug_entity, camera);
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 

@@ -67,20 +67,20 @@ impl ShadowBox {
         let frustum_corners_ws = self.get_frustum_corners_ws(camera);
         self.frustum_corners = frustum_corners_ws.clone();
 
-        self.update_shadow_box_size(frustum_corners_ws, world_to_lightspace);
+        // self.update_shadow_box_size(frustum_corners_ws, world_to_lightspace);
 
-        // self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, world_to_lightspace);
+        self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(frustum_corners_ws, world_to_lightspace);
 
-        // self.width = distance(&self.obb_corners[0], &self.obb_corners[1]);
-        // self.height = distance(&self.obb_corners[0], &self.obb_corners[4]);
-        // self.length = distance(&self.obb_corners[0], &self.obb_corners[3]);
+        self.width = distance(&self.obb_corners[0], &self.obb_corners[1]);
+        self.height = distance(&self.obb_corners[0], &self.obb_corners[4]);
+        self.length = distance(&self.obb_corners[0], &self.obb_corners[3]);
 
         self.ortho_proj_mat[0][0] = 2.0 / self.width;
         self.ortho_proj_mat[1][1] = 2.0 / self.height;
         self.ortho_proj_mat[2][2] = -2.0 / self.length;
 
-        //self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);
-        //self.world_space_center = camera.looking_at.clone();
+        self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);
+        self.world_space_center = camera.looking_at.clone();
     }
 
     fn compute_frustum_sizes(aspect_ratio: f32, fov_deg: f32, near_dist: f32, far_dist: f32) -> (f32, f32, f32, f32)  {
