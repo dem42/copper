@@ -39,7 +39,7 @@ impl Matrix4f {
         }
     }
 
-    pub fn change_of_basis_3d(x: &Vector3f, y: &Vector3f, z: &Vector3f) -> Matrix4f {
+    fn change_of_basis_3d(x: &Vector3f, y: &Vector3f, z: &Vector3f) -> Matrix4f {
         let mut data = [[0.0f32; 4]; 4];        
         for i in 0..3 {
             data[i][0] = x[i];

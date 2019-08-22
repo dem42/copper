@@ -28,7 +28,7 @@ const float fog_gradient = 1.5;
 uniform vec4 clip_plane;
 
 void main(void) {
-    vec4 world_position = transform * vec4(pos, 1.0);
+    vec4 world_position = transform * vec4(pos, 1.0);    
     shadow_coords = to_shadowmap_space * world_position;
 
     gl_ClipDistance[0] = dot(world_position, clip_plane);
