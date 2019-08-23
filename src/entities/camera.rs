@@ -1,5 +1,6 @@
 use std::f32;
 use crate::math::{
+    Quaternion,
     Vector3f,
 };
 use crate::display::{
@@ -60,6 +61,10 @@ impl Camera {
         self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);        
         
         self.looking_at = player.entity.position.clone();
+        let q1 = Quaternion::from_angle_axis(-self.pitch, &Vector3f::POS_X_AXIS);
+        let q2 = Quaternion::from_angle_axis(player.entity.rotation_deg.y + self.angle_around_player, &Vector3f::POS_Y_AXIS);
+        let rot = q2 * q1;
+        self.up = Quaternion::rotate_vector(&Vector3f::POS_Y_AXIS, &rot);
                 
         self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
     }

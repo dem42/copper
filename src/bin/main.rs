@@ -34,7 +34,6 @@ use copper::entities::{
     DebugEntity,
 };
 use copper::math::{
-    Quaternion,
     Vector2f,
     Vector3f,
 };
@@ -78,8 +77,6 @@ fn main() {
         
     while !display.is_close_requested() {
 
-        //rotate_debug_entity(&mut scene.debug_entity, &display);
-
         scene.camera.move_camera(&display, &scene.player);
         
         update_mouse_picker_and_move_lamp(&mut mouse_picker, &display, &mut scene);
@@ -119,22 +116,6 @@ fn spin_around_normal_mapped_entities(scene: &mut Scene, display: &Display) {
     for idx in 0..scene.normal_mapped_entities.len() {
         scene.normal_mapped_entities[idx].increase_rotation(0.0, 0.0, SPEED * display.frame_time_sec);
     }
-}
-
-fn rotate_debug_entity(debug_entity: &mut DebugEntity, display: &Display) {
-    let mut comp_q = Quaternion::identity();
-
-    if debug_entity.rotation.x != -20.0 {
-        debug_entity.rotation.x = -20.0;
-        let qc = Quaternion::from_angle_axis(debug_entity.rotation.x, &Vector3f::new(1.0, 0.0, 0.0));
-        comp_q = comp_q * qc;
-    }
-    
-    debug_entity.rotation.y = 6.0 * display.frame_time_sec;     
-    let qc = Quaternion::from_angle_axis(debug_entity.rotation.y, &Vector3f::new(0.0, 1.0, 0.0));
-    comp_q = comp_q * qc;       
-    
-    debug_entity.position = Quaternion::rotate_vector(&debug_entity.position, &comp_q);
 }
 
 fn init_scene_resources(resource_manager: &mut ResourceManager) {
@@ -265,15 +246,14 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
 
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
-    let shadow_map = framebuffers.shadowmap_fbo.depth_texture;
+    let _shadow_map = framebuffers.shadowmap_fbo.depth_texture;
     let guis = vec!{
         GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
-        GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
+        //GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
     };
 
-    let lights = vec!{
-        //Light::new_infinite(Vector3f::new(-10000.0, 10000.0, 5000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
+    let lights = vec!{        
         Light::new_infinite(Vector3f::new(5000.0, 10000.0, 5000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
         Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),

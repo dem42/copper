@@ -170,6 +170,19 @@ mod tests {
     }
 
     #[test]
+    fn test_hamilton_product_with_0() {
+        let q1 = Quaternion::new(0.1, -0.1, 0.0, 0.0);
+        let q2 = Quaternion::new(0.0, 0.0, 1.0, 0.0);        
+
+        let res = q1 * q2;
+        let expected = [0.0,0.0,0.1,-0.1];
+
+        for i in 0..4 {
+            assert_f32_eq!(expected[i], res[i], test_constants::EPS_MEDIUM, &format!("Mismatch on pos: {}.", i));
+        }        
+    }
+
+    #[test]
     fn test_to_rot_mat() {
         let mut q = Quaternion::new(4.0, 1.0, 2.0, -3.0);
         q.normalize();

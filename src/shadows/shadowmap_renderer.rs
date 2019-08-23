@@ -70,8 +70,11 @@ impl ShadowMapRenderer {
     }
 
     pub fn prepare_textured_model(&mut self, model: &TexturedModel) {
+        gl::active_texture(gl::TEXTURE0);        
+        gl::bind_texture(gl::TEXTURE_2D, model.texture.tex_id);
         gl::bind_vertex_array(model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+        gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);        
     }
 
     pub fn render(&mut self, entities: &Vec<&Entity>) {        
@@ -90,15 +93,16 @@ impl ShadowMapRenderer {
         gl::draw_elements(gl::TRIANGLES, entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);            
     }
 
-    pub fn cleanup_textured_model(&mut self) {
+    pub fn cleanup_textured_model(&mut self) {        
         gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
+        gl::disable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
         gl::bind_vertex_array(0);
     }
 
     pub fn render_terrain(&mut self, terrains: &Vec<Terrain>) {
         for terrain in terrains.iter() {
             gl::bind_vertex_array(terrain.model.raw_model.vao_id);
-            gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+            gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);            
             
             let terrain_pos = Vector3f::new(terrain.x as f32, 0.0, terrain.z as f32);
             let terrain_rot = Vector3f::new(0.0, 0.0, 0.0);
@@ -111,7 +115,7 @@ impl ShadowMapRenderer {
             self.shadow_shader.load_mvp_matrix(&self.mvp_matrix);
             gl::draw_elements(gl::TRIANGLES, terrain.model.raw_model.vertex_count, gl::UNSIGNED_INT);
 
-            gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
+            gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);            
         }
         gl::bind_vertex_array(0);
     }

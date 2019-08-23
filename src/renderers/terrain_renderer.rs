@@ -5,6 +5,7 @@ use crate::entities::{
     Terrain,
 };
 use crate::shaders::TerrainShader;
+use crate::shadows::shadow_box::ShadowBox;
 use crate::math::{
     Matrix4f,
     Vector3f,
@@ -39,6 +40,7 @@ impl TerrainRenderer {
         self.shader.load_view_matrix(camera);  
         self.shader.load_sky_color(sky_color);
         self.shader.load_to_shadowmap_space(&to_shadowmap_space);
+        self.shader.load_shadow_distance(ShadowBox::SHADOW_DISTANCE);
 
         gl::active_texture(gl::TEXTURE5);
         gl::bind_texture(gl::TEXTURE_2D, shadow_map_texture);

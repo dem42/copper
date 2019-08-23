@@ -17,12 +17,16 @@ uniform mat4 transform;
 uniform mat4 projection_matrix;
 uniform mat4 view_matrix;
 uniform mat4 to_shadowmap_space;
+uniform float shadow_distance;
 
 uniform vec3 light_pos[NUM_LIGHTS];
 
 // fog stuff
 const float fog_density = 0.007;
 const float fog_gradient = 1.5;
+
+// shadow stuff
+const float shadow_transition_distance = 10.0;
 
 // clipping plane for water rendering
 uniform vec4 clip_plane;
@@ -52,4 +56,8 @@ void main(void) {
     float distance_to_eye = length(eye_space_position.xyz);
     float fog_vis_coef = exp(-pow(distance_to_eye * fog_density, fog_gradient));
     visibility = clamp(fog_vis_coef, 0.0, 1.0);
+
+    float to_shadow_box_edge_dist = distance_to_eye - (shadow_distance - shadow_transition_distance);
+    float excess_of_transition = to_shadow_box_edge_dist / shadow_transition_distance;
+    shadow_coords.w = 1 - clamp(excess_of_transition, 0, 1);
 }

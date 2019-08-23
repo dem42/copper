@@ -20,6 +20,7 @@ impl ShadowShader {
             "res/shaders/shadows/shadowFragmentShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");
+                shader_prog.bind_attribute(RawModel::TEX_COORD_ATTRIB, "in_texture_coords");
             },
             |shader_prog| {
                 location_mvp_matrix = shader_prog.get_uniform_location("mvp_matrix");
