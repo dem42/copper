@@ -42,12 +42,8 @@ impl Matrix4f {
     fn change_of_basis_3d(x: &Vector3f, y: &Vector3f, z: &Vector3f) -> Matrix4f {
         let mut data = [[0.0f32; 4]; 4];        
         for i in 0..3 {
-            data[i][0] = x[i];
-        }
-        for i in 0..3 {
-            data[i][1] = y[i];
-        }
-        for i in 0..3 {
+            data[i][0] = x[i];        
+            data[i][1] = y[i];        
             data[i][2] = z[i];
         }
         data[3][3] = 1.0;        
@@ -164,6 +160,34 @@ impl Matrix4f {
     
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
         Self::look_at(&camera.position, &camera.looking_at, &camera.up)
+        //Self::create_fps_view_matrix(&camera.position, -camera.pitch, camera.yaw)
+    }
+
+    // the allowed range for camera pitch (assuming pitch rot around X axis) is [-90, 90]
+    // the allowed range for camera yaw (assuming yaw row around Y axis) is [0, 360]
+    // the reason for ptich limit is due to yaw rotation. it would have to be reversed if you go out of the range
+    // since rotation is measures in RHS as counter-clockwise from z to x and being upside down would mean the rotation would need to be clockwise
+    pub fn create_fps_view_matrix(eye_position: &Vector3f, pitch: f32, yaw: f32) -> Matrix4f {
+        let mut view_mat = Matrix4f::zeros();
+        let (sa, ca) = pitch.to_radians().sin_cos();
+        let (sb, cb) = yaw.to_radians().sin_cos();
+        // the axis are rows because we are already dealing with the inverted camera transform matrix
+        // the resulting view matrix is meant to turn everything around X axis by pitch and around Y by yaw
+        // disregard the pitch and yaw terms ... this is more like the pitch yaw of an object alined around -z
+        // V = M^-1 = (T*Ry*Rx)^-1
+        let xaxis = Vector3f::new(cb, 0.0,-sb);
+        let yaxis = Vector3f::new(sa*sb, ca, cb*sa);
+        let zaxis = Vector3f::new(ca*sb, -sa, ca*cb);
+        for i in 0..3 {
+            view_mat[0][i] = xaxis[i];
+            view_mat[0][3] = -(eye_position.dot_product(&xaxis));
+            view_mat[1][i] = yaxis[i];
+            view_mat[1][3] = -(eye_position.dot_product(&yaxis));
+            view_mat[2][i] = zaxis[i];
+            view_mat[2][3] = -(eye_position.dot_product(&zaxis));
+        }
+        view_mat[3][3] = 1.0;
+        view_mat
     }
 
     pub fn create_view_matrix0(camera: &Camera) -> Matrix4f {

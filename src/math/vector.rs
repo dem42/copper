@@ -20,8 +20,12 @@ impl Vector4f {
         Vector4f { x, y, z, w}
     }
 
-    pub fn from_point(v: &Vector3f) -> Vector4f {
+    pub fn point(v: &Vector3f) -> Vector4f {
         Vector4f { x: v.x, y: v.y, z: v.z, w: 1.0}
+    }
+
+    pub fn vector(v: &Vector3f) -> Vector4f {
+        Vector4f { x: v.x, y: v.y, z: v.z, w: 0.0}
     }
 
     pub fn xyz(self) -> Vector3f {

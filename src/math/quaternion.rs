@@ -88,8 +88,8 @@ impl Quaternion {
 
     pub fn rotate_vector(vector: &Vector3f, quaternion: &Quaternion) -> Vector3f {
         let v_as_q = Quaternion { a: 0.0, v: vector.clone() };
-        let recip = quaternion.reciprocal();
-        let res = (quaternion * v_as_q) * recip;        
+        let quaterion_conj = quaternion.reciprocal();
+        let res = (quaternion * v_as_q) * quaterion_conj; 
         res.v
     }
 }
@@ -210,7 +210,7 @@ mod tests {
         q.normalize();        
         let mat = q.as_rot_mat();
 
-        let mut expected = mat.transform(&Vector4f::from_point(&tv)).xyz();
+        let mut expected = mat.transform(&Vector4f::point(&tv)).xyz();
         expected.normalize();
         let mut result = Quaternion::rotate_vector(&tv, &q);
         result.normalize();

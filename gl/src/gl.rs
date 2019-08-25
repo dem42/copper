@@ -187,7 +187,11 @@ pub fn uniform_matrix4f(location_id: i32, matrix: &[[f32; 4]; 4]) {
     unsafe {        
         // hope this cast is ok .. in memory the 4x4 array should be just a block of 16 floats
         // in row major order since rust uses row major 
-        let transpose = TRUE; // true implies row major order (is rust always gonna be row major?)
+        // opengl matrices use same memory layout as directx which means they want the x,y,z vectors in order in memory (axes of matrix coord system)
+        // and then followed by the p vector [x.x, x.y, ...., p.x, p.y, p.z, 1] in memory
+        // since rust is row major where our first row is [x.x, y.x, z.x, p.x] for example we need to make sure that
+        // the memory is transposed so that it has the shape that opengl expects (the one we can use to premultiply)
+        let transpose = TRUE; // true implies row major order (is rust always gonna be row major or machine dependent?)
         UniformMatrix4fv(location_id, 1, transpose, matrix.as_ptr() as *const f32);
     }
 }

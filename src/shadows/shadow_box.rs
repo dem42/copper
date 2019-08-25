@@ -199,7 +199,7 @@ impl ShadowBox {
 
     fn calc_lightspace_frustum_corner(start_ptn: &Vector3f, direction: &Vector3f, width: f32, light_view_mat: &Matrix4f) -> Vector4f {
         let point = start_ptn + (direction * width);
-        let point = Vector4f::from_point(&point);
+        let point = Vector4f::point(&point);
         light_view_mat.transform(&point)
     }
  

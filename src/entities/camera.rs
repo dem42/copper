@@ -2,6 +2,7 @@ use std::f32;
 use crate::math::{
     Quaternion,
     Vector3f,
+    Vector4f,
 };
 use crate::display::{
     Display,
@@ -58,14 +59,21 @@ impl Camera {
         let (x_offset, z_offset) = (camera_horizontal_offset_to_player * s, camera_horizontal_offset_to_player * c);
 
         let player_pos = &player.entity.position;
-        self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);        
-        
+        self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);                
         self.looking_at = player.entity.position.clone();
-        let q1 = Quaternion::from_angle_axis(-self.pitch, &Vector3f::POS_X_AXIS);
+
+        let q1 = Quaternion::from_angle_axis(self.pitch, &Vector3f::POS_X_AXIS);
         let q2 = Quaternion::from_angle_axis(player.entity.rotation_deg.y + self.angle_around_player, &Vector3f::POS_Y_AXIS);
+        // combining like this is like an extrinsic rotation (q1 * q2 would be intrinsic)
         let rot = q2 * q1;
+        let mut to_p = &self.looking_at - &self.position;        
         self.up = Quaternion::rotate_vector(&Vector3f::POS_Y_AXIS, &rot);
-                
+        //self.up = rot_mat.transform(&Vector4f::POS_Y_AXIS).xyz();
+        //to_p = rot_mat.transform(&Vector4f::vector(&to_p)).xyz();
+        //self.up.normalize();
+        to_p.normalize();
+        println!("{:?} and {}", self.up, to_p.dot_product(&self.up));
+
         self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
     }
 
