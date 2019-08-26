@@ -65,7 +65,7 @@ fn main() {
     let mut framebuffers = Framebuffers::new(&display);
     let mut resource_manager = ResourceManager::default();
 
-    let mut scene = create_test_scene(&mut resource_manager, &framebuffers);
+    let mut scene = create_scene(&mut resource_manager, &framebuffers);
     
     let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();
@@ -246,11 +246,11 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
 
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
-    let _shadow_map = framebuffers.shadowmap_fbo.depth_texture;
+    let shadow_map = framebuffers.shadowmap_fbo.depth_texture;
     let guis = vec!{
         GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
-        //GuiPanel::new(shadow_map, Vector2f::new(0.5, 0.5), Vector2f::new(0.5, 0.5)),
+        GuiPanel::new(shadow_map, Vector2f::new(0.7, 0.7), Vector2f::new(0.3, 0.3)),
     };
 
     let lights = vec!{        

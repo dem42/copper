@@ -160,6 +160,7 @@ impl Matrix4f {
     
     pub fn create_view_matrix(camera: &Camera) -> Matrix4f {
         Self::look_at(&camera.position, &camera.looking_at, &camera.up)
+        // dont use this since it is restricted in the pitch angle altho it does work
         //Self::create_fps_view_matrix(&camera.position, -camera.pitch, camera.yaw)
     }
 

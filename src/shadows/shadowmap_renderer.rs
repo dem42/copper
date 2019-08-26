@@ -52,7 +52,7 @@ impl ShadowMapRenderer {
     pub fn start_render(&mut self, camera: &Camera, sun: &Light) {        
         // testing with thinmatrix impl
         // self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);
-        self.update_world_to_lightspace(&sun.position);
+        self.update_world_to_lightspace(&sun.position, camera);
         self.shadow_box.update(camera, &self.world_to_lightspace);
         //self.shadow_box.update_odd(camera, &self.world_to_lightspace);
         //self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
@@ -132,19 +132,31 @@ impl ShadowMapRenderer {
         res
     }
 
-    fn update_world_to_lightspace(&mut self, sun_direction: &Vector3f) {
-        let center = &self.shadow_box.world_space_center;        
+    fn calc_light_pitch_yaw_dg(to_light_direction: &Vector3f) -> (f32, f32) {
+        let yaw = (-to_light_direction.x).atan2(-to_light_direction.z);
+        let pitch = (-to_light_direction.y / to_light_direction.length()).asin();
+        (pitch.to_degrees(), yaw.to_degrees())
+    }
+
+    fn update_world_to_lightspace(&mut self, sun_direction: &Vector3f, camera: &Camera) {
         let mut normalized_sun_dir = sun_direction.clone();
         normalized_sun_dir.normalize();
-        let sun_position = center + ((ShadowBox::SHADOW_DISTANCE / 2.0) * &normalized_sun_dir);
-        // y axis up could be the same direction as the light .. so we rotate the sun direction by 90degs to get up
-        // what if light is behind ?
-        let mut up = Vector3f::POS_Y_AXIS;
-        if Vector3f::parallel(&up, &normalized_sun_dir) {
-            up = Vector3f::POS_Z_AXIS;
-        }
-        //let up = Quaternion::rotate_vector(&normalized_sun_dir, &Quaternion::from_angle_axis(90.0, &Vector3f::POS_X_AXIS));        
-        self.world_to_lightspace = Matrix4f::look_at(&sun_position, center, &up);
+        let sun_position = camera.looking_at.clone() + ((ShadowBox::SHADOW_DISTANCE / 4.0) * &normalized_sun_dir);
+        let (pitch, yaw) = Self::calc_light_pitch_yaw_dg(sun_direction);
+        self.world_to_lightspace = Matrix4f::create_fps_view_matrix(&sun_position, pitch, yaw);
+
+        // let center = &self.shadow_box.world_space_center;        
+        // let mut normalized_sun_dir = sun_direction.clone();
+        // normalized_sun_dir.normalize();
+        // let sun_position = center + ((ShadowBox::SHADOW_DISTANCE / 2.0) * &normalized_sun_dir);
+        // // y axis up could be the same direction as the light .. so we rotate the sun direction by 90degs to get up
+        // // what if light is behind ?
+        // let mut up = Vector3f::POS_Y_AXIS;
+        // if Vector3f::parallel(&up, &normalized_sun_dir) {
+        //     up = Vector3f::POS_Z_AXIS;
+        // }
+        // //let up = Quaternion::rotate_vector(&normalized_sun_dir, &Quaternion::from_angle_axis(90.0, &Vector3f::POS_X_AXIS));        
+        // self.world_to_lightspace = Matrix4f::look_at(&sun_position, center, &up);
     }
 
     fn update_world_to_lightspace0(&mut self, pitch: f32, yaw: f32) {

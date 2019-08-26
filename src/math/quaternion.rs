@@ -89,7 +89,14 @@ impl Quaternion {
     pub fn rotate_vector(vector: &Vector3f, quaternion: &Quaternion) -> Vector3f {
         let v_as_q = Quaternion { a: 0.0, v: vector.clone() };
         let quaterion_conj = quaternion.reciprocal();
-        let res = (quaternion * v_as_q) * quaterion_conj; 
+        let res = quaternion * v_as_q * quaterion_conj;
+        res.v
+    }
+
+    // reflection through origin
+    pub fn reflect_point(point: &Vector3f, quaternion: &Quaternion) -> Vector3f {
+        let v_as_q = Quaternion { a: 0.0, v: point.clone() };        
+        let res = quaternion * v_as_q * quaternion;
         res.v
     }
 }

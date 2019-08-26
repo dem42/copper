@@ -131,6 +131,11 @@ impl ShadowBox {
         corners
     }
     
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// This method of calculating the dynamic shadow box is copied from thinmatrix
+    /// it uses the idea of changing the frustum to view space where the bounding cuboid is axis aligned so we can find the bounding cuboid 
+    /// by looking at the max, min coordinates
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     fn update_size_odd(&mut self, camera: &Camera, light_view_mat: &Matrix4f) {
         let change_basis = Matrix4f::camera_change_of_basis(&camera.position, &camera.looking_at, &camera.up);
         let forward_vec = change_basis.transform(&Vector4f::NEG_Z_AXIS).xyz();
@@ -203,6 +208,10 @@ impl ShadowBox {
         light_view_mat.transform(&point)
     }
  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// this is my implementation of the idea of calculating the view cuboid by expressing frustum in view reference frame
+    /// and then since there the cuboid is axis-aligned to calculate it we find the mins and maxes     
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     fn update_shadow_box_size(&mut self, camera: &Camera, light_basis_mat: &Matrix4f) {
         // we want to project things to the light space which should act as a view space (eye space)
         // therefore our rotation uses the negative angles since we want things to move in the opposite direction         
@@ -244,6 +253,13 @@ impl ShadowBox {
         //self.world_space_center = (1.0 / corners.len() as f32) * avg;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// This algo attempts to avoid having to project to the lightspace since i was worried about the
+    /// cicrular dependency even though it should be ok. The idea of the algo is that in the lightspace matrix we have the normal vectors
+    /// of the planes of the bounding cuboid (since the vectors are the axis which are normal to the cuboid if the cuboid is on origin)
+    /// then we compute the dot product of each plane normal with world space frustum corners
+    /// that gives us distances to the planes and we can use combinations of these distances to find the corners of the bounding cuboid
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     fn update_shadow_box_dot_with_planes_algo(&mut self, camera: &Camera, world_to_lightspace: &Matrix4f) {
 
         self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(&self.frustum_corners, world_to_lightspace);

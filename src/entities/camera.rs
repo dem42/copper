@@ -66,13 +66,7 @@ impl Camera {
         let q2 = Quaternion::from_angle_axis(player.entity.rotation_deg.y + self.angle_around_player, &Vector3f::POS_Y_AXIS);
         // combining like this is like an extrinsic rotation (q1 * q2 would be intrinsic)
         let rot = q2 * q1;
-        let mut to_p = &self.looking_at - &self.position;        
         self.up = Quaternion::rotate_vector(&Vector3f::POS_Y_AXIS, &rot);
-        //self.up = rot_mat.transform(&Vector4f::POS_Y_AXIS).xyz();
-        //to_p = rot_mat.transform(&Vector4f::vector(&to_p)).xyz();
-        //self.up.normalize();
-        to_p.normalize();
-        println!("{:?} and {}", self.up, to_p.dot_product(&self.up));
 
         self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
     }
