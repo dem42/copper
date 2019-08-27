@@ -8,7 +8,6 @@ use crate::entities::{
 use crate::gl;
 use crate::math::{
     Matrix4f,
-    Quaternion,
     Vector3f,
 };
 use crate::models::{
@@ -25,7 +24,6 @@ pub struct ShadowMapRenderer {
     bias: Matrix4f,
     vp_matrix: Matrix4f,
     mvp_matrix: Matrix4f,
-    //test_proj_matrix: Matrix4f,
 }
 
 impl ShadowMapRenderer {
@@ -37,7 +35,6 @@ impl ShadowMapRenderer {
         let shadow_shader = ShadowShader::new();
         let vp_matrix = Matrix4f::identity();
         let mvp_matrix = Matrix4f::identity();
-        //let proj_mat = Matrix4f::create_projection_matrix(-50.0, -100.0, Display::FOV_HORIZONTAL, aspect_ratio);
         ShadowMapRenderer {
             shadow_shader,
             shadow_box,
@@ -45,17 +42,14 @@ impl ShadowMapRenderer {
             bias,
             vp_matrix,
             mvp_matrix,
-            //test_proj_matrix: proj_mat,
         }
     }
 
-    pub fn start_render(&mut self, camera: &Camera, sun: &Light) {        
-        // testing with thinmatrix impl
-        // self.shadow_box.update(camera, light_pitch_dg, light_yaw_dg);
-        self.update_world_to_lightspace(&sun.position, camera);
-        self.shadow_box.update(camera, &self.world_to_lightspace);
-        //self.shadow_box.update_odd(camera, &self.world_to_lightspace);
-        //self.update_world_to_lightspace(light_pitch_dg, light_yaw_dg);
+    pub fn start_render(&mut self, camera: &Camera, sun: &Light) {                
+        let (pitch, yaw) = Self::calc_light_pitch_yaw_dg(&sun.position);
+        let world_to_lightspace_non_moving = Matrix4f::create_fps_view_matrix(&Vector3f::ZERO, pitch, yaw);
+        self.shadow_box.update(camera, &world_to_lightspace_non_moving);        
+        self.update_world_to_lightspace(pitch, yaw);
         
         gl::enable(gl::DEPTH_TEST);
         gl::clear(gl::DEPTH_BUFFER_BIT);
@@ -64,9 +58,6 @@ impl ShadowMapRenderer {
         self.vp_matrix.make_identity();
         self.vp_matrix.pre_multiply_in_place(&self.world_to_lightspace);
         self.vp_matrix.pre_multiply_in_place(&self.shadow_box.ortho_proj_mat);
-        // self.vp_matrix.multiply_in_place(&self.test_proj_matrix);
-        // let cam_view = Matrix4f::create_view_matrix(camera);
-        // self.vp_matrix.multiply_in_place(&cam_view);
     }
 
     pub fn prepare_textured_model(&mut self, model: &TexturedModel) {
@@ -138,38 +129,14 @@ impl ShadowMapRenderer {
         (pitch.to_degrees(), yaw.to_degrees())
     }
 
-    fn update_world_to_lightspace(&mut self, sun_direction: &Vector3f, camera: &Camera) {
-        let mut normalized_sun_dir = sun_direction.clone();
-        normalized_sun_dir.normalize();
-        let sun_position = camera.looking_at.clone() + ((ShadowBox::SHADOW_DISTANCE / 4.0) * &normalized_sun_dir);
-        let (pitch, yaw) = Self::calc_light_pitch_yaw_dg(sun_direction);
-        self.world_to_lightspace = Matrix4f::create_fps_view_matrix(&sun_position, pitch, yaw);
-
-        // let center = &self.shadow_box.world_space_center;        
-        // let mut normalized_sun_dir = sun_direction.clone();
-        // normalized_sun_dir.normalize();
-        // let sun_position = center + ((ShadowBox::SHADOW_DISTANCE / 2.0) * &normalized_sun_dir);
-        // // y axis up could be the same direction as the light .. so we rotate the sun direction by 90degs to get up
-        // // what if light is behind ?
-        // let mut up = Vector3f::POS_Y_AXIS;
-        // if Vector3f::parallel(&up, &normalized_sun_dir) {
-        //     up = Vector3f::POS_Z_AXIS;
-        // }
-        // //let up = Quaternion::rotate_vector(&normalized_sun_dir, &Quaternion::from_angle_axis(90.0, &Vector3f::POS_X_AXIS));        
-        // self.world_to_lightspace = Matrix4f::look_at(&sun_position, center, &up);
-    }
-
-    fn update_world_to_lightspace0(&mut self, pitch: f32, yaw: f32) {
-        self.world_to_lightspace.make_identity();        
+    fn update_world_to_lightspace(&mut self, pitch: f32, yaw: f32) {
+        // this is a different to_lightspace matrix -> namely this one is moving whilst the one we compute in start_render is static
+        // the reason this is important is that this allows us to remove the circular dependency between computing the center of the shadowbox
+        // and using the center to compute the to_lightspace matrix
+        // if the dependency is there then the frustum bounding box (shadow box) jumps around too much which seems to causes it to not correctly center on the player        
         let center = &self.shadow_box.world_space_center;
-        self.world_to_lightspace.translate(&(-center));
-        // check create_view_matrix for explanation of why the signs are so odd here
-        // the idea is again the same as in view matrix .. we want to transform from world coords to this reference frame
-        // so we should take the inverse of the model matrix of light space .. but there are issues with just an inverse as explained in comment to create_view_matrix
-        let angles = Vector3f::new(pitch, -yaw, 0.0);
-        self.world_to_lightspace.rotate(&angles);
+        self.world_to_lightspace = Matrix4f::create_fps_view_matrix(center, pitch, yaw);
     }
-
     // we want to use the lightspace transform in a shader to sample from the depth map
     // the projection to lightspace ndc coords will leave us in the unit cube [-1,1]
     // but a texture has coords in range [0,1] so we use the bias matrix to apply the conversion directly to the matrix

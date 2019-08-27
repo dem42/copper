@@ -92,7 +92,7 @@ impl MasterRenderer {
         debug_entity.position = self.shadowmap_renderer.shadow_box.world_space_center.clone();
         debug_entity.scale = Vector3f::new(100.0, 100.0, 100.0);
         //debug_entity.scale = 0.80 * Vector3f::new(self.shadowmap_renderer.shadow_box.width, self.shadowmap_renderer.shadow_box.height, self.shadowmap_renderer.shadow_box.length);
-        self.debug_renderer.render_cube(debug_entity, camera);
+        //self.debug_renderer.render_cube(debug_entity, camera);
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 

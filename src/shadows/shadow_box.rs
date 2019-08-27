@@ -35,7 +35,7 @@ pub struct ShadowBox {
 
 impl ShadowBox {
     pub const OFFSET: f32 = 10.0;
-    pub const SHADOW_DISTANCE: f32 = 300.0;
+    pub const SHADOW_DISTANCE: f32 = 100.0;
 
     pub fn new(aspect_ratio: f32, fov_deg: f32, near: f32, far: f32) -> Self {
        let (farplane_width, farplane_height, nearplane_width, nearplane_height) = ShadowBox::compute_frustum_sizes(aspect_ratio, fov_deg, near.abs(), far.abs());
@@ -57,16 +57,15 @@ impl ShadowBox {
         }
     }
 
-    // does it make sense to transform to light space if all we care about is the world space center
-    // and the size of the shadow box (for orthographic projection)
-    // a composition of translation and rotation which the transform is a rigid transformation which means it preserves distance between points
+    // does it make sense to transform to light space if all we care about is the world space center? -- yes -> 
+    // at best in world space you could get the diagonal of the frustum and just create a shadowbox of that size (works btw) but otherwise the shadowbox size changes
+    // based on the frustum angle    
     pub fn update(&mut self, camera: &Camera, world_to_lightspace: &Matrix4f) {        
         let frustum_corners_ws = self.get_frustum_corners_ws(camera);
         self.frustum_corners = frustum_corners_ws.clone();
 
-        self.update_shadow_box_size(camera, world_to_lightspace);
-        //self.update_size_odd(camera, &light_view_mat);
-        //self.update_shadow_box_dot_with_planes_algo();
+        self.update_shadow_box_size(world_to_lightspace);        
+        //self.update_shadow_box_dot_with_planes_algo(world_to_lightspace);
 
         self.ortho_proj_mat[0][0] = 2.0 / self.width;
         self.ortho_proj_mat[1][1] = 2.0 / self.height;
@@ -130,89 +129,12 @@ impl ShadowBox {
         }
         corners
     }
-    
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    /// This method of calculating the dynamic shadow box is copied from thinmatrix
-    /// it uses the idea of changing the frustum to view space where the bounding cuboid is axis aligned so we can find the bounding cuboid 
-    /// by looking at the max, min coordinates
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    fn update_size_odd(&mut self, camera: &Camera, light_view_mat: &Matrix4f) {
-        let change_basis = Matrix4f::camera_change_of_basis(&camera.position, &camera.looking_at, &camera.up);
-        let forward_vec = change_basis.transform(&Vector4f::NEG_Z_AXIS).xyz();
-
-        let to_far = Self::SHADOW_DISTANCE * forward_vec.clone();
-        let to_near = (-self.near_plane) * forward_vec.clone();
-        let center_near = &camera.position + to_near;
-        let center_far = &camera.position + to_far;
-
-        let inv_light = light_view_mat.inverse();
-
-        let points = self.calc_frustum_vertices(light_view_mat, &change_basis, &forward_vec, &center_near, &center_far);
         
-        let mut min_v = Vector4f::new(f32::MAX, f32::MAX, f32::MAX, 0.0);
-        let mut max_v = Vector4f::new(f32::MIN, f32::MIN, f32::MIN, 0.0);
-        //  let mut min_v = Vector4f::new(0.0, 0.0, 0.0, 0.0);
-        //  let mut max_v = Vector4f::new(500.0, 500.0, 500.0, 0.0);
-
-        for pt in points.into_iter() {
-            min_v.x = f32_min(min_v.x, pt.x);
-            min_v.y = f32_min(min_v.y, pt.y);
-            min_v.z = f32_min(min_v.z, pt.z);
-            max_v.x = f32_max(max_v.x, pt.x);
-            max_v.y = f32_max(max_v.y, pt.y);
-            max_v.z = f32_max(max_v.z, pt.z);
-        }        
-        self.width = max_v.x - min_v.x;
-        self.height = max_v.y - min_v.y;
-        self.length = max_v.z - min_v.z;
-
-        self.ortho_proj_mat[0][0] = 2.0 / self.width;
-        self.ortho_proj_mat[1][1] = 2.0 / self.height;
-        self.ortho_proj_mat[2][2] = -2.0 / self.length;
-        
-        let mut cen = 0.5 * (max_v + min_v);
-        cen.w = 1.0;
-        
-        //self.world_space_center = camera.looking_at.clone();
-        self.world_space_center = inv_light.transform(&cen).xyz();
-    }
-
-    fn calc_frustum_vertices(&self, light_view_mat: &Matrix4f, rotation: &Matrix4f, forward_vec: &Vector3f, center_near: &Vector3f, center_far: &Vector3f) -> [Vector4f; 8] {
-        let mut res: [Vector4f; 8] = Default::default();        
-        let up_vec = rotation.transform(&Vector4f::POS_Y_AXIS).xyz();
-        let right_vec = rotation.transform(&Vector4f::POS_X_AXIS).xyz();
-        let down_vec = &up_vec * -1.0;
-        let left_vec = &right_vec * -1.0;
-        
-        let far_top = center_far + (&up_vec * self.farplane_height);
-        let far_bottom = center_far + (&down_vec * self.farplane_height);
-
-        let near_top = center_near + (&up_vec * self.nearplane_height);
-        let near_bottom = center_near + (&down_vec * self.nearplane_height);
-
-        res[0] = Self::calc_lightspace_frustum_corner(&far_top, &right_vec, self.farplane_width, light_view_mat);
-        res[1] = Self::calc_lightspace_frustum_corner(&far_top, &left_vec, self.farplane_width, light_view_mat);
-        res[2] = Self::calc_lightspace_frustum_corner(&far_bottom, &right_vec, self.farplane_width, light_view_mat);
-        res[3] = Self::calc_lightspace_frustum_corner(&far_bottom, &left_vec, self.farplane_width, light_view_mat);
-        res[4] = Self::calc_lightspace_frustum_corner(&near_top, &right_vec, self.nearplane_width, light_view_mat);
-        res[5] = Self::calc_lightspace_frustum_corner(&near_top, &left_vec, self.nearplane_width, light_view_mat);
-        res[6] = Self::calc_lightspace_frustum_corner(&near_bottom, &right_vec, self.nearplane_width, light_view_mat);
-        res[7] = Self::calc_lightspace_frustum_corner(&near_bottom, &left_vec, self.nearplane_width, light_view_mat);
-
-        res
-    }
-
-    fn calc_lightspace_frustum_corner(start_ptn: &Vector3f, direction: &Vector3f, width: f32, light_view_mat: &Matrix4f) -> Vector4f {
-        let point = start_ptn + (direction * width);
-        let point = Vector4f::point(&point);
-        light_view_mat.transform(&point)
-    }
- 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     /// this is my implementation of the idea of calculating the view cuboid by expressing frustum in view reference frame
     /// and then since there the cuboid is axis-aligned to calculate it we find the mins and maxes     
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    fn update_shadow_box_size(&mut self, camera: &Camera, light_basis_mat: &Matrix4f) {
+    pub fn update_shadow_box_size(&mut self, light_basis_mat: &Matrix4f) {
         // we want to project things to the light space which should act as a view space (eye space)
         // therefore our rotation uses the negative angles since we want things to move in the opposite direction         
         let light_orient_inv = light_basis_mat.inverse();
@@ -260,7 +182,7 @@ impl ShadowBox {
     /// then we compute the dot product of each plane normal with world space frustum corners
     /// that gives us distances to the planes and we can use combinations of these distances to find the corners of the bounding cuboid
     //////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-    fn update_shadow_box_dot_with_planes_algo(&mut self, camera: &Camera, world_to_lightspace: &Matrix4f) {
+    pub fn update_shadow_box_dot_with_planes_algo(&mut self, world_to_lightspace: &Matrix4f) {
 
         self.obb_corners = ShadowBox::calc_bounding_cuboid_corners_ws(&self.frustum_corners, world_to_lightspace);
 
@@ -268,8 +190,7 @@ impl ShadowBox {
         self.height = distance(&self.obb_corners[0], &self.obb_corners[4]);
         self.length = distance(&self.obb_corners[0], &self.obb_corners[3]);
 
-        self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);
-        self.world_space_center = camera.looking_at.clone();
+        self.world_space_center = 0.5 * (&self.obb_corners[0] + &self.obb_corners[6]);        
     }
 
     fn calc_bounding_cuboid_corners_ws(corners: &[Vector3f; 8], light_basis_mat: &Matrix4f) -> [Vector3f; 8] {

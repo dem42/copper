@@ -48,13 +48,9 @@ void adjust_brightness(inout float diffuse_brightness, inout float specular_brig
 void main(void) {
 
     // compare depth with shadowmap depth to figure out if this piece of terrain is in shadow or not (absence of light due to something blocking it)
-    //float obj_depth_nearest_light = texture(shadow_map, vec2(shadow_coords.x, 1 - shadow_coords.y)).r;
     float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy).r;    
      
     float light_factor = 1.0 - step(obj_depth_nearest_light, shadow_coords.z)*0.6*shadow_coords.w;
-    if (shadow_coords.z < 0.5001) {
-        light_factor = 1.0;
-    }
 
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)
     vec4 blend_map_col = texture(blend_map_sampler, pass_tex_coord);
@@ -97,7 +93,5 @@ void main(void) {
     total_diffuse = max(total_diffuse, 0.2) * light_factor; // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
     
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * blended_texture_color + vec4(total_specular, 1.0);
-    out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
-    //out_Color = mix(out_Color, vec4(step(shadow_coords.z, obj_depth_nearest_light)), 0.999);
-    out_Color = mix(out_Color, vec4(obj_depth_nearest_light - shadow_coords.z) * 100.0, 0.999);
+    out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);    
 }
