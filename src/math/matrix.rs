@@ -67,12 +67,17 @@ impl Matrix4f {
         transform_mat
     }
     
-    pub fn create_particle_transform_matrix(translation: &Vector3f, rotation_z_deg: f32, scale: f32, camera_pitch: f32, camera_yaw: f32) -> Matrix4f {        
+    pub fn create_particle_transform_matrix(translation: &Vector3f, rotation_z_deg: f32, scale: f32, camera: &Camera) -> Matrix4f {
+        let camera_pitch = camera.pitch;
+        let camera_yaw = camera.yaw;        
         let mut transform_mat = Matrix4f::identity();
-        transform_mat.scale(&Vector3f::new(scale, scale, scale));
+        transform_mat.scale(&Vector3f::new(scale, scale, scale));                        
+        transform_mat.rotate(&Vector3f::new(0.0, 0.0, rotation_z_deg));
         // make sure particles always angle up with where the camera is in yaw and pitch
         // that way when we rotate them they will still face it. use signs opposite to the ones used to build create_view_matrix
-        transform_mat.rotate(&Vector3f::new(-camera_pitch, camera_yaw, rotation_z_deg));
+        // but note that this isnt the inverse of the camera (i think) it just makes sure that they face the right way -> inverse is troublesome due to translation
+        transform_mat.rotate(&Vector3f::new(-camera_pitch, 0.0, 0.0));
+        transform_mat.rotate(&Vector3f::new(0.0, camera_yaw, 0.0));
         transform_mat.translate(translation);
         transform_mat
     }

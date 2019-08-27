@@ -68,7 +68,7 @@ impl Camera {
         let rot = q2 * q1;
         self.up = Quaternion::rotate_vector(&Vector3f::POS_Y_AXIS, &rot);
 
-        self.yaw = player.entity.rotation_deg.y + self.angle_around_player - 180.0; // remove the rotation to get player model to face right way
+        self.yaw = (player.entity.rotation_deg.y + self.angle_around_player - 180.0) % 360.0; // remove the rotation to get player model to face right way
     }
 
     fn calc_zoom(&mut self, display: &Display) {
