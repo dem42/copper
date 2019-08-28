@@ -1,4 +1,7 @@
-use crate::display::Display;
+use crate::display::{
+    Display,
+    ShadowMapFBO,
+};
 use crate::entities::{
     Camera,
     Entity,
@@ -16,14 +19,16 @@ use crate::models::{
 };
 use super::shadow_box::ShadowBox;
 use super::shadow_shader::ShadowShader;
+use super::shadow_params::ShadowParams;
 
 pub struct ShadowMapRenderer {
     shadow_shader: ShadowShader,
     pub shadow_box: ShadowBox,
+    pub shadow_params: ShadowParams,
     world_to_lightspace: Matrix4f,    
     bias: Matrix4f,
     vp_matrix: Matrix4f,
-    mvp_matrix: Matrix4f,
+    mvp_matrix: Matrix4f,    
 }
 
 impl ShadowMapRenderer {
@@ -35,6 +40,13 @@ impl ShadowMapRenderer {
         let shadow_shader = ShadowShader::new();
         let vp_matrix = Matrix4f::identity();
         let mvp_matrix = Matrix4f::identity();
+
+        let shadow_params = ShadowParams {
+            shadow_map_texture: 0,
+            shadow_distance: ShadowBox::SHADOW_DISTANCE,
+            shadow_map_size: ShadowMapFBO::SHADOW_MAP_SIZE,
+        };
+
         ShadowMapRenderer {
             shadow_shader,
             shadow_box,
@@ -42,6 +54,7 @@ impl ShadowMapRenderer {
             bias,
             vp_matrix,
             mvp_matrix,
+            shadow_params,
         }
     }
 

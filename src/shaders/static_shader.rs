@@ -10,11 +10,13 @@ use crate::math::{
     Vector3f,
     Vector4f,
 };
+use crate::shadows::shadow_params::ShadowParams;
 
 const NUM_LIGHTS: usize = 4;
 
 pub struct StaticShader {
     program: ShaderProgram,
+    location_texture_sampler: i32,
     location_transformation_matrix: i32,
     location_projection_matrix: i32,
     location_view_matrix: i32,
@@ -28,11 +30,16 @@ pub struct StaticShader {
     location_texture_offset: i32,
     location_attenuation: [i32; NUM_LIGHTS],
     location_clip_plane: i32,
+    location_to_shadowmap_space: i32,
+    location_shadowmap: i32,
+    location_shadow_distance: i32,
+    location_shadow_map_size: i32,
 }
 
 impl StaticShader {
     pub fn new() -> StaticShader {
         let (
+            mut location_texture_sampler,
             mut location_transformation_matrix, 
             mut location_projection_matrix,
             mut location_view_matrix,
@@ -50,6 +57,13 @@ impl StaticShader {
             mut location_attenuation,
             mut location_clip_plane,
         ) = Default::default();
+
+        let (
+            mut location_to_shadowmap_space,
+            mut location_shadowmap,
+            mut location_shadow_distance,
+            mut location_shadow_map_size,
+        ) = Default::default();
         
         let shader_program = ShaderProgram::new(
             "res/shaders/entityVertexShader.glsl", 
@@ -60,6 +74,7 @@ impl StaticShader {
                 shader_prog.bind_attribute(RawModel::NORMAL_ATTRIB, "normal");
             },
             |shader_prog| {                
+                location_texture_sampler = shader_prog.get_uniform_location("texture_sampler");
                 location_transformation_matrix = shader_prog.get_uniform_location("transform");
                 location_projection_matrix = shader_prog.get_uniform_location("projection_matrix");
                 location_view_matrix = shader_prog.get_uniform_location("view_matrix");
@@ -87,10 +102,16 @@ impl StaticShader {
                     location_attenuation[i] = shader_prog.get_uniform_location(&format!("attenuation[{}]", i));
                 }
                 location_clip_plane = shader_prog.get_uniform_location("clip_plane");
+
+                location_to_shadowmap_space = shader_prog.get_uniform_location("to_shadowmap_space");
+                location_shadowmap = shader_prog.get_uniform_location("shadow_map");
+                location_shadow_distance = shader_prog.get_uniform_location("shadow_distance");
+                location_shadow_map_size = shader_prog.get_uniform_location("shadow_map_size");
         });
 
-        StaticShader {
+        StaticShader {            
             program: shader_program,
+            location_texture_sampler,
             location_transformation_matrix,
             location_projection_matrix,
             location_view_matrix,
@@ -104,6 +125,10 @@ impl StaticShader {
             location_texture_offset,
             location_attenuation,
             location_clip_plane,
+            location_to_shadowmap_space,
+            location_shadowmap,
+            location_shadow_distance,
+            location_shadow_map_size,
         }
     }
 
@@ -113,6 +138,11 @@ impl StaticShader {
 
     pub fn stop(&mut self) {
         self.program.stop();
+    }
+
+    pub fn connect_texture_units(&mut self) {
+        ShaderProgram::load_int(self.location_texture_sampler, 0);     
+        ShaderProgram::load_int(self.location_shadowmap, 1);
     }
 
     pub fn load_atlas_number_of_rows(&mut self, number_of_rows: usize) {
@@ -166,5 +196,14 @@ impl StaticShader {
 
     pub fn load_clip_plane(&mut self, clip_plane: &Vector4f) {
         ShaderProgram::load_vector4d(self.location_clip_plane, clip_plane);
+    }
+
+    pub fn load_to_shadowmap_space(&mut self, to_shadowmap_matrix: &Matrix4f) {
+        ShaderProgram::load_matrix(self.location_to_shadowmap_space, to_shadowmap_matrix);
+    }
+
+    pub fn load_shadow_params(&mut self, shadow_params: &ShadowParams) {
+        ShaderProgram::load_float(self.location_shadow_distance, shadow_params.shadow_distance);
+        ShaderProgram::load_float(self.location_shadow_map_size, shadow_params.shadow_map_size as f32);
     }
 }

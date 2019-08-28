@@ -11,10 +11,13 @@ out vec3 surface_normal;
 out vec3 light_direction[NUM_LIGHTS];
 out vec3 to_camera_dir;
 out float visibility;
+out vec4 shadow_coords;
 
 uniform mat4 transform;
 uniform mat4 projection_matrix;
 uniform mat4 view_matrix;
+uniform mat4 to_shadowmap_space;
+uniform float shadow_distance;
 
 uniform vec3 light_pos[NUM_LIGHTS];
 uniform float uses_fake_lighting;
@@ -27,11 +30,15 @@ uniform vec2 texture_offset;
 const float fog_density = 0.007;
 const float fog_gradient = 1.5;
 
+// shadow stuff
+const float shadow_transition_distance = 10.0;
+
 // clipping plane for water rendering
 uniform vec4 clip_plane;
 
 void main(void) {
     vec4 world_position = transform * vec4(pos, 1.0);
+    shadow_coords = to_shadowmap_space * world_position;
     // set what the distance to clipping plane 0 is from this vertex (negative will get culled, positive won't)
     // to compute distance of point from plane we substitute the point (or it's vec4 with w=1) into plane equation -> this is the same as taking dot product
     // because you are basically projecting the vector onto the plane normal and you get the magnitude of this vector in the direction of the normal
@@ -62,4 +69,8 @@ void main(void) {
     float distance_to_eye = length(eye_space_position.xyz);
     float fog_vis_coef = exp(-pow(distance_to_eye * fog_density, fog_gradient));
     visibility = clamp(fog_vis_coef, 0.0, 1.0);
+
+    float to_shadow_box_edge_dist = distance_to_eye - (shadow_distance - shadow_transition_distance);
+    float excess_of_transition = to_shadow_box_edge_dist / shadow_transition_distance;
+    shadow_coords.w = 1 - clamp(excess_of_transition, 0, 1);
 }

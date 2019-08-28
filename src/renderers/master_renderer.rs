@@ -3,7 +3,6 @@ use crate::display::{
     Display,
     Framebuffers,
     FramebufferObject,
-    ShadowMapFBO,
     WallClock,
 };
 use crate::gl;
@@ -84,7 +83,7 @@ impl MasterRenderer {
         display.restore_default_framebuffer();
 
         let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane, framebuffers.shadowmap_fbo.depth_texture);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
@@ -97,12 +96,13 @@ impl MasterRenderer {
     }
 
     fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
-                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>, _terrains: &Vec<Terrain>) {
+                normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>, terrains: &Vec<Terrain>) {
         
         gl::helper::push_debug_group(RenderGroup::SHADOW_MAP_PASS.id, RenderGroup::SHADOW_MAP_PASS.name);
 
         framebuffers.shadowmap_fbo.bind();
         self.shadowmap_renderer.start_render(camera, &lights[0]);
+        self.shadowmap_renderer.shadow_params.shadow_map_texture = framebuffers.shadowmap_fbo.depth_texture;
 
         // render into the shadowmap depth buffer all the entities that we want to cast shadows
         let entity_by_tex = MasterRenderer::group_entities_by_tex(entities);
@@ -122,6 +122,8 @@ impl MasterRenderer {
         self.shadowmap_renderer.prepare_textured_model(&player.entity.model);
         self.shadowmap_renderer.render_entity(&player.entity);
         self.shadowmap_renderer.cleanup_textured_model();
+
+        self.shadowmap_renderer.render_terrain(terrains);
 
         self.shadowmap_renderer.stop_render();
 
@@ -147,12 +149,12 @@ impl MasterRenderer {
         
         camera.set_to_reflected_ray_camera_origin(water_height);
         framebuffers.reflection_fbo.bind();
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane, framebuffers.shadowmap_fbo.depth_texture);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
         camera.set_to_reflected_ray_camera_origin(water_height);
 
         // we should also move camera before refraction to account for refracted angle?
         framebuffers.refraction_fbo.bind();
-        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane, framebuffers.shadowmap_fbo.depth_texture);
+        self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
 
         gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?   
 
@@ -160,13 +162,13 @@ impl MasterRenderer {
     }
 
     fn render_pass(&mut self, lights: &Vec<Light>, camera: &Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-                player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f, shadow_map_texture: u32) {
+                player: &Player, skybox: &Skybox, wall_clock: &WallClock, clip_plane: &Vector4f) {
 
         gl::helper::push_debug_group(RenderGroup::DRAW_ENTITIES.id, RenderGroup::DRAW_ENTITIES.name);
         self.prepare();
 
         // render entites
-        self.entity_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR);
+        self.entity_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, &self.shadowmap_renderer.get_to_shadow(), &self.shadowmap_renderer.shadow_params);
         let groups_by_tex = MasterRenderer::group_entities_by_tex(entities);
         for (textured_model, entity_vec) in groups_by_tex.iter() {
             self.entity_renderer.prepare_textured_model(textured_model, clip_plane);
@@ -201,7 +203,7 @@ impl MasterRenderer {
 
         // render terrain
         gl::helper::push_debug_group(RenderGroup::DRAW_TERRAIN.id, RenderGroup::DRAW_TERRAIN.name);
-        self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, self.shadowmap_renderer.get_to_shadow(), shadow_map_texture, ShadowMapFBO::SHADOW_MAP_SIZE);
+        self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, &self.shadowmap_renderer.get_to_shadow(), &self.shadowmap_renderer.shadow_params);
         for terrain in terrains.iter() {
             self.terrain_renderer.prepare_terrain(terrain, clip_plane);
             self.terrain_renderer.render(terrain);

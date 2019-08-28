@@ -5,7 +5,7 @@ use crate::entities::{
     Terrain,
 };
 use crate::shaders::TerrainShader;
-use crate::shadows::shadow_box::ShadowBox;
+use crate::shadows::shadow_params::ShadowParams;
 use crate::math::{
     Matrix4f,
     Vector3f,
@@ -32,18 +32,19 @@ impl TerrainRenderer {
         }
     }
 
-    pub fn start_render(&mut self, lights: &Vec<Light>, camera: &Camera, sky_color: &Vector3f, to_shadowmap_space: Matrix4f, shadow_map_texture: u32, shadow_map_size: usize) {
+    pub fn start_render(&mut self, lights: &Vec<Light>, camera: &Camera, sky_color: &Vector3f, to_shadow_space: &Matrix4f, shadow_params: &ShadowParams) {
         self.shader.start();
         // we do this more than once because we may want to change the light, view, sky color
         // but we do them once per model type, because the type has one shader
         self.shader.load_lights(lights);
         self.shader.load_view_matrix(camera);  
         self.shader.load_sky_color(sky_color);
-        self.shader.load_to_shadowmap_space(&to_shadowmap_space);
-        self.shader.load_shadow_params(ShadowBox::SHADOW_DISTANCE, shadow_map_size);
+        
+        self.shader.load_to_shadowmap_space(to_shadow_space);
+        self.shader.load_shadow_params(shadow_params);
 
         gl::active_texture(gl::TEXTURE5);
-        gl::bind_texture(gl::TEXTURE_2D, shadow_map_texture);
+        gl::bind_texture(gl::TEXTURE_2D, shadow_params.shadow_map_texture);
     }
 
     pub fn stop_render(&mut self) {          

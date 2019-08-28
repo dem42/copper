@@ -32,14 +32,10 @@ uniform vec3 attenuation[NUM_LIGHTS];
 const bool uses_cell_shading = false;
 const float brightness_levels = 2.0;
 
-const float A = 2.0 / 500.0;
-const float B = 2.0 / 500.0;
-
 // how many pixels to sample on each side of center pixel (so 2 means 3x3 box) 
-const int pcf_count = 2;
+const int pcf_count = 1;
 // texture pixels we will be sampling
 const float texel_count = (pcf_count*2.0 + 1.0)*(pcf_count*2.0 + 1.0);
-
 uniform float shadow_map_size;
 
 void adjust_brightness(inout float diffuse_brightness, inout float specular_brightness) {
@@ -61,12 +57,12 @@ void main(void) {
         for (int y=-pcf_count; y <= pcf_count; y++) {
             // compare depth with shadowmap depth to figure out if this piece of terrain is in shadow or not (absence of light due to something blocking it)
             float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy + vec2(x, y) * texel_size).r;
-            total_in_shadow += step(obj_depth_nearest_light, shadow_coords.z);
+            // add slight offset to prevent shadow acne
+            total_in_shadow += step(obj_depth_nearest_light + 0.005, shadow_coords.z);
         }
     }
-    total_in_shadow /= texel_count;    
-     
-    float light_factor = 1.0 - total_in_shadow*0.6*shadow_coords.w;
+    total_in_shadow /= texel_count;     
+    float light_factor = 1.0 - total_in_shadow*shadow_coords.w;
 
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)
     vec4 blend_map_col = texture(blend_map_sampler, pass_tex_coord);

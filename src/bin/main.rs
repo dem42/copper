@@ -1,7 +1,8 @@
 extern crate copper;
 extern crate rand;
 
-use rand::Rng;
+use rand::prelude::*;
+use rand::{Rng, SeedableRng};
 
 use copper::display::{
     Display,
@@ -151,7 +152,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
 
 fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuffers) -> Scene {
     let mut entities = Vec::new();    
-    let mut rng = rand::thread_rng();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(0xb000u64);
     const X_WIDTH: f32 = 1000.0;
     const Z_WIDTH: f32 = -1000.0;
 
@@ -254,7 +255,7 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
     };
 
     let lights = vec!{        
-        Light::new_infinite(Vector3f::new(5000.0, 10000.0, 5000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
+        Light::new_infinite(Vector3f::new(5000.0, 10000.0, 5000.0), Vector3f::new(1.0, 1.0, 1.0)), // sunlight, no attenuation
         Light::new_point(ground.create_pos_above_terrain(185.0,12.5,-293.0), Vector3f::new(2.0, 0.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(370.0,14.0,-300.0), Vector3f::new(0.0, 2.0, 2.0), Vector3f::new(1.0, 0.01, 0.002)),
         Light::new_point(ground.create_pos_above_terrain(120.0,14.0,-240.0), Vector3f::new(2.0, 2.0, 0.0), Vector3f::new(1.0, 0.01, 0.002)),        

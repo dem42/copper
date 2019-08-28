@@ -9,6 +9,7 @@ use crate::math::{
     Vector3f,
     Vector4f,
 };
+use crate::shadows::shadow_params::ShadowParams;
 
 const NUM_LIGHTS: usize = 4;
 
@@ -193,8 +194,8 @@ impl TerrainShader {
         ShaderProgram::load_matrix(self.location_to_shadowmap_space, to_shadowmap_matrix);
     }
 
-    pub fn load_shadow_params(&mut self, shadow_distance: f32, shadow_map_size: usize) {
-        ShaderProgram::load_float(self.location_shadow_distance, shadow_distance);
-        ShaderProgram::load_float(self.location_shadow_map_size, shadow_map_size as f32);
+    pub fn load_shadow_params(&mut self, shadow_params: &ShadowParams) {
+        ShaderProgram::load_float(self.location_shadow_distance, shadow_params.shadow_distance);
+        ShaderProgram::load_float(self.location_shadow_map_size, shadow_params.shadow_map_size as f32);
     }
 }

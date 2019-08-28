@@ -4,7 +4,6 @@ use crate::entities::{
     Camera,
     Light,
 };
-use crate::shaders::StaticShader;
 use crate::math::{
     Matrix4f,
     Vector3f,
@@ -14,6 +13,8 @@ use crate::models::{
     TexturedModel,
     RawModel,
 };
+use crate::shaders::StaticShader;
+use crate::shadows::shadow_params::ShadowParams;
 
 pub struct EntityRenderer {
     shader: StaticShader,
@@ -25,17 +26,24 @@ impl EntityRenderer {
         let mut shader = StaticShader::new();
         shader.start();
         shader.load_projection_matrix(projection_matrix);
+        shader.connect_texture_units();
         shader.stop();
         EntityRenderer {
             shader,
         }
     }
     
-    pub fn start_render(&mut self, lights: &Vec<Light>, camera: &Camera, sky_color: &Vector3f) {
+    pub fn start_render(&mut self, lights: &Vec<Light>, camera: &Camera, sky_color: &Vector3f, to_shadow_space: &Matrix4f, shadow_params: &ShadowParams) {
         self.shader.start();
         self.shader.load_lights(lights);
         self.shader.load_view_matrix(camera);
         self.shader.load_sky_color(sky_color);
+        
+        self.shader.load_to_shadowmap_space(to_shadow_space);
+        self.shader.load_shadow_params(shadow_params);
+
+        gl::active_texture(gl::TEXTURE1);
+        gl::bind_texture(gl::TEXTURE_2D, shadow_params.shadow_map_texture);
     }
 
     pub fn stop_render(&mut self) {

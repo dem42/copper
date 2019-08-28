@@ -180,7 +180,7 @@ impl Drop for RefractionFBO {
 }
 
 impl ShadowMapFBO {
-    pub const SHADOW_MAP_SIZE: usize = 2048;
+    pub const SHADOW_MAP_SIZE: usize = 4096;
 
     fn new() -> Self {
         let fbo_id = Self::create_frame_buffer(false);
