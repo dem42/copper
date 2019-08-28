@@ -35,6 +35,13 @@ const float brightness_levels = 2.0;
 const float A = 2.0 / 500.0;
 const float B = 2.0 / 500.0;
 
+// how many pixels to sample on each side of center pixel (so 2 means 3x3 box) 
+const int pcf_count = 2;
+// texture pixels we will be sampling
+const float texel_count = (pcf_count*2.0 + 1.0)*(pcf_count*2.0 + 1.0);
+
+uniform float shadow_map_size;
+
 void adjust_brightness(inout float diffuse_brightness, inout float specular_brightness) {
     if (!uses_cell_shading) {
         return;
@@ -46,11 +53,20 @@ void adjust_brightness(inout float diffuse_brightness, inout float specular_brig
 }
 
 void main(void) {
+    // size of a pixel in texture coords space
+    float texel_size = 1.0 / shadow_map_size;
+    float total_in_shadow = 0.0;
 
-    // compare depth with shadowmap depth to figure out if this piece of terrain is in shadow or not (absence of light due to something blocking it)
-    float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy).r;    
+    for (int x=-pcf_count; x<=pcf_count; x++) {
+        for (int y=-pcf_count; y <= pcf_count; y++) {
+            // compare depth with shadowmap depth to figure out if this piece of terrain is in shadow or not (absence of light due to something blocking it)
+            float obj_depth_nearest_light = texture(shadow_map, shadow_coords.xy + vec2(x, y) * texel_size).r;
+            total_in_shadow += step(obj_depth_nearest_light, shadow_coords.z);
+        }
+    }
+    total_in_shadow /= texel_count;    
      
-    float light_factor = 1.0 - step(obj_depth_nearest_light, shadow_coords.z)*0.6*shadow_coords.w;
+    float light_factor = 1.0 - total_in_shadow*0.6*shadow_coords.w;
 
     // sample untiled (by untiled i mean before coordinates are scaled by 40.0 which exploits REPEAT to tile the texture onto the object)
     vec4 blend_map_col = texture(blend_map_sampler, pass_tex_coord);
@@ -90,7 +106,7 @@ void main(void) {
         total_diffuse += (brightness * light_color[i]) / attenuation_factor; // add alpha of 1
         total_specular += (pow(spec_brightness, shine_damper) * reflectivity * light_color[i]) / attenuation_factor;
     }
-    total_diffuse = max(total_diffuse, 0.2) * light_factor; // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
+    total_diffuse = max(total_diffuse * light_factor, 0.2); // clamp to [0.2, 1], the 0.2 means everything is given a little bit of color -> ambient
     
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * blended_texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);    

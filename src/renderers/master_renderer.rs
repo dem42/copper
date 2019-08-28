@@ -3,6 +3,7 @@ use crate::display::{
     Display,
     Framebuffers,
     FramebufferObject,
+    ShadowMapFBO,
     WallClock,
 };
 use crate::gl;
@@ -200,7 +201,7 @@ impl MasterRenderer {
 
         // render terrain
         gl::helper::push_debug_group(RenderGroup::DRAW_TERRAIN.id, RenderGroup::DRAW_TERRAIN.name);
-        self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, self.shadowmap_renderer.get_to_shadow(), shadow_map_texture);
+        self.terrain_renderer.start_render(lights, camera, &MasterRenderer::SKY_COLOR, self.shadowmap_renderer.get_to_shadow(), shadow_map_texture, ShadowMapFBO::SHADOW_MAP_SIZE);
         for terrain in terrains.iter() {
             self.terrain_renderer.prepare_terrain(terrain, clip_plane);
             self.terrain_renderer.render(terrain);

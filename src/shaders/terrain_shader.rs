@@ -32,6 +32,7 @@ pub struct TerrainShader {
     location_to_shadowmap_space: i32,
     location_shadowmap: i32,
     location_shadow_distance: i32,
+    location_shadow_map_size: i32,
 }
 
 impl TerrainShader {
@@ -54,10 +55,14 @@ impl TerrainShader {
             mut location_b_sampler,
             mut location_blend_map_sampler,
             mut location_attenuation,
-            mut location_clip_plane,
+            mut location_clip_plane,            
+        ) = Default::default();
+
+        let (
             mut location_to_shadowmap_space,
             mut location_shadowmap,
             mut location_shadow_distance,
+            mut location_shadow_map_size,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -99,6 +104,7 @@ impl TerrainShader {
                 location_to_shadowmap_space = shader_prog.get_uniform_location("to_shadowmap_space");
                 location_shadowmap = shader_prog.get_uniform_location("shadow_map");
                 location_shadow_distance = shader_prog.get_uniform_location("shadow_distance");
+                location_shadow_map_size = shader_prog.get_uniform_location("shadow_map_size");
         });
 
         TerrainShader {
@@ -121,6 +127,7 @@ impl TerrainShader {
             location_to_shadowmap_space,
             location_shadowmap,
             location_shadow_distance,
+            location_shadow_map_size,
         }
     }
 
@@ -186,7 +193,8 @@ impl TerrainShader {
         ShaderProgram::load_matrix(self.location_to_shadowmap_space, to_shadowmap_matrix);
     }
 
-    pub fn load_shadow_distance(&mut self, shadow_distance: f32) {
+    pub fn load_shadow_params(&mut self, shadow_distance: f32, shadow_map_size: usize) {
         ShaderProgram::load_float(self.location_shadow_distance, shadow_distance);
+        ShaderProgram::load_float(self.location_shadow_map_size, shadow_map_size as f32);
     }
 }
