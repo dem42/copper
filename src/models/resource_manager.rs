@@ -84,6 +84,7 @@ pub struct ModelProps {
     pub has_transparency: bool,
     pub uses_fake_lighting: bool,
     pub uses_mipmaps: bool,
+    pub uses_anisotropic_filtering: bool,
     pub shine_damper: f32,
     pub reflectivity: f32,
     pub atlas_props: AtlasProps,
@@ -92,7 +93,9 @@ pub struct ModelProps {
 impl ModelProps {
     fn get_texture_params(&self) -> TextureParams {        
         if self.uses_mipmaps {
-            if self.normal_map.is_some() {
+            if self.uses_anisotropic_filtering {
+                TextureParams::anisotropic_texture()
+            } else if self.normal_map.is_some() {
                 TextureParams::mipmapped_texture(-2.4)
             } else {
                 TextureParams::mipmapped_texture(-0.4)
@@ -112,6 +115,7 @@ impl Models {
         has_transparency: false, 
         uses_fake_lighting: false, 
         uses_mipmaps: false,
+        uses_anisotropic_filtering: false,
         shine_damper: 1.0,
         reflectivity: 0.0, 
         atlas_props: AtlasProps(1),
@@ -121,6 +125,7 @@ impl Models {
         has_transparency: false, 
         uses_fake_lighting: false, 
         uses_mipmaps: true,
+        uses_anisotropic_filtering: true,
         shine_damper: 1.0,
         reflectivity: 0.0,  
         atlas_props: AtlasProps(1),
@@ -130,6 +135,7 @@ impl Models {
         has_transparency: false, 
         uses_fake_lighting: false, 
         uses_mipmaps: true,
+        uses_anisotropic_filtering: false,
         shine_damper: 20.0,
         reflectivity: 0.6,  
         atlas_props: AtlasProps(1),
@@ -139,6 +145,7 @@ impl Models {
         has_transparency: true, 
         uses_fake_lighting: false, 
         uses_mipmaps: true, 
+        uses_anisotropic_filtering: false,
         shine_damper: 1.0,
         reflectivity: 0.0, 
         atlas_props: AtlasProps(2),
@@ -147,7 +154,8 @@ impl Models {
     const GRASS_PROPS: ModelProps = ModelProps { 
         has_transparency: true, 
         uses_fake_lighting: true, 
-        uses_mipmaps: true, 
+        uses_mipmaps: true,
+        uses_anisotropic_filtering: false,
         shine_damper: 1.0,
         reflectivity: 0.0, 
         atlas_props: AtlasProps(1),
@@ -158,6 +166,7 @@ impl Models {
         has_transparency: false, 
         uses_fake_lighting: true, 
         uses_mipmaps: true, 
+        uses_anisotropic_filtering: false,
         shine_damper: 1.0,
         reflectivity: 0.0, 
         atlas_props: AtlasProps(1),
@@ -166,7 +175,8 @@ impl Models {
     const BARREL_PROPS: ModelProps = ModelProps { 
         has_transparency: false, 
         uses_fake_lighting: false, 
-        uses_mipmaps: true, 
+        uses_mipmaps: true,
+        uses_anisotropic_filtering: false,
         shine_damper: 10.0,
         reflectivity: 0.5, 
         atlas_props: AtlasProps(1),
@@ -175,7 +185,8 @@ impl Models {
     const BOULDER_PROPS: ModelProps = ModelProps { 
         has_transparency: false, 
         uses_fake_lighting: false, 
-        uses_mipmaps: true, 
+        uses_mipmaps: true,
+        uses_anisotropic_filtering: false,
         shine_damper: 10.0,
         reflectivity: 0.5, 
         atlas_props: AtlasProps(1),

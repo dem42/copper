@@ -444,6 +444,14 @@ pub fn depth_mask(flag: bool) {
     }
 }
 
+pub fn get_floatv(name: types::GLenum) -> f32 {
+    unsafe {
+        let mut result: f32 = 0.0;
+        GetFloatv(name, &mut result as *mut f32);
+        result
+    }
+}
+
 ///////////
 // gl 3.0
 ///////////

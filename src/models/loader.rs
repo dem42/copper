@@ -4,6 +4,7 @@ use texture_lib::texture_loader::{
 };
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
+use crate::math::utils::f32_min;
 
 #[derive(Default)]
 pub struct ModelLoader {    
@@ -17,13 +18,24 @@ pub struct TextureParams {
     reverse_texture_data: bool,
     use_mipmap: bool,
     mipmap_lod: f32,
+    use_anisotropic_filtering: bool,
 }
 
-impl TextureParams {    
+impl TextureParams {
+    const DEFAULT_ANISOTROPIC_AMOUNT: f32 = 4.0;
+
     pub fn mipmapped_texture(mipmap_lod: f32) -> TextureParams {
         TextureParams {
             use_mipmap: true,
             mipmap_lod,
+            ..Default::default()
+        }
+    }
+    pub fn anisotropic_texture() -> TextureParams {
+        TextureParams {
+            use_mipmap: true,
+            mipmap_lod: 0.0,
+            use_anisotropic_filtering: true,
             ..Default::default()
         }
     }
@@ -121,6 +133,12 @@ impl ModelLoader {
             gl::tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
             // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
             gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, params.mipmap_lod);
+            if params.use_anisotropic_filtering {
+                let max_anisotropic = gl::get_floatv(gl::MAX_TEXTURE_MAX_ANISOTROPY);
+                let min_amount = f32_min(TextureParams::DEFAULT_ANISOTROPIC_AMOUNT, max_anisotropic);
+                gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY, min_amount);
+            }
+
         } else {        
             gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
             gl::tex_parameter_iv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
