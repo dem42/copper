@@ -150,7 +150,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_debug_cuboid_model();
 }
 
-fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuffers) -> Scene {
+fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &Framebuffers) -> Scene {
     let mut entities = Vec::new();    
     let mut rng: StdRng = SeedableRng::seed_from_u64(0xb000u64);
     const X_WIDTH: f32 = 1000.0;
@@ -247,11 +247,11 @@ fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuff
 
     let healthbar = resource_manager.get_gui_texture(ResourceManager::HEALTHBAR_TEXTURE);
     let gui_background = resource_manager.get_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE);
-    let shadow_map = framebuffers.shadowmap_fbo.depth_texture;
+    //let shadow_map = framebuffers.shadowmap_fbo.depth_texture;
     let guis = vec!{
         GuiPanel::new(gui_background, Vector2f::new(-0.73, -0.7), Vector2f::new(0.25, 0.25)),
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
-        GuiPanel::new(shadow_map, Vector2f::new(0.7, 0.7), Vector2f::new(0.3, 0.3)),
+        //GuiPanel::new(shadow_map, Vector2f::new(0.7, 0.7), Vector2f::new(0.3, 0.3)),
     };
 
     let lights = vec!{        

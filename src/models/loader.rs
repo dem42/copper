@@ -134,9 +134,9 @@ impl ModelLoader {
             // set texture detail level (more negative means nicer) things at a high angle like grass/flowers may seem blurry if this is positive or 0
             gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_LOD_BIAS, params.mipmap_lod);
             if params.use_anisotropic_filtering {
-                let max_anisotropic = gl::get_floatv(gl::MAX_TEXTURE_MAX_ANISOTROPY);
+                let max_anisotropic = gl::get_floatv(gl::MAX_TEXTURE_MAX_ANISOTROPY_EXT);
                 let min_amount = f32_min(TextureParams::DEFAULT_ANISOTROPIC_AMOUNT, max_anisotropic);
-                gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY, min_amount);
+                gl::tex_parameterf(gl::TEXTURE_2D, gl::TEXTURE_MAX_ANISOTROPY_EXT, min_amount);
             }
 
         } else {        

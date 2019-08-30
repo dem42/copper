@@ -6,3 +6,4 @@ glut-sys/target
 gl-sys/target
 
 texture_lib/target
+gl/target/

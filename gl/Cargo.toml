@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs.git"
 default-features = false
-version = "0.30.0"
+version = "0.32.0"
 
 [build-dependencies]
 gl_generator = "0.10.0"

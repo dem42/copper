@@ -2,7 +2,6 @@ use std::f32;
 use crate::math::{
     Quaternion,
     Vector3f,
-    Vector4f,
 };
 use crate::display::{
     Display,
