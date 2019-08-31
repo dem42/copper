@@ -42,8 +42,9 @@ pub struct ResourceManager {
     skybox_model: Option<SkyboxModel>,
     water_model: Option<WaterModel>,
     particle_model: Option<ParticleModel>,
+    // debugging models
     debug_model: Option<DynamicVertexIndexedModel>,
-
+    
     models: HashMap<ModelType, TexturedModel>,
     gui_textures: HashMap<&'static str, u32>,
     font_types: HashMap<&'static str, FontType>,
@@ -74,6 +75,7 @@ pub enum ModelType {
     BobbleTree,
     Barrel,
     Boulder,
+    FloorTile,
 }
 
 pub type ParticleTextureProps = (&'static str, usize);
@@ -191,7 +193,17 @@ impl Models {
         reflectivity: 0.5, 
         atlas_props: AtlasProps(1),
         normal_map: Some("res/textures/normal_maps/boulderNormal.png"),
-    }; 
+    };
+    const FLOOR_PROPS: ModelProps = ModelProps { 
+        has_transparency: true, 
+        uses_fake_lighting: true, 
+        uses_mipmaps: true,
+        uses_anisotropic_filtering: true,
+        shine_damper: 1.0,
+        reflectivity: 0.0, 
+        atlas_props: AtlasProps(1),
+        normal_map: None,
+    };
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
@@ -205,6 +217,7 @@ impl Models {
     pub const BOBBLE_TREE: Model = Model(ModelType::BobbleTree, "res/models/bobbleTree.obj", "res/textures/bobbleTree.png", &Models::COMMON_PROPS);
     pub const BARREL: Model = Model(ModelType::Barrel, "res/models/barrel.obj", "res/textures/barrel.png", &Models::BARREL_PROPS);
     pub const BOULDER: Model = Model(ModelType::Boulder, "res/models/boulder.obj", "res/textures/boulder.png", &Models::BOULDER_PROPS);
+    pub const FLOOR_TILE: Model = Model(ModelType::FloorTile, "res/models/flat.obj", "res/textures/box.png", &Models::FLOOR_PROPS);
 }
 
 
