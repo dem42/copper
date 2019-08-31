@@ -17,7 +17,7 @@ use copper::particles::{
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    simple_floor_scene::create_scene
+    all_scene::create_scene
 };
 
 fn main() {

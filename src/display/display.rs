@@ -129,6 +129,8 @@ impl Display {
         glfw.window_hint(WindowHint::ContextVersion(4, 3));
         glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
         glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
+        // enable multisampling in the fbo created for the window
+        glfw.window_hint(WindowHint::Samples(Some(4)));
 
         let (mut window, events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
@@ -144,6 +146,9 @@ impl Display {
         gl::load_with(|s| window.get_proc_address(s) as *const _);
 
         gl::helper::register_error_callback();
+
+        // turn on multisampling in opengl after enabling the window hint to have fbo use multisampling
+        gl::enable(gl::MULTISAMPLE);
 
         let projection_matrix = Matrix4f::create_projection_matrix(Display::NEAR, Display::FAR, Display::FOV_HORIZONTAL, Display::get_aspect_ratio_internal(&window));
 
