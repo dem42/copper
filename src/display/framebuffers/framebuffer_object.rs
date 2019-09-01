@@ -1,13 +1,12 @@
-use crate::display::{
-    Display,
-};
 use crate::gl;
 
 bitflags! {
     pub struct FboFlags : u32 {
-        const COLOR = 0b001;
-        const DEPTH = 0b010; 
-        const SHADOW_DEPTH = 0b100; 
+        const COLOR_TEX       = 0b00001;
+        const COLOR_RENDERBUF = 0b00010;
+        const DEPTH_TEX       = 0b00100;
+        const DEPTH_RENDERBUF = 0b01000;
+        const SHADOW_DEPTH    = 0b10000;
     }
 }
 
@@ -17,22 +16,29 @@ pub struct FramebufferObject {
     pub viewport_height: usize,
     pub color_texture: Option<u32>,
     pub depth_texture: Option<u32>,
+    pub depth_renderbuffer_id: Option<u32>,
 }
 
 impl FramebufferObject {
 
     pub fn new(viewport_width: usize, viewport_height: usize, flags: FboFlags) -> Self {
         let fbo_id = Self::create_frame_buffer(flags);
-        let color_texture = if flags.contains(FboFlags::COLOR) {
+        let color_texture = if flags.contains(FboFlags::COLOR_TEX) {
             Some(Self::create_color_texture_attachment(viewport_width, viewport_height))
         } else {
             None
         };
-        let depth_texture = if flags.contains(FboFlags::DEPTH) {
+        let depth_texture = if flags.contains(FboFlags::DEPTH_TEX) {
             Some(Self::create_depth_texture_attachment(viewport_width, viewport_height))
         } else if flags.contains(FboFlags::SHADOW_DEPTH) {
             // can this be simplified into just one depth attachment?
             Some(Self::create_depth_texture_attachment_for_shadows(viewport_width, viewport_height))
+        } else {
+            None
+        };
+
+        let depth_renderbuffer_id = if flags.contains(FboFlags::DEPTH_RENDERBUF) {
+            Some(Self::create_depth_renderbuffer_attachment(viewport_width, viewport_height))
         } else {
             None
         };
@@ -43,13 +49,14 @@ impl FramebufferObject {
             viewport_height,
             color_texture,
             depth_texture,
+            depth_renderbuffer_id,
         }
     }
 
     pub fn create_frame_buffer(flags: FboFlags) -> u32 {
         let fbo_id = gl::gen_framebuffer();
         gl::bind_framebuffer(gl::FRAMEBUFFER, fbo_id);
-        let color_attachments = if flags.contains(FboFlags::COLOR) {        
+        let color_attachments = if flags.contains(FboFlags::COLOR_TEX) {        
             [gl::COLOR_ATTACHMENT0; 1]
         } else {
             // by setting the draw_buffers to none we effectively make this a depth only pass
@@ -125,6 +132,9 @@ impl Drop for FramebufferObject {
         }
         if let Some(depth_tex) = self.depth_texture {
             gl::delete_texture(depth_tex);
-        }        
+        }
+        if let Some(depth_renderbuf) = self.depth_renderbuffer_id {
+            gl::delete_renderbuffer(depth_renderbuf);
+        }
     }    
 }

@@ -16,7 +16,8 @@ use crate::math::{
 use crate::models::{
     TexturedModel,
 };
-use crate::shadows::shadowmap_renderer::ShadowMapRenderer;
+use crate::particles::ParticleMaster;
+use super::shadowmap_renderer::ShadowMapRenderer;
 use super::entity_renderer::EntityRenderer;
 use super::normal_map_entity_renderer::NormalMapEntityRenderer;
 use super::terrain_renderer::TerrainRenderer;
@@ -38,7 +39,8 @@ impl RenderGroup {
     pub const DRAW_SKYBOX: RenderGroup = RenderGroup {id: 5, name: "Skybox"};
     pub const DRAW_WATER: RenderGroup = RenderGroup {id: 6, name: "WaterSurfaceDraw"};
     pub const PARTICLE_EFFECTS_PASS: RenderGroup = RenderGroup {id: 7, name: "ParticleEffects"};
-    pub const DRAW_GUI: RenderGroup = RenderGroup {id: 8, name: "GuiOverlayDraw"};
+    pub const POST_PROCESSING: RenderGroup = RenderGroup {id: 8, name: "PostProcessing"};
+    pub const DRAW_GUI: RenderGroup = RenderGroup {id: 9, name: "GuiOverlayDraw"};
 }
 
 pub struct MasterRenderer {    
@@ -76,22 +78,29 @@ impl MasterRenderer {
     }
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut FboMap, debug_entity: &mut DebugEntity) {
+                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut FboMap, particle_master: &mut ParticleMaster, 
+                _debug_entity: &mut DebugEntity) {
 
         self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights, terrains);
 
         self.do_water_render_passes(water_tiles, camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights, skybox, display);
-        display.restore_default_framebuffer();
+        
+        let camera_tex_fbo = framebuffers.fbos.get_mut(FboMap::CAMERA_TEXTURE_FBO).expect("Must have a camera texture fbo to which to render the scene for post processing");
+        camera_tex_fbo.bind(); // we will unbind it later after particle effects are drawn
 
         let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
+        // render particles
+        particle_master.render(&camera);
+        display.restore_default_framebuffer();
+
         //let obb_ref = &self.shadowmap_renderer.shadow_box.frustum_corners;
         //self.debug_renderer.render(debug_entity, camera, obb_ref); 
-        debug_entity.position = self.shadowmap_renderer.shadow_box.world_space_center.clone();
-        debug_entity.scale = Vector3f::new(100.0, 100.0, 100.0);
+        //debug_entity.position = self.shadowmap_renderer.shadow_box.world_space_center.clone();
+        //debug_entity.scale = Vector3f::new(100.0, 100.0, 100.0);
         //debug_entity.scale = 0.80 * Vector3f::new(self.shadowmap_renderer.shadow_box.width, self.shadowmap_renderer.shadow_box.height, self.shadowmap_renderer.shadow_box.length);
         //self.debug_renderer.render_cube(debug_entity, camera);
     }

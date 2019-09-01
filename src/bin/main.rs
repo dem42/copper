@@ -5,8 +5,8 @@ use copper::display::{
     framebuffers::FboMap,
 };
 use copper::renderers::{
-    MasterRenderer,
-    GuiRenderer,
+    master_renderer::MasterRenderer,
+    gui_renderer::GuiRenderer,
 };
 use copper::models::{
     ResourceManager,
@@ -14,6 +14,7 @@ use copper::models::{
 use copper::particles::{
     ParticleMaster,
 };
+use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
@@ -34,6 +35,7 @@ fn main() {
 
     // particle effects master
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
+    let mut post_processing = PostProcessing::new(scene.quad_model.clone());
         
     while !display.is_close_requested() {
 
@@ -52,11 +54,11 @@ fn main() {
         scene.skybox.increase_rotation(&display);
 
         master_renderer.render(&scene.lights, &mut scene.camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
-            &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut scene.debug_entity);
+            &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut particle_master, &mut scene.debug_entity);
 
-        particle_master.render(&scene.camera);
+        post_processing.do_post_processing(&mut framebuffers, &display);
 
-        gui_renderer.render(&scene.guis, &scene.gui_model.raw_model, &scene.texts);
+        gui_renderer.render(&scene.guis, &scene.quad_model.raw_model, &scene.texts);
 
         display.update_display();
     }

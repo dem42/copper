@@ -6,7 +6,7 @@ use super::{
         TerrainTexturePack,
         TextureParams,
         TerrainModel,
-        GuiModel,
+        QuadModel,
         SkyboxModel,
         WaterModel,
         ParticleModel,
@@ -38,7 +38,7 @@ pub struct ResourceManager {
     texture_pack: Option<TerrainTexturePack>,
     blend_texture: Option<TerrainTexture>,
     terrain_model: Option<TerrainModel>,
-    gui_model: Option<GuiModel>,
+    quad_model: Option<QuadModel>,
     skybox_model: Option<SkyboxModel>,
     water_model: Option<WaterModel>,
     particle_model: Option<ParticleModel>,
@@ -315,8 +315,8 @@ impl ResourceManager {
          *tex_id
     }
 
-    pub fn init_gui_model(&mut self) {
-        if let None = self.gui_model {
+    pub fn init_quad_model(&mut self) {
+        if let None = self.quad_model {
             // create quad that covers full screen -> we will scale it to create guis
             let positions = vec!{
                 -1.0, 1.0,
@@ -325,14 +325,14 @@ impl ResourceManager {
                 1.0, -1.0,
             };
             let raw_model = self.loader.load_simple_model_to_vao(&positions, 2);
-            self.gui_model = Some(GuiModel {
+            self.quad_model = Some(QuadModel {
                 raw_model,
             });
         }
     }
 
-    pub fn gui_model(&self) -> GuiModel {
-        self.gui_model.clone().expect("Need to call init_gui_model before accessing gui model")
+    pub fn quad_model(&self) -> QuadModel {
+        self.quad_model.clone().expect("Need to call init_gui_model before accessing gui model")
     }
 
     pub fn skybox(&self) -> SkyboxModel {

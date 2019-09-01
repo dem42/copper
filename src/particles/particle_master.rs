@@ -14,7 +14,7 @@ use crate::math::{
 use crate::models::{
     ParticleTexturedModel,
 };
-use crate::renderers::ParticleRenderer;
+use crate::renderers::particle_renderer::ParticleRenderer;
 use crate::utils::insertion_sort;
 use super::particle_system::{
     AdvancedParticleSystem,

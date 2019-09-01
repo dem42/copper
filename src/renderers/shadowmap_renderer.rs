@@ -17,9 +17,12 @@ use crate::models::{
     RawModel,
     TexturedModel,
 };
-use super::shadow_box::ShadowBox;
-use super::shadow_shader::ShadowShader;
-use super::shadow_params::ShadowParams;
+use crate::shadows::{
+    shadow_params::ShadowParams,
+    shadow_box::ShadowBox,
+};
+use crate::shaders::ShadowShader;
+
 
 pub struct ShadowMapRenderer {
     shadow_shader: ShadowShader,

@@ -325,7 +325,7 @@ pub struct TerrainModel {
 }
 
 #[derive(Clone)]
-pub struct GuiModel {
+pub struct QuadModel {
     pub raw_model: RawModel,
 }
 

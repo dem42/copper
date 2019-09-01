@@ -51,7 +51,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_skybox();
     resource_manager.init_water();
 
-    resource_manager.init_gui_model();
+    resource_manager.init_quad_model();
     resource_manager.init_gui_textures();
 
     resource_manager.init_fonts();
@@ -224,8 +224,8 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         entities, 
         normal_mapped_entities, 
         ground, 
-        player, 
-        gui_model: resource_manager.gui_model(), 
+        player,        
+        quad_model: resource_manager.quad_model(), 
         water: water_tiles,
         debug_entity,
         camera,
