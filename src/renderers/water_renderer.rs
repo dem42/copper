@@ -1,6 +1,6 @@
 use crate::display::{
     Display,
-    Framebuffers,
+    framebuffers::FboMap,
 };
 use crate::entities::{
     Camera,
@@ -39,7 +39,7 @@ impl WaterRenderer {
         }
     }
 
-    pub fn render(&mut self, water_tiles: &Vec<WaterTile>, framebuffers: &Framebuffers, camera: &Camera, display: &Display, lights: &Vec<Light>) {
+    pub fn render(&mut self, water_tiles: &Vec<WaterTile>, framebuffers: &FboMap, camera: &Camera, display: &Display, lights: &Vec<Light>) {
         gl::helper::push_debug_group(RenderGroup::DRAW_WATER.id, RenderGroup::DRAW_WATER.name);
 
         self.shader.start();
@@ -50,12 +50,15 @@ impl WaterRenderer {
 
         self.shader.load_lights(lights);
 
+        let reflection_fbo = framebuffers.fbos.get(FboMap::REFLECTION_FBO).expect("Must have reflection fbo for water render");
+        let refraction_fbo = framebuffers.fbos.get(FboMap::REFRACTION_FBO).expect("Must have refraction fbo for water render");
+
         gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(gl::TEXTURE_2D, framebuffers.reflection_fbo.color_texture);
+        gl::bind_texture(gl::TEXTURE_2D, reflection_fbo.color_texture.expect("ReflectionFbo must have a color attachment"));
         gl::active_texture(gl::TEXTURE1);
-        gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.color_texture);        
+        gl::bind_texture(gl::TEXTURE_2D, refraction_fbo.color_texture.expect("RefractionFbo must have a color attachment")); 
         gl::active_texture(gl::TEXTURE4);
-        gl::bind_texture(gl::TEXTURE_2D, framebuffers.refraction_fbo.depth_texture);
+        gl::bind_texture(gl::TEXTURE_2D, refraction_fbo.depth_texture.expect("RefractionFbo must have a depth attach"));
 
         // turn on alpha blending for softer edges (linear blending)
         // this is ok because water rendering happens after terrain/entity rendering so we blend with them

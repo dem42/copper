@@ -2,6 +2,8 @@ extern crate gl;
 extern crate libc;
 extern crate texture_lib;
 extern crate rand;
+#[macro_use]
+extern crate bitflags;
 
 #[macro_use]
 pub mod utils;

@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 use crate::display::{
     Display,
-    Framebuffers,
-    FramebufferObject,
     WallClock,
+    framebuffers::{
+        FboMap,
+    }
 };
 use crate::gl;
 use crate::entities::*;
@@ -75,7 +76,7 @@ impl MasterRenderer {
     }
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
-                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut Framebuffers, debug_entity: &mut DebugEntity) {
+                player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut FboMap, debug_entity: &mut DebugEntity) {
 
         self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights, terrains);
 
@@ -95,14 +96,15 @@ impl MasterRenderer {
         //self.debug_renderer.render_cube(debug_entity, camera);
     }
 
-    fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut Framebuffers, entities: &Vec<Entity>, 
+    fn do_shadowmap_render_passes(&mut self, camera: &mut Camera, framebuffers: &mut FboMap, entities: &Vec<Entity>, 
                 normal_mapped_entities: &Vec<Entity>, player: &Player, lights: &Vec<Light>, terrains: &Vec<Terrain>) {
         
         gl::helper::push_debug_group(RenderGroup::SHADOW_MAP_PASS.id, RenderGroup::SHADOW_MAP_PASS.name);
 
-        framebuffers.shadowmap_fbo.bind();
+        let shadowmap_fbo = framebuffers.fbos.get_mut(FboMap::SHADOW_MAP_FBO).expect("Must have shadowmap fbo to render shadowmaps");
+        shadowmap_fbo.bind();
         self.shadowmap_renderer.start_render(camera, &lights[0]);
-        self.shadowmap_renderer.shadow_params.shadow_map_texture = framebuffers.shadowmap_fbo.depth_texture;
+        self.shadowmap_renderer.shadow_params.shadow_map_texture = shadowmap_fbo.depth_texture.expect("A shadowmup must have a depth texture or crash");
 
         // render into the shadowmap depth buffer all the entities that we want to cast shadows
         let entity_by_tex = MasterRenderer::group_entities_by_tex(entities);
@@ -130,7 +132,7 @@ impl MasterRenderer {
         gl::helper::pop_debug_group();
     }
 
-    fn do_water_render_passes(&mut self, water_tiles: &Vec<WaterTile>, camera: &mut Camera, framebuffers: &mut Framebuffers,
+    fn do_water_render_passes(&mut self, water_tiles: &Vec<WaterTile>, camera: &mut Camera, framebuffers: &mut FboMap,
                 entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, player: &Player, lights: &Vec<Light>,
                 skybox: &Skybox, display: &Display) {
 
@@ -140,7 +142,7 @@ impl MasterRenderer {
 
         gl::helper::push_debug_group(RenderGroup::REFLECT_REFRACT_PASS.id, RenderGroup::REFLECT_REFRACT_PASS.name);
         // enable clip plane                    
-        gl::enable(gl::CLIP_DISTANCE0); 
+        gl::enable(gl::CLIP_DISTANCE0);
 
         let water_height = WaterTile::get_water_height(water_tiles);
         let tiny_overlap = 0.07; // to prevent glitches near the edge of the water
@@ -148,12 +150,14 @@ impl MasterRenderer {
         let below_water_clip_plane = Vector4f::new(0.0, 1.0, 0.0, -water_height + tiny_overlap);        
         
         camera.set_to_reflected_ray_camera_origin(water_height);
-        framebuffers.reflection_fbo.bind();
+        let reflection_fbo = framebuffers.fbos.get_mut(FboMap::REFLECTION_FBO).expect("Must have reflection fbo for water render");
+        reflection_fbo.bind();
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &below_water_clip_plane);
         camera.set_to_reflected_ray_camera_origin(water_height);
 
         // we should also move camera before refraction to account for refracted angle?
-        framebuffers.refraction_fbo.bind();
+        let refraction_fbo = framebuffers.fbos.get_mut(FboMap::REFRACTION_FBO).expect("Must have refraction fbo for water render");
+        refraction_fbo.bind();
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_water_clip_plane);
 
         gl::disable(gl::CLIP_DISTANCE0); // apparently this doesnt work on all drivers?   

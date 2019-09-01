@@ -2,7 +2,7 @@ extern crate copper;
 
 use copper::display::{
     Display,
-    Framebuffers,
+    framebuffers::FboMap,
 };
 use copper::renderers::{
     MasterRenderer,
@@ -22,7 +22,7 @@ use copper::scenes::{
 
 fn main() {
     let mut display = Display::create();
-    let mut framebuffers = Framebuffers::new(&display);
+    let mut framebuffers = FboMap::new(&display);
     let mut resource_manager = ResourceManager::default();
 
     let mut scene = create_scene(&mut resource_manager, &framebuffers);

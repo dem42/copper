@@ -1,6 +1,6 @@
 use crate::display::{
     Display,
-    ShadowMapFBO,
+    framebuffers::FboMap,
 };
 use crate::entities::{
     Camera,
@@ -44,7 +44,7 @@ impl ShadowMapRenderer {
         let shadow_params = ShadowParams {
             shadow_map_texture: 0,
             shadow_distance: ShadowBox::SHADOW_DISTANCE,
-            shadow_map_size: ShadowMapFBO::SHADOW_MAP_SIZE,
+            shadow_map_size: FboMap::SHADOW_MAP_SIZE,
         };
 
         ShadowMapRenderer {

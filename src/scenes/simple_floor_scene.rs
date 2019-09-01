@@ -1,8 +1,6 @@
 use super::scene::Scene;
 
-use crate::display::{
-    Framebuffers,
-};
+use crate::display::framebuffers::FboMap;
 use crate::entities::{
     Entity,
     Camera,
@@ -10,7 +8,6 @@ use crate::entities::{
     Player,
     Ground,
     Skybox,
-    Terrain,
     DebugEntity,
 };
 use crate::guis::GuiPanel;
@@ -32,7 +29,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_debug_cuboid_model();
 }
 
-pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Framebuffers) -> Scene {
+pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMap) -> Scene {
 
     init_scene_resources(resource_manager);
 
@@ -77,7 +74,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &Frame
 
     let particle_systems = Vec::new();
 
-    let shadow_map = framebuffers.shadowmap_fbo.depth_texture;
+    let shadow_map = framebuffers.fbos[FboMap::SHADOW_MAP_FBO].depth_texture.expect("Must have shadowmap to show it in gui");
     let guis = vec!{
         GuiPanel::new(shadow_map, Vector2f::new(0.6, 0.6), Vector2f::new(0.4, 0.4)),
     };

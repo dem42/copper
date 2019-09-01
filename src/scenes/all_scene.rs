@@ -4,9 +4,7 @@ extern crate rand;
 use rand::prelude::*;
 use rand::{Rng, SeedableRng};
 
-use crate::display::{
-    Framebuffers,
-};
+use crate::display::framebuffers::FboMap;
 use crate::entities::{
     Entity,
     Camera,
@@ -64,7 +62,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_debug_cuboid_model();
 }
 
-pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &Framebuffers) -> Scene {
+pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {
     let mut entities = Vec::new();    
     let mut rng: StdRng = SeedableRng::seed_from_u64(0xb000u64);
     const X_WIDTH: f32 = 1000.0;
