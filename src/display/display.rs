@@ -130,7 +130,9 @@ impl Display {
         glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
         glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
         // enable multisampling in the fbo created for the window
-        glfw.window_hint(WindowHint::Samples(Some(4 )));
+        //glfw.window_hint(WindowHint::Samples(Some(4)));
+        // disable multisampling -> we use post processing so the fbo we render to has to take care of it not the default screen fbo
+        glfw.window_hint(WindowHint::Samples(None));
 
         let (mut window, events) = glfw.create_window(WIDTH, HEIGHT, "Hello Copper", WindowMode::Windowed)
             .expect("Failed to create GLFW window.");

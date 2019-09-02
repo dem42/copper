@@ -62,14 +62,17 @@ impl PostProcessing {
         gl::helper::push_debug_group(RenderGroup::POST_PROCESSING.id, RenderGroup::POST_PROCESSING.name);
         self.start();
 
-        self.horizontal_blur.render(camera_texture, display);
-        self.horizontal_blur_small.render(self.horizontal_blur.get_output_texture().unwrap(), display);
+        /////////////////////////////////////////////        
+        // strong gaussian blurring
+        /////////////////////////////////////////////
+        // self.horizontal_blur.render(camera_texture, display);
+        // self.horizontal_blur_small.render(self.horizontal_blur.get_output_texture().unwrap(), display);
 
-        self.vertical_blur.render(self.horizontal_blur_small.get_output_texture().unwrap(), display);
-        self.vertical_blur_small.render(self.vertical_blur.get_output_texture().unwrap(), display);
+        // self.vertical_blur.render(self.horizontal_blur_small.get_output_texture().unwrap(), display);
+        // self.vertical_blur_small.render(self.vertical_blur.get_output_texture().unwrap(), display);
 
-        self.contrast_changer.render(self.vertical_blur_small.get_output_texture().unwrap(), display);
-        
+        self.contrast_changer.render(camera_texture, display);
+
         self.end();
         display.restore_default_framebuffer();
         gl::helper::pop_debug_group();

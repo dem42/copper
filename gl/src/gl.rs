@@ -518,6 +518,14 @@ pub fn check_framebuffer_status(fbo: types::GLenum) {
     }
 }
 
+// copy from one framebuffer to another
+// you can specify the range which should be copied from and to as a rectangle with corners ([srcX0,srcY0], [srcX1,srcY1]) -> ([dstX0,dstY0], [dstX1,dstY1])
+pub fn blit_framebuffer(src_x0: usize, src_y0: usize, src_x1: usize, src_y1: usize, dst_x0: usize, dst_y0: usize, dst_x1: usize, dst_y1: usize, buffer_type_bit_mask: types::GLbitfield, on_different_size_filter: types::GLenum) {
+    unsafe {
+        BlitFramebuffer(src_x0 as i32, src_y0 as i32, src_x1 as i32, src_y1 as i32, dst_x0 as i32, dst_y0 as i32, dst_x1 as i32, dst_y1 as i32, buffer_type_bit_mask, on_different_size_filter);
+    }
+}
+
 pub fn draw_buffers(color_buffers: &[types::GLenum]) {
     unsafe {
         DrawBuffers(color_buffers.len() as i32, color_buffers.as_ptr());
@@ -548,6 +556,12 @@ pub fn bind_renderbuffer(target: types::GLenum, renderbuffer: u32) {
 pub fn renderbuffer_storage(target: types::GLenum, internalformat: types::GLenum, width: usize, height: usize) {
     unsafe {
         RenderbufferStorage(target, internalformat, width as i32, height as i32);
+    }
+}
+
+pub fn renderbuffer_storage_multisampled(target: types::GLenum, internalformat: types::GLenum, width: usize, height: usize, samples: usize) {
+    unsafe {
+        RenderbufferStorageMultisample(target, samples as i32, internalformat, width as i32, height as i32)
     }
 }
 

@@ -1,12 +1,14 @@
+use super::super::Display;
 use crate::gl;
 
 bitflags! {
     pub struct FboFlags : u32 {
-        const COLOR_TEX       = 0b00001;
-        const COLOR_RENDERBUF = 0b00010;
-        const DEPTH_TEX       = 0b00100;
-        const DEPTH_RENDERBUF = 0b01000;
-        const SHADOW_DEPTH    = 0b10000;
+        const COLOR_TEX       = 0b000001;
+        const COLOR_RENDERBUF = 0b000010;
+        const DEPTH_TEX       = 0b000100;
+        const DEPTH_RENDERBUF = 0b001000;
+        const SHADOW_DEPTH    = 0b010000;
+        const MULTISAMPLED    = 0b100000;
     }
 }
 
@@ -17,9 +19,12 @@ pub struct FramebufferObject {
     pub color_texture: Option<u32>,
     pub depth_texture: Option<u32>,
     pub depth_renderbuffer_id: Option<u32>,
+    pub color_renderbuffer_id: Option<u32>,
 }
 
 impl FramebufferObject {
+    // number of samples used for multisampled anti aliasing MSAA
+    const SAMPLE_NUM: usize = 4;
 
     pub fn new(viewport_width: usize, viewport_height: usize, flags: FboFlags) -> Self {
         let fbo_id = Self::create_frame_buffer(flags);
@@ -36,9 +41,13 @@ impl FramebufferObject {
         } else {
             None
         };
-
         let depth_renderbuffer_id = if flags.contains(FboFlags::DEPTH_RENDERBUF) {
-            Some(Self::create_depth_renderbuffer_attachment(viewport_width, viewport_height))
+            Some(Self::create_depth_renderbuffer_attachment(viewport_width, viewport_height, flags.contains(FboFlags::MULTISAMPLED)))
+        } else {
+            None
+        };
+        let color_renderbuffer_id = if flags.contains(FboFlags::COLOR_RENDERBUF) {
+            Some(Self::create_color_renderbuffer_attachment(viewport_width, viewport_height, flags.contains(FboFlags::MULTISAMPLED)))
         } else {
             None
         };
@@ -50,13 +59,14 @@ impl FramebufferObject {
             color_texture,
             depth_texture,
             depth_renderbuffer_id,
+            color_renderbuffer_id,
         }
     }
 
     pub fn create_frame_buffer(flags: FboFlags) -> u32 {
         let fbo_id = gl::gen_framebuffer();
         gl::bind_framebuffer(gl::FRAMEBUFFER, fbo_id);
-        let color_attachments = if flags.contains(FboFlags::COLOR_TEX) {        
+        let color_attachments = if flags.intersects(FboFlags::COLOR_TEX | FboFlags::COLOR_RENDERBUF) {        
             [gl::COLOR_ATTACHMENT0; 1]
         } else {
             // by setting the draw_buffers to none we effectively make this a depth only pass
@@ -101,11 +111,27 @@ impl FramebufferObject {
         tex_id
     }
 
-    pub fn create_depth_renderbuffer_attachment(width: usize, height: usize) -> u32 {
+    pub fn create_depth_renderbuffer_attachment(width: usize, height: usize, multisampled: bool) -> u32 {
         let render_buffer_id = gl::gen_renderbuffer();
         gl::bind_renderbuffer(gl::RENDERBUFFER, render_buffer_id);
-        gl::renderbuffer_storage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, width, height);
+        if multisampled {
+            gl::renderbuffer_storage_multisampled(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, width, height, Self::SAMPLE_NUM);
+        } else {
+            gl::renderbuffer_storage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, width, height);
+        }
         gl::framebuffer_renderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, render_buffer_id);
+        render_buffer_id
+    }
+
+    pub fn create_color_renderbuffer_attachment(width: usize, height: usize, multisampled: bool) -> u32 {
+        let render_buffer_id = gl::gen_renderbuffer();
+        gl::bind_renderbuffer(gl::RENDERBUFFER, render_buffer_id);
+        if multisampled {
+            gl::renderbuffer_storage_multisampled(gl::RENDERBUFFER, gl::RGBA8, width, height, Self::SAMPLE_NUM);
+        } else {
+            gl::renderbuffer_storage(gl::RENDERBUFFER, gl::RGBA8, width, height);
+        }
+        gl::framebuffer_renderbuffer(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::RENDERBUFFER, render_buffer_id);
         render_buffer_id
     }
 
@@ -121,6 +147,27 @@ impl FramebufferObject {
     pub fn bind(&mut self) {
         Self::bind_framebuffer(self.fbo_id, self.viewport_width, self.viewport_height);
     }
+
+    pub fn resolve_to_fbo(&mut self, target_fbo: &mut FramebufferObject, display: &Display) {
+        // draw to target
+        gl::bind_framebuffer(gl::DRAW_FRAMEBUFFER, target_fbo.fbo_id);
+        // read from us
+        gl::bind_framebuffer(gl::READ_FRAMEBUFFER, self.fbo_id);
+        gl::blit_framebuffer(0, 0, self.viewport_width, self.viewport_height, 0, 0, target_fbo.viewport_width, target_fbo.viewport_height, gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT, gl::NEAREST);
+        display.restore_default_framebuffer();
+    }
+
+    pub fn resolve_to_screen(&mut self, display: &Display) {
+        // draw to default fbo
+        gl::bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
+        // read from us
+        gl::bind_framebuffer(gl::READ_FRAMEBUFFER, self.fbo_id);
+        let size = display.get_size();
+        let width = size.0 as usize;
+        let height = size.1 as usize;
+        gl::blit_framebuffer(0, 0, self.viewport_width, self.viewport_height, 0, 0, width, height, gl::COLOR_BUFFER_BIT, gl::NEAREST);
+        display.restore_default_framebuffer();
+    }
 }
 
 impl Drop for FramebufferObject {
@@ -134,6 +181,9 @@ impl Drop for FramebufferObject {
         }
         if let Some(depth_renderbuf) = self.depth_renderbuffer_id {
             gl::delete_renderbuffer(depth_renderbuf);
+        }
+        if let Some(color_renderbuf) = self.color_renderbuffer_id {
+            gl::delete_renderbuffer(color_renderbuf);
         }
     }    
 }

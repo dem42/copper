@@ -85,7 +85,7 @@ impl MasterRenderer {
 
         self.do_water_render_passes(water_tiles, camera, framebuffers, entities, normal_mapped_entities, terrains, player, lights, skybox, display);
         
-        let camera_tex_fbo = framebuffers.fbos.get_mut(FboMap::CAMERA_TEXTURE_FBO).expect("Must have a camera texture fbo to which to render the scene for post processing");
+        let camera_tex_fbo = framebuffers.fbos.get_mut(FboMap::CAMERA_TEXTURE_FBO_MULTI).expect("Must have a camera output fbo to which to render the scene for post processing");
         camera_tex_fbo.bind(); // we will unbind it later after particle effects are drawn
 
         let above_infinity_plane = Vector4f::new(0.0, -1.0, 0.0, 10_000.0);
