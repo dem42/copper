@@ -22,6 +22,8 @@ pub struct PostProcessing {
     contrast_changer: GenericPostprocess<ContrastShader>,
     horizontal_blur: GenericPostprocess<HorizontalBlurShader>,
     vertical_blur: GenericPostprocess<VerticalBlurShader>,
+    horizontal_blur_small: GenericPostprocess<HorizontalBlurShader>,
+    vertical_blur_small: GenericPostprocess<VerticalBlurShader>,
 }
 
 impl PostProcessing {
@@ -30,10 +32,16 @@ impl PostProcessing {
         let width = screen_size.0 as usize;
         let height = screen_size.1 as usize;
 
-        let horizontal_blur = GenericPostprocess::new(HorizontalBlurShader::new(width), 
-            Some(FramebufferObject::new(width, height, FboFlags::COLOR_TEX)));
-        let vertical_blur = GenericPostprocess::new(VerticalBlurShader::new(height), 
-            Some(FramebufferObject::new(width, height, FboFlags::COLOR_TEX)));
+        let horizontal_blur = GenericPostprocess::new(HorizontalBlurShader::new(width / 2), 
+            Some(FramebufferObject::new(width / 2, height / 2, FboFlags::COLOR_TEX)));
+        let vertical_blur = GenericPostprocess::new(VerticalBlurShader::new(height / 2), 
+            Some(FramebufferObject::new(width / 2, height / 2, FboFlags::COLOR_TEX)));
+
+        let horizontal_blur_small = GenericPostprocess::new(HorizontalBlurShader::new(width / 8), 
+            Some(FramebufferObject::new(width / 8, height / 8, FboFlags::COLOR_TEX)));
+        let vertical_blur_small = GenericPostprocess::new(VerticalBlurShader::new(height / 8), 
+            Some(FramebufferObject::new(width / 8, height / 8, FboFlags::COLOR_TEX)));
+        // this final step upscales this image back to screen size
         let contrast_changer = GenericPostprocess::new(ContrastShader::new(), None);
 
         PostProcessing {
@@ -41,6 +49,8 @@ impl PostProcessing {
             contrast_changer,
             horizontal_blur,
             vertical_blur,
+            horizontal_blur_small,
+            vertical_blur_small,
         }
     }
 
@@ -51,9 +61,15 @@ impl PostProcessing {
 
         gl::helper::push_debug_group(RenderGroup::POST_PROCESSING.id, RenderGroup::POST_PROCESSING.name);
         self.start();
+
         self.horizontal_blur.render(camera_texture, display);
-        self.vertical_blur.render(self.horizontal_blur.get_output_texture().unwrap(), display);
-        self.contrast_changer.render(self.vertical_blur.get_output_texture().unwrap(), display);
+        self.horizontal_blur_small.render(self.horizontal_blur.get_output_texture().unwrap(), display);
+
+        self.vertical_blur.render(self.horizontal_blur_small.get_output_texture().unwrap(), display);
+        self.vertical_blur_small.render(self.vertical_blur.get_output_texture().unwrap(), display);
+
+        self.contrast_changer.render(self.vertical_blur_small.get_output_texture().unwrap(), display);
+        
         self.end();
         display.restore_default_framebuffer();
         gl::helper::pop_debug_group();

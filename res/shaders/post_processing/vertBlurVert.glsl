@@ -14,6 +14,6 @@ void main(void) {
     vec2 texture_pos = position * 0.5 + 0.5;
     float pixel_height = 1.0 / viewport_height;
     for (int i=-5; i<=5; i++) {
-        blurTextureCoords[i + 5] = texture_pos + vec2(i * pixel_height, 0.0);
+        blurTextureCoords[i + 5] = texture_pos + vec2(0.0, i * pixel_height);
     }
 }
