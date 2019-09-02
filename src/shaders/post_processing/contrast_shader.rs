@@ -1,4 +1,7 @@
-use super::shader_program::ShaderProgram;
+use super::super::{
+    shader::Shader,
+    shader_program::ShaderProgram,
+};
 
 use crate::models::RawModel;
 
@@ -15,19 +18,24 @@ impl ContrastShader {
             |shader_prog| { 
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
             }, 
-            |shader_prog| {
+            |_| {
                 
             });
         ContrastShader {
             shader_program,
         }
     }
+}
 
-    pub fn start(&mut self) {
+impl Shader for ContrastShader {
+    fn start(&mut self) {
         self.shader_program.start();
     }
 
-    pub fn stop(&mut self) {
+    fn stop(&mut self) {
         self.shader_program.stop();
+    }
+
+    fn init(&mut self) {
     }
 }

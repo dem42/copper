@@ -35,7 +35,7 @@ fn main() {
 
     // particle effects master
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
-    let mut post_processing = PostProcessing::new(scene.quad_model.clone());
+    let mut post_processing = PostProcessing::new(scene.quad_model.clone(), &display);
         
     while !display.is_close_requested() {
 

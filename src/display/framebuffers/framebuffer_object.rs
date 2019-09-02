@@ -110,7 +110,6 @@ impl FramebufferObject {
     }
 
     pub fn bind_framebuffer(fbo_id: u32, width: usize, height: usize) {
-        gl::bind_texture(gl::TEXTURE_2D, 0); // unbind any active texture
         gl::bind_framebuffer(gl::FRAMEBUFFER, fbo_id); // bind the frame buffer 
         gl::viewport(0, 0, width as i32, height as i32);
     }

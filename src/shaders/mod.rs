@@ -1,4 +1,5 @@
 pub mod shader_program;
+pub mod shader;
 pub mod static_shader;
 pub mod terrain_shader;
 pub mod gui_shader;
@@ -8,8 +9,8 @@ pub mod normal_map_static_shader;
 pub mod text_shader;
 pub mod particle_shader;
 pub mod shadow_shader;
-pub mod contrast_shader;
 pub mod debug_shader;
+pub mod post_processing;
 
 pub use self::static_shader::StaticShader;
 pub use self::normal_map_static_shader::NormalMapStaticShader;
@@ -20,5 +21,4 @@ pub use self::water_shader::WaterShader;
 pub use self::text_shader::TextShader;
 pub use self::particle_shader::ParticleShader;
 pub use self::shadow_shader::ShadowShader;
-pub use self::contrast_shader::ContrastShader;
 pub use self::debug_shader::DebugShader;
