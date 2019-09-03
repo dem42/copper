@@ -6,7 +6,7 @@ out vec4 gl_Color;
 
 uniform sampler2D color_texture;
 
-const float contrast = 0.6;
+const float contrast = 0.3;
 
 void main(void) {
     vec4 color = texture(color_texture, texture_coords);

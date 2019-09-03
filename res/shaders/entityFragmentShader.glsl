@@ -16,6 +16,7 @@ out vec4 out_Color;
 
 uniform sampler2D texture_sampler;
 uniform sampler2D shadow_map;
+uniform sampler2D extra_info_map;
 
 uniform vec3 light_color[NUM_LIGHTS];
 // specular lighting
@@ -25,6 +26,8 @@ uniform float reflectivity;
 uniform vec3 sky_color;
 // point light attenuation
 uniform vec3 attenuation[NUM_LIGHTS];
+// for turning off/on extra info
+uniform float has_extra_info;
 
 const bool uses_cell_shading = false;
 const float brightness_levels = 3.0;
@@ -67,7 +70,15 @@ void main(void) {
     vec4 texture_color = texture(texture_sampler, pass_tex_coord);
     if (texture_color.a < 0.5) {
         discard; // do not render transparency (hack)
+    }    
+    float shininess_fac = 1.0;
+    float glow_fac = 0.0;
+    if (has_extra_info > 0.5) {
+        vec4 extra_info = texture(extra_info_map, pass_tex_coord);
+        shininess_fac = extra_info.r;
+        glow_fac = extra_info.g;
     }
+
     // we have to normalize after interpolation
     vec3 unit_normal = normalize(surface_normal);
     vec3 unit_camera = normalize(to_camera_dir);
@@ -95,6 +106,12 @@ void main(void) {
         total_specular = (pow(spec_brightness, shine_damper) * reflectivity * light_color[i]) / attenuation_factor;
     }
     total_diffuse = max(total_diffuse * light_factor, 0.2); // clamp to 0.2 so nothing totally dark -> ambient light
+
+    // apply extra info factors
+    // adjust shininess (lowering it) based on specular map
+    total_specular *= shininess_fac;
+    // when glow_fac > 0.5 this will subtract old total_diffuse and add vec3(1) making the pixel glow since very bright    
+    total_diffuse += step(0.5, glow_fac) * (vec3(1) - total_diffuse);
 
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);    

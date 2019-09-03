@@ -34,6 +34,8 @@ pub struct StaticShader {
     location_shadowmap: i32,
     location_shadow_distance: i32,
     location_shadow_map_size: i32,
+    location_extra_info_map: i32,
+    location_has_extra_info: i32,
 }
 
 impl StaticShader {
@@ -63,6 +65,8 @@ impl StaticShader {
             mut location_shadowmap,
             mut location_shadow_distance,
             mut location_shadow_map_size,
+            mut location_extra_info_map,
+            mut location_has_extra_info,
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
@@ -107,6 +111,9 @@ impl StaticShader {
                 location_shadowmap = shader_prog.get_uniform_location("shadow_map");
                 location_shadow_distance = shader_prog.get_uniform_location("shadow_distance");
                 location_shadow_map_size = shader_prog.get_uniform_location("shadow_map_size");
+
+                location_extra_info_map = shader_prog.get_uniform_location("extra_info_map");
+                location_has_extra_info = shader_prog.get_uniform_location("has_extra_info");
         });
 
         StaticShader {            
@@ -129,6 +136,8 @@ impl StaticShader {
             location_shadowmap,
             location_shadow_distance,
             location_shadow_map_size,
+            location_extra_info_map,
+            location_has_extra_info,
         }
     }
 
@@ -143,6 +152,7 @@ impl StaticShader {
     pub fn connect_texture_units(&mut self) {
         ShaderProgram::load_int(self.location_texture_sampler, 0);     
         ShaderProgram::load_int(self.location_shadowmap, 1);
+        ShaderProgram::load_int(self.location_extra_info_map, 2);
     }
 
     pub fn load_atlas_number_of_rows(&mut self, number_of_rows: usize) {
@@ -205,5 +215,9 @@ impl StaticShader {
     pub fn load_shadow_params(&mut self, shadow_params: &ShadowParams) {
         ShaderProgram::load_float(self.location_shadow_distance, shadow_params.shadow_distance);
         ShaderProgram::load_float(self.location_shadow_map_size, shadow_params.shadow_map_size as f32);
+    }
+
+    pub fn load_extra_info(&mut self, has_extra_info: bool) {        
+        ShaderProgram::load_float(self.location_has_extra_info, if has_extra_info { 1.0 } else { 0.0 });
     }
 }

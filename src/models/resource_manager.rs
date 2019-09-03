@@ -76,6 +76,7 @@ pub enum ModelType {
     Barrel,
     Boulder,
     FloorTile,
+    Lantern,
 }
 
 pub type ParticleTextureProps = (&'static str, usize);
@@ -91,6 +92,7 @@ pub struct ModelProps {
     pub reflectivity: f32,
     pub atlas_props: AtlasProps,
     pub normal_map: Option<&'static str>,
+    pub extra_info_map: Option<&'static str>,
 }
 impl ModelProps {
     fn get_texture_params(&self) -> TextureParams {        
@@ -113,7 +115,7 @@ pub struct Model(ModelType, &'static str, &'static str, &'static ModelProps);
 pub struct Models;
 
 impl Models {
-    const GUI_PROPS: ModelProps = ModelProps {
+    const DEFAULT_PROPS: ModelProps = ModelProps {
         has_transparency: false, 
         uses_fake_lighting: false, 
         uses_mipmaps: false,
@@ -122,87 +124,67 @@ impl Models {
         reflectivity: 0.0, 
         atlas_props: AtlasProps(1),
         normal_map: None,
+        extra_info_map: None,
     };
-    const COMMON_PROPS: ModelProps = ModelProps {
-        has_transparency: false, 
-        uses_fake_lighting: false, 
-        uses_mipmaps: true,
-        uses_anisotropic_filtering: true,
-        shine_damper: 1.0,
-        reflectivity: 0.0,  
-        atlas_props: AtlasProps(1),
-        normal_map: None,
+    const GUI_PROPS: ModelProps = ModelProps {        
+        ..Self::DEFAULT_PROPS
     };
-    const SHINY_PROPS: ModelProps = ModelProps {
-        has_transparency: false, 
-        uses_fake_lighting: false, 
+    const COMMON_PROPS: ModelProps = ModelProps {        
         uses_mipmaps: true,
-        uses_anisotropic_filtering: false,
+        uses_anisotropic_filtering: true,        
+        ..Self::DEFAULT_PROPS
+    };
+    const SHINY_PROPS: ModelProps = ModelProps {        
+        uses_mipmaps: true,        
         shine_damper: 20.0,
-        reflectivity: 0.6,  
-        atlas_props: AtlasProps(1),
+        reflectivity: 0.6,          
         normal_map: None,
+        ..Self::DEFAULT_PROPS
     };
     const FERN_PROPS: ModelProps = ModelProps { 
-        has_transparency: true, 
-        uses_fake_lighting: false, 
-        uses_mipmaps: true, 
-        uses_anisotropic_filtering: false,
-        shine_damper: 1.0,
-        reflectivity: 0.0, 
+        has_transparency: true,         
+        uses_mipmaps: true,        
         atlas_props: AtlasProps(2),
-        normal_map: None,
+        ..Self::DEFAULT_PROPS
     };    
     const GRASS_PROPS: ModelProps = ModelProps { 
         has_transparency: true, 
         uses_fake_lighting: true, 
-        uses_mipmaps: true,
-        uses_anisotropic_filtering: false,
-        shine_damper: 1.0,
-        reflectivity: 0.0, 
-        atlas_props: AtlasProps(1),
-        normal_map: None,
+        uses_mipmaps: true,        
+        ..Self::DEFAULT_PROPS
     };
     // point light is inside the lamp. to get it to light up the outer faces we make the outer faces have a vector that points up
-    const LAMP_PROPS: ModelProps = ModelProps { 
-        has_transparency: false, 
+    const LAMP_PROPS: ModelProps = ModelProps {        
         uses_fake_lighting: true, 
-        uses_mipmaps: true, 
-        uses_anisotropic_filtering: false,
-        shine_damper: 1.0,
-        reflectivity: 0.0, 
-        atlas_props: AtlasProps(1),
-        normal_map: None,
+        uses_mipmaps: true,         
+        ..Self::DEFAULT_PROPS
     };
-    const BARREL_PROPS: ModelProps = ModelProps { 
-        has_transparency: false, 
-        uses_fake_lighting: false, 
+    const BARREL_PROPS: ModelProps = ModelProps {         
         uses_mipmaps: true,
-        uses_anisotropic_filtering: false,
         shine_damper: 10.0,
         reflectivity: 0.5, 
-        atlas_props: AtlasProps(1),
-        normal_map: Some("res/textures/normal_maps/barrelNormal.png"),
+        normal_map: Some("res/textures/normal_maps/barrelNormal.png"),        
+        ..Self::DEFAULT_PROPS
     };
-    const BOULDER_PROPS: ModelProps = ModelProps { 
-        has_transparency: false, 
-        uses_fake_lighting: false, 
+    const BOULDER_PROPS: ModelProps = ModelProps {         
         uses_mipmaps: true,
-        uses_anisotropic_filtering: false,
         shine_damper: 10.0,
-        reflectivity: 0.5, 
-        atlas_props: AtlasProps(1),
+        reflectivity: 0.5,        
         normal_map: Some("res/textures/normal_maps/boulderNormal.png"),
+        ..Self::DEFAULT_PROPS
     };
     const FLOOR_PROPS: ModelProps = ModelProps { 
         has_transparency: true, 
         uses_fake_lighting: true, 
         uses_mipmaps: true,
-        uses_anisotropic_filtering: true,
-        shine_damper: 1.0,
-        reflectivity: 0.0, 
-        atlas_props: AtlasProps(1),
-        normal_map: None,
+        uses_anisotropic_filtering: true,        
+        ..Self::DEFAULT_PROPS
+    };
+    const LANTERN_PROPS: ModelProps = ModelProps {
+        shine_damper: 10.0,
+        reflectivity: 0.5,
+        extra_info_map: Some("res/textures/extra_info_maps/lantern_spec_glow.png"),
+        ..Self::DEFAULT_PROPS
     };
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
@@ -218,6 +200,7 @@ impl Models {
     pub const BARREL: Model = Model(ModelType::Barrel, "res/models/barrel.obj", "res/textures/barrel.png", &Models::BARREL_PROPS);
     pub const BOULDER: Model = Model(ModelType::Boulder, "res/models/boulder.obj", "res/textures/boulder.png", &Models::BOULDER_PROPS);
     pub const FLOOR_TILE: Model = Model(ModelType::FloorTile, "res/models/flat.obj", "res/textures/box.png", &Models::FLOOR_PROPS);
+    pub const LANTERN: Model = Model(ModelType::Lantern, "res/models/lantern.obj", "res/textures/lantern.png", &Models::LANTERN_PROPS);
 }
 
 
@@ -248,7 +231,14 @@ impl ResourceManager {
             let model_data = load_simple_obj_model(obj_file).expect(&format!("Unable to load simple {}", obj_file));
             let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
             (raw_model, None)
-        }; 
+        };
+
+        let extra_info_texture = if let Some(extra_info_tex_name) = model_props.extra_info_map {
+            let texture = self.loader.load_texture(extra_info_tex_name, TextureParams::default());
+            Some(texture.tex_id)
+        } else {
+            None
+        };
         
         let mut texture = self.loader.load_texture(texture_file, model_props.get_texture_params());
         texture.has_transparency = model_props.has_transparency;
@@ -256,7 +246,7 @@ impl ResourceManager {
         texture.shine_damper = model_props.shine_damper;
         texture.reflectivity = model_props.reflectivity;
         texture.number_of_rows_in_atlas = model_props.atlas_props.0;
-        let model = TexturedModel { raw_model, texture, normal_map_tex_id: normal_map };
+        let model = TexturedModel { raw_model, texture, normal_map_tex_id: normal_map, extra_info_tex_id: extra_info_texture };
 
         self.models.insert(model_type.clone(), model);
     }

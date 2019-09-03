@@ -69,6 +69,16 @@ impl EntityRenderer {
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
         gl::bind_texture(gl::TEXTURE_2D, textured_model.texture.tex_id);
+        match textured_model.extra_info_tex_id {
+            Some(extra_info_tex_id) => {
+                self.shader.load_extra_info(true);
+                gl::active_texture(gl::TEXTURE2);
+                gl::bind_texture(gl::TEXTURE_2D, extra_info_tex_id);
+            },
+            None => {
+                self.shader.load_extra_info(false);
+            }
+        };
     }
 
     pub fn render(&mut self, entity: &Entity) {

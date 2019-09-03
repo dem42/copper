@@ -44,6 +44,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::LAMP);
     resource_manager.init(&Models::BARREL);
     resource_manager.init(&Models::BOULDER);
+    resource_manager.init(&Models::LANTERN);
 
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
@@ -165,6 +166,9 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         GuiPanel::new(healthbar, Vector2f::new(-0.75, -0.75), Vector2f::new(0.2, 0.2)),
         //GuiPanel::new(shadow_map, Vector2f::new(0.7, 0.7), Vector2f::new(0.3, 0.3)),
     };
+    
+    // add lantern which isnt a light source but has extra_info_map
+    entities.push(Entity::new(resource_manager.model(ModelType::Lantern), ground.create_pos_on_terrain(130.0, -190.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
 
     let lights = vec!{        
         Light::new_infinite(Vector3f::new(5000.0, 10000.0, 5000.0), Vector3f::new(1.0, 1.0, 1.0)), // sunlight, no attenuation

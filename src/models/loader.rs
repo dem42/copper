@@ -301,6 +301,7 @@ pub struct TexturedModel {
     pub raw_model: RawModel,
     pub texture: ModelTexture,
     pub normal_map_tex_id: Option<u32>,
+    pub extra_info_tex_id: Option<u32>,
 }
 
 impl PartialEq for TexturedModel {

@@ -1,0 +1,13 @@
+extra info maps contain different data stored in the different color channels of the texture
+for example we have maps that store
+1. specular map (shininess) -> red channel
+2. glow (diffuse scale) -> green channel
+
+to generate the map I used gimp what i did is:
+open the channels tab in the toolbox that has layers etc
+right click on a layer and choose "Channel to selection" 
+then you can use the brush to paint only into this channel is seems
+to fill a channel with black you can do the channle to selection and then apply a black bucket fill a couple of times
+
+with this technique you seem to need to paint over (reapply the color) multiple times for some reason so it probably isnt entirely correct
+but it seems to be at least good for creating an outline that you can later color when you fill another channel with black
