@@ -5,29 +5,29 @@ use super::super::{
 
 use crate::models::RawModel;
 
-pub struct ContrastShader {
+pub struct BrightnessFilterShader {
     shader_program: ShaderProgram,
 }
 
 
-impl ContrastShader {
+impl BrightnessFilterShader {
     pub fn new() -> Self {
         let shader_program = ShaderProgram::new(
             "res/shaders/post_processing/defaultVert.glsl", 
-            "res/shaders/post_processing/contrastFrag.glsl", 
+            "res/shaders/post_processing/brightnessFilterFrag.glsl", 
             |shader_prog| { 
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
             }, 
             |_| {
                 
             });
-        ContrastShader {
+        Self {
             shader_program,
         }
     }
 }
 
-impl Shader for ContrastShader {
+impl Shader for BrightnessFilterShader {
     fn start(&mut self) {
         self.shader_program.start();
     }

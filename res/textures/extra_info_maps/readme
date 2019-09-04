@@ -11,3 +11,12 @@ to fill a channel with black you can do the channle to selection and then apply 
 
 with this technique you seem to need to paint over (reapply the color) multiple times for some reason so it probably isnt entirely correct
 but it seems to be at least good for creating an outline that you can later color when you fill another channel with black
+
+this advice from stack sounds better but i havent tested it:
+"
+Probably your best bet is to open a new image, then use Colours > Components > Decompose. This will turn the channels into editable layers named red, green, blue, and open the result as a new greyscale image in a new tab for you to edit.
+
+Once you have finished editing these layers, click Colours > Components > Recompose, and the other image open in the tabs along the top will update.
+
+Here's a screenshot showing each channel with different content, edited using decompose then recompose. Obviously if you want masks, you'd need to invert each of the RGB layers, like this example.
+"

@@ -14,6 +14,8 @@ use crate::shaders::post_processing::{
     HorizontalBlurShader,
     VerticalBlurShader,
     ContrastShader,
+    BrightnessFilterShader,
+    CombineShader,
 };
 use crate::renderers::master_renderer::RenderGroup;
 
@@ -22,8 +24,8 @@ pub struct PostProcessing {
     contrast_changer: GenericPostprocess<ContrastShader>,
     horizontal_blur: GenericPostprocess<HorizontalBlurShader>,
     vertical_blur: GenericPostprocess<VerticalBlurShader>,
-    horizontal_blur_small: GenericPostprocess<HorizontalBlurShader>,
-    vertical_blur_small: GenericPostprocess<VerticalBlurShader>,
+    brightness_filter: GenericPostprocess<BrightnessFilterShader>,
+    combine_shader: GenericPostprocess<CombineShader>,
 }
 
 impl PostProcessing {
@@ -32,25 +34,25 @@ impl PostProcessing {
         let width = screen_size.0 as usize;
         let height = screen_size.1 as usize;
 
-        let horizontal_blur = GenericPostprocess::new(HorizontalBlurShader::new(width / 2), 
-            Some(FramebufferObject::new(width / 2, height / 2, FboFlags::COLOR_TEX)));
-        let vertical_blur = GenericPostprocess::new(VerticalBlurShader::new(height / 2), 
-            Some(FramebufferObject::new(width / 2, height / 2, FboFlags::COLOR_TEX)));
+        let horizontal_blur = GenericPostprocess::new(HorizontalBlurShader::new(width / 5), 
+            Some(FramebufferObject::new(width / 5, height / 5, FboFlags::COLOR_TEX)));
+        let vertical_blur = GenericPostprocess::new(VerticalBlurShader::new(height / 5), 
+            Some(FramebufferObject::new(width / 5, height / 5, FboFlags::COLOR_TEX)));
 
-        let horizontal_blur_small = GenericPostprocess::new(HorizontalBlurShader::new(width / 8), 
-            Some(FramebufferObject::new(width / 8, height / 8, FboFlags::COLOR_TEX)));
-        let vertical_blur_small = GenericPostprocess::new(VerticalBlurShader::new(height / 8), 
-            Some(FramebufferObject::new(width / 8, height / 8, FboFlags::COLOR_TEX)));
         // this final step upscales this image back to screen size
         let contrast_changer = GenericPostprocess::new(ContrastShader::new(), None);
+
+        // shaders required for bloom effect
+        let combine_shader = GenericPostprocess::new(CombineShader::new(), Some(FramebufferObject::new(width, height, FboFlags::COLOR_TEX)));
+        let brightness_filter = GenericPostprocess::new(BrightnessFilterShader::new(), Some(FramebufferObject::new(width / 2, height / 2, FboFlags::COLOR_TEX)));
 
         PostProcessing {
             quad_model,
             contrast_changer,
             horizontal_blur,
             vertical_blur,
-            horizontal_blur_small,
-            vertical_blur_small,
+            brightness_filter,
+            combine_shader,
         }
     }
 
@@ -62,16 +64,11 @@ impl PostProcessing {
         gl::helper::push_debug_group(RenderGroup::POST_PROCESSING.id, RenderGroup::POST_PROCESSING.name);
         self.start();
 
-        /////////////////////////////////////////////        
-        // strong gaussian blurring
-        /////////////////////////////////////////////
-        // self.horizontal_blur.render(camera_texture, display);
-        // self.horizontal_blur_small.render(self.horizontal_blur.get_output_texture().unwrap(), display);
-
-        // self.vertical_blur.render(self.horizontal_blur_small.get_output_texture().unwrap(), display);
-        // self.vertical_blur_small.render(self.vertical_blur.get_output_texture().unwrap(), display);
-
-        self.contrast_changer.render(camera_texture, display);
+        self.brightness_filter.render_with_one_input(camera_texture, display);
+        self.horizontal_blur.render_with_one_input(self.brightness_filter.get_output_texture().unwrap(), display);
+        self.vertical_blur.render_with_one_input(self.horizontal_blur.get_output_texture().unwrap(), display);
+        self.combine_shader.render_with_two_inputs(camera_texture, self.vertical_blur.get_output_texture().unwrap(), display);
+        self.contrast_changer.render_with_one_input(self.combine_shader.get_output_texture().unwrap(), display);
 
         self.end();
         display.restore_default_framebuffer();
