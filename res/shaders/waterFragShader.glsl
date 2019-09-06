@@ -7,7 +7,8 @@ in vec2 tex_coords;
 in vec3 to_camera_vec;
 in vec3 from_light[LIGHT_NUM];
 
-out vec4 final_color;
+layout(location = 0) out vec4 final_color;
+layout(location = 1) out vec4 out_brightness_Color;
 
 uniform sampler2D reflection_tex;
 uniform sampler2D refraction_tex;
@@ -103,4 +104,6 @@ void main() {
     final_color = mix(final_color, vec4(0.0, 0.3, 0.5, 1.0), 0.2) + vec4(total_specular * water_blend_factor, 0.0);;    
     final_color = mix(vec4(sky_color, 1.0), final_color, visibility);
     final_color.a = water_blend_factor;
+
+    out_brightness_Color = vec4(0.0);
 }

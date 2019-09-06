@@ -384,6 +384,14 @@ pub fn bind_attrib_location(program_id: u32, attribute_id: u32, variable_name: &
     Ok(())
 }
 
+pub fn bind_frag_data_location(program_id: u32, color_attachment_number: u32, out_color_name: &str) -> Result<(), Error> {
+    let out_color_name_nul_term = CString::new(out_color_name)?;
+    unsafe {
+        BindFragDataLocation(program_id, color_attachment_number, out_color_name_nul_term.as_ptr());
+    }
+    Ok(())
+}
+
 pub fn gen_texture() -> u32 {
     unsafe {
         let mut textures = [0u32; 1];

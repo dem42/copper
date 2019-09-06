@@ -30,6 +30,12 @@ const HEIGHT: u32 = 720;
 // investigate framerate limits (high framerates vs VSync and flickering)
 // what happens when we use lwjgl Display.Sync(frame_rate_cap)
 
+pub struct WindowSize {
+    pub width: usize,
+    pub height: usize,
+    pub width_f32: f32,
+    pub height_f32: f32,
+}
 
 pub trait Keyboard {
     fn is_pressed(&self, key: Key) -> bool;
@@ -167,9 +173,14 @@ impl Display {
         }
     }
 
-    pub fn get_size(&self) -> (f32, f32) {
+    pub fn get_size(&self) -> WindowSize {
         let (w, h) = self.window.get_size();
-        (w as f32, h as f32)
+        WindowSize {
+            width_f32: w as f32, 
+            height_f32: h as f32,
+            width: w as usize, 
+            height: h as usize,
+        }
     }
 
     pub fn get_aspect_ratio(&self) -> f32 {

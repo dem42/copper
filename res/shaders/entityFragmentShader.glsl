@@ -12,7 +12,8 @@ in float visibility;
 in vec4 shadow_coords;
 
 // rgba
-out vec4 out_Color;
+layout(location = 0) out vec4 out_Color;
+layout(location = 1) out vec4 out_brightness_Color;
 
 uniform sampler2D texture_sampler;
 uniform sampler2D shadow_map;
@@ -112,7 +113,9 @@ void main(void) {
     total_specular *= shininess_fac;
     // when glow_fac > 0.5 this will subtract old total_diffuse and add vec3(1) making the pixel glow since very bright    
     total_diffuse += step(0.5, glow_fac) * (vec3(1) - total_diffuse);
-
+    
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * texture_color + vec4(total_specular, 1.0);
-    out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);    
+    out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility);
+    // make pixels brightness black unless in glow map
+    out_brightness_Color = step(0.5, glow_fac) * (light_based_out_color);
 }

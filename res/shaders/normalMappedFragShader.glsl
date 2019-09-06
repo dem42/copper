@@ -11,7 +11,8 @@ in vec3 to_camera_dir_tgs;
 in float visibility;
 
 // rgba
-out vec4 out_Color;
+layout(location = 0) out vec4 out_Color;
+layout(location = 1) out vec4 out_brightness_Color;
 
 uniform sampler2D texture_sampler;
 uniform sampler2D normal_map_sampler;
@@ -77,4 +78,5 @@ void main(void) {
 
     vec4 light_based_out_color = vec4(total_diffuse, 1.0) * texture_color + vec4(total_specular, 1.0);
     out_Color = mix(vec4(sky_color, 1.0), light_based_out_color, visibility); 
+    out_brightness_Color = vec4(0.0);
 }

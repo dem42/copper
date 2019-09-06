@@ -11,6 +11,7 @@ use crate::entities::{
 use crate::display::{
     Display,
     Keyboard,
+    WindowSize,
 };
 
 pub struct MousePicker;
@@ -95,7 +96,7 @@ impl MousePicker {
     fn viewport_to_normalized_device_coords(mouse_x: f32, mouse_y: f32, display: &Display) -> Vector2f {
         // from [(0,height), (width, 0)] to [(-1,-1), (1,1)] 
         // move by half w/h to center then scale by half w/h down
-        let (w, h) = display.get_size();
+        let WindowSize{width_f32: w, height_f32: h, width: _, height: _} = display.get_size();
         Vector2f::new((2.0*mouse_x - w)/w, (h - 2.0*mouse_y)/h)
     }
 }

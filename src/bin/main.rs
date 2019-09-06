@@ -8,6 +8,7 @@ use copper::display::{
 };
 use copper::renderers::{
     master_renderer::MasterRenderer,
+    master_renderer::RenderGroup,
     gui_renderer::GuiRenderer,
 };
 use copper::models::{
@@ -22,10 +23,11 @@ use copper::scenes::{
     scene::Scene,
     all_scene::create_scene
 };
+use copper::gl;
 
 fn main() {
     let mut display = Display::create();
-    let mut framebuffers = FboMap::new(&display);
+    let mut framebuffers = FboMap::new_rendering_fbos(&display);
     let mut resource_manager = ResourceManager::default();
 
     let mut scene = create_scene(&mut resource_manager, &framebuffers);
@@ -38,8 +40,6 @@ fn main() {
     // particle effects master
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
     let mut post_processing = PostProcessing::new(scene.quad_model.clone(), &display);
-
-    const POSTPROCESSING: bool = true;
         
     while !display.is_close_requested() {
 
@@ -60,13 +60,7 @@ fn main() {
         master_renderer.render(&scene.lights, &mut scene.camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
             &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut particle_master, &mut scene.debug_entity);
 
-        if POSTPROCESSING {
-            do_anti_aliasing_for_fbo(&mut framebuffers, &display);
-
-            post_processing.do_post_processing(&mut framebuffers, &display);
-        } else {
-            do_anti_aliasing_to_screen(&mut framebuffers, &display);
-        }
+        do_post_processing(&mut post_processing, &mut framebuffers, &display);
 
         gui_renderer.render(&scene.guis, &scene.quad_model.raw_model, &scene.texts);
 
@@ -74,15 +68,30 @@ fn main() {
     }
 }
 
-fn do_anti_aliasing_for_fbo(framebuffers: &mut FboMap, display: &Display) {
-    let display_size = display.get_size();
+fn do_post_processing(post_processing: &mut PostProcessing, framebuffers: &mut FboMap, display: &Display) {    
+    const POSTPROCESSING: bool = true;
+
+    gl::helper::push_debug_group(RenderGroup::POST_PROCESSING.id, RenderGroup::POST_PROCESSING.name);
+
+    if POSTPROCESSING {
+        do_anti_aliasing_for_fbo(post_processing, framebuffers, display);
+        post_processing.do_post_processing(display);
+    } else {
+        do_anti_aliasing_to_screen(framebuffers, display);
+    }
+
+    gl::helper::pop_debug_group();
+}
+
+fn do_anti_aliasing_for_fbo(post_processing: &mut PostProcessing, framebuffers: &mut FboMap, display: &Display) {
     let camera_multisampled_fbo = framebuffers.fbos.get_mut(FboMap::CAMERA_TEXTURE_FBO_MULTI).expect("A multisampled fbo must be present MSAA processing of camera output");
+
     // create the target fbo that will later be read from in post processing shaders
-    let mut camera_texture_fbo = FramebufferObject::new(display_size.0 as usize, display_size.1 as usize, FboFlags::COLOR_TEX | FboFlags::DEPTH_TEX);
+    let mut camera_texture_fbo = post_processing.post_processing_fbos.fbos.get_mut(FboMap::CAMERA_TEXTURE_FBO).expect("A camera texture fbo is needed to write the resolved MSAA camera output to");
+    camera_multisampled_fbo.resolve_to_fbo(gl::COLOR_ATTACHMENT0, &mut camera_texture_fbo, display);
 
-    camera_multisampled_fbo.resolve_to_fbo(&mut camera_texture_fbo, display);
-
-    framebuffers.insert(FboMap::CAMERA_TEXTURE_FBO, camera_texture_fbo);
+    let mut camera_brightness_fbo = post_processing.post_processing_fbos.fbos.get_mut(FboMap::CAMERA_BRIGHTNESS_FBO).expect("A post processing brightness fbo is needed to write the glow brightness into");
+    camera_multisampled_fbo.resolve_to_fbo(gl::COLOR_ATTACHMENT1, &mut camera_brightness_fbo, display);
 }
 
 fn do_anti_aliasing_to_screen(framebuffers: &mut FboMap, display: &Display) {

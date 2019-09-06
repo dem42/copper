@@ -18,7 +18,7 @@ impl ImageRenderer {
     pub fn get_color_texture(&self) -> Result<u32, &'static str> {
         match &self.target_fbo {
             Some(fbo) => {
-                match fbo.color_texture {
+                match fbo.color_texture(0) {
                     Some(color_tex) => Ok(color_tex),
                     None            => Err("The configured render target fbo does not have a color texture attachment"),
                 }

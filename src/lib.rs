@@ -1,4 +1,4 @@
-extern crate gl;
+pub extern crate gl;
 extern crate libc;
 extern crate texture_lib;
 extern crate rand;

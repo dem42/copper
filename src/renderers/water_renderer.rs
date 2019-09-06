@@ -54,9 +54,9 @@ impl WaterRenderer {
         let refraction_fbo = framebuffers.fbos.get(FboMap::REFRACTION_FBO).expect("Must have refraction fbo for water render");
 
         gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(gl::TEXTURE_2D, reflection_fbo.color_texture.expect("ReflectionFbo must have a color attachment"));
+        gl::bind_texture(gl::TEXTURE_2D, reflection_fbo.color_texture(0).expect("ReflectionFbo must have a color attachment"));
         gl::active_texture(gl::TEXTURE1);
-        gl::bind_texture(gl::TEXTURE_2D, refraction_fbo.color_texture.expect("RefractionFbo must have a color attachment")); 
+        gl::bind_texture(gl::TEXTURE_2D, refraction_fbo.color_texture(0).expect("RefractionFbo must have a color attachment")); 
         gl::active_texture(gl::TEXTURE4);
         gl::bind_texture(gl::TEXTURE_2D, refraction_fbo.depth_texture.expect("RefractionFbo must have a depth attach"));
 
