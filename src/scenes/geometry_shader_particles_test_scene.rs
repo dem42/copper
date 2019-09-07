@@ -10,14 +10,17 @@ use crate::entities::{
     Skybox,
     DebugEntity,
 };
-use crate::guis::GuiPanel;
-use crate::math::{Vector3f, Vector2f};
+use crate::math::{Vector3f};
 use crate::models::{
     ResourceManager,
     Models,
     ModelType,
     SkyboxModel,
     RawModel,
+};
+use crate::particles::{
+    AdvancedParticleSystem,
+    ParticleSystemProps,
 };
 
 fn init_scene_resources(resource_manager: &mut ResourceManager) {
@@ -27,6 +30,9 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
 
     // debug entity
     resource_manager.init_debug_cuboid_model();
+
+    resource_manager.init_simple_point_particle_model();
+    resource_manager.init_particle_textures();
 }
 
 pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {
@@ -61,7 +67,19 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         Light::new_infinite(Vector3f::new(5000.0, 10000.0, -5000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
     };
 
-    let particle_systems = Vec::new();
+    let particle_spawn = player.entity.position.clone();    
+    let particle_system = AdvancedParticleSystem::new(resource_manager.simple_point_particle_model(), resource_manager.particle_texture(ResourceManager::SMOKE_ATLAS),
+        ParticleSystemProps { 
+            particles_per_sec: 30.0, speed: 15.0, scale: 6.5, 
+            gravity_effect: 0.05, life_length: 1.5, 
+            speed_error: 0.3, life_error: 0.3, scale_error: 0.1, 
+            randomize_rotation: true, direction: Some((Vector3f::new(0.0, 1.0, 0.0), 50.0)),
+            additive_blending: false,
+        }
+    );
+    let particle_systems = vec![        
+        (particle_system, particle_spawn),
+    ];
     
     let guis = Vec::new();
 

@@ -22,8 +22,8 @@ impl ParticleShader {
         ) = Default::default();
 
         let program = ShaderProgram::new(
-            "res/shaders/particleVertShader.glsl", 
-            "res/shaders/particleFragShader.glsl", 
+            "res/shaders/particles/particleVertShader.glsl", 
+            "res/shaders/particles/particleFragShader.glsl", 
             |shader_program| {
                 shader_program.bind_attribute(RawModel::POS_ATTRIB, "position");
                 shader_program.bind_attribute(ParticleModel::MODELVIEW_COLUMN1, "model_view_matrix");

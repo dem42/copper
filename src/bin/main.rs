@@ -3,8 +3,6 @@ extern crate copper;
 use copper::display::{
     Display,
     framebuffers::FboMap,
-    framebuffers::FramebufferObject,
-    framebuffers::FboFlags,
 };
 use copper::renderers::{
     master_renderer::MasterRenderer,

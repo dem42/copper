@@ -12,6 +12,7 @@ use super::{
         ParticleModel,
         ParticleTexture,
         DynamicVertexIndexedModel,
+        RawModel,
     },
     terrain_generator::HeightsGenerator,
 };
@@ -41,7 +42,11 @@ pub struct ResourceManager {
     quad_model: Option<QuadModel>,
     skybox_model: Option<SkyboxModel>,
     water_model: Option<WaterModel>,
+    // particle models: 
+    // for gpu instanced use particle model which has stream vbo
+    // for geometry shader use simple point
     particle_model: Option<ParticleModel>,
+    simple_point_particle_model: Option<ParticleModel>,
     // debugging models
     debug_model: Option<DynamicVertexIndexedModel>,
     
@@ -439,6 +444,20 @@ impl ResourceManager {
         GuiText::new(font_type, text_model, position, material)
     }
 
+    pub fn init_simple_point_particle_model(&mut self) {
+        if let None = self.simple_point_particle_model {            
+            let raw_model = RawModel {
+                vao_id: self.loader.create_vao(),
+                vertex_count: 1,
+            };
+            let stream_draw_vbo = self.loader.create_empty_float_vbo_for_attrib(RawModel::POS_ATTRIB, ParticleModel::MAX_INSTANCES, 3);
+            self.simple_point_particle_model = Some(ParticleModel {
+                raw_model,
+                stream_draw_vbo,
+            });
+        }
+    }
+
     pub fn init_particle_model(&mut self) {
         if let None = self.particle_model {
             let quad_triang_strip = vec![
@@ -464,6 +483,10 @@ impl ResourceManager {
 
     pub fn particle_model(&self) -> ParticleModel {
         self.particle_model.as_ref().expect("Must init_particle_model before accessing it").clone()
+    }
+
+    pub fn simple_point_particle_model(&self) -> ParticleModel {
+        self.simple_point_particle_model.as_ref().expect("Must init_simple_point_particle_model before accessing it").clone()
     }
 
     pub fn init_particle_textures(&mut self) {

@@ -200,7 +200,7 @@ impl ModelLoader {
         gl::bind_buffer(gl::ARRAY_BUFFER, 0);
     }
 
-    fn create_vao(&mut self) -> u32 {
+    pub fn create_vao(&mut self) -> u32 {
         let vao_id = gl::gen_vertex_array();
         self.vao_list.push(vao_id);
         gl::bind_vertex_array(vao_id);                

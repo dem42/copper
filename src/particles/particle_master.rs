@@ -14,7 +14,11 @@ use crate::math::{
 use crate::models::{
     ParticleTexturedModel,
 };
-use crate::renderers::particle_renderer::ParticleRenderer;
+use crate::renderers::{
+    particle_renderer::ParticleRenderer,
+    particle_renderer_gpu_instanced::ParticleRendererGpuInstanced,
+    particle_renderer_geometry_shdr::ParticleRendererGeometryShader,
+};
 use crate::utils::insertion_sort;
 use super::particle_system::{
     AdvancedParticleSystem,
@@ -106,14 +110,14 @@ impl PartialOrd for Particle {
 
 pub struct ParticleMaster {
     particles: HashMap<ParticleTexturedModel, Vec<Particle>>,
-    particle_renderer: ParticleRenderer,
+    particle_renderer: Box<dyn ParticleRenderer>,
 }
 
 impl ParticleMaster {
     pub fn new(projection_matrix: &Matrix4f) -> Self {
         ParticleMaster {
             particles: HashMap::new(),
-            particle_renderer: ParticleRenderer::new(projection_matrix),
+            particle_renderer: Box::new(ParticleRendererGeometryShader::new(projection_matrix)),
         }
     }
 

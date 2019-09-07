@@ -11,6 +11,7 @@ pub mod particle_shader;
 pub mod shadow_shader;
 pub mod debug_shader;
 pub mod post_processing;
+pub mod particle_using_geometry_shader;
 
 pub use self::static_shader::StaticShader;
 pub use self::normal_map_static_shader::NormalMapStaticShader;
