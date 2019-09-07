@@ -192,9 +192,11 @@ impl MasterRenderer {
             self.entity_renderer.unprepare_textured_model(textured_model);
         }        
         // render player
-        self.entity_renderer.prepare_textured_model(&player.entity.model, clip_plane); 
-        self.entity_renderer.render(&player.entity);
-        self.entity_renderer.unprepare_textured_model(&player.entity.model);
+        if !player.is_invisible_immovable {
+            self.entity_renderer.prepare_textured_model(&player.entity.model, clip_plane); 
+            self.entity_renderer.render(&player.entity);
+            self.entity_renderer.unprepare_textured_model(&player.entity.model);
+        }
 
         self.entity_renderer.stop_render();
         gl::helper::pop_debug_group();     

@@ -12,6 +12,8 @@ const DAY_SEGMENTS: f32 = WallClock::DAY_LENGTH / 4.0;
 pub struct Skybox {
     pub model: SkyboxModel,
     pub rotation_yaw_deg: f32,
+    // this is a hack for scenes that don't want to show a skybox :(
+    pub invisible: bool,
 }
 
 impl Skybox {
@@ -19,6 +21,7 @@ impl Skybox {
         Skybox {
             model,
             rotation_yaw_deg,
+            invisible: false,
         }
     }
 

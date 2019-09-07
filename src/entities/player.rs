@@ -16,6 +16,7 @@ pub struct Player {
     current_turn_speed: f32,
     upwards_speed: f32,
     is_in_air: bool,
+    pub is_invisible_immovable: bool,
 }
 
 impl Player {
@@ -30,10 +31,14 @@ impl Player {
             current_turn_speed: 0.0,
             upwards_speed: 0.0,
             is_in_air: false,
+            is_invisible_immovable: false,
         }
     }
 
     pub fn move_player(&mut self, display: &Display, ground: &Ground) {
+        if self.is_invisible_immovable {
+            return;
+        }
         self.check_inputs(display);
         self.entity.increase_rotation(0.0, self.current_turn_speed * display.frame_time_sec, 0.0);
         let distance = self.current_speed * display.frame_time_sec;

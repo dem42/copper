@@ -238,5 +238,6 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         guis,
         lights,
         particle_systems,
+        uses_post_processing: true,
     }
 }

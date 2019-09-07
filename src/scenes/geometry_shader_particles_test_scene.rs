@@ -16,43 +16,32 @@ use crate::models::{
     ResourceManager,
     Models,
     ModelType,
+    SkyboxModel,
+    RawModel,
 };
 
 fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::PLAYER);
     
-    resource_manager.init_skybox();
-    resource_manager.init(&Models::FLOOR_TILE);
     resource_manager.init_quad_model();
 
     // debug entity
     resource_manager.init_debug_cuboid_model();
 }
 
-pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMap) -> Scene {
+pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {
 
     init_scene_resources(resource_manager);
 
-    let mut entities = Vec::new();
-    let tile_size = 10.0;
-    const LO: isize = -10;
-    const HI: isize = 10;
-    for x in LO..=HI {
-        for z in LO..=HI {            
-            let flat_floor_tile = Entity::new(resource_manager.model(ModelType::FloorTile), 
-                Vector3f::new((x as f32) * 2.0 * tile_size, 0.0, (z as f32) * 2.0 * tile_size), 
-                Vector3f::zero(), 
-                tile_size);
-            entities.push(flat_floor_tile);
-        }
-    }
+    let entities = Vec::new();
     
-    let terrains = Vec::new();    
+    let terrains = Vec::new();
     let ground = Ground { terrains };
 
     //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, 0.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
-    let player = Player::new(player_entity);
+    let mut player = Player::new(player_entity);
+    player.is_invisible_immovable = true;
     
     let water_tiles = Vec::new();
     let normal_mapped_entities = Vec::new();
@@ -63,7 +52,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
     let mut camera = Camera::new(20.0, 50.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
-    let skybox = Skybox::new(resource_manager.skybox(), 0.0);
+    let skybox = Skybox::new(SkyboxModel {raw_model: RawModel {vao_id: 0, vertex_count: 0}, day_texture_id: 0, night_texture_id: 0}, 0.0);
 
     let texts = Vec::new();
     
@@ -73,11 +62,8 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
     };
 
     let particle_systems = Vec::new();
-
-    let shadow_map = framebuffers.fbos[FboMap::SHADOW_MAP_FBO].depth_texture.expect("Must have shadowmap to show it in gui");
-    let guis = vec!{
-        GuiPanel::new(shadow_map, Vector2f::new(0.6, 0.6), Vector2f::new(0.4, 0.4)),
-    };
+    
+    let guis = Vec::new();
 
     Scene {
         entities, 

@@ -21,7 +21,7 @@ use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    all_scene::create_scene
+    geometry_shader_particles_test_scene::create_scene,
 };
 use copper::gl;
 
@@ -60,7 +60,7 @@ fn main() {
         master_renderer.render(&scene.lights, &mut scene.camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
             &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut particle_master, &mut scene.debug_entity);
 
-        do_post_processing(&mut post_processing, &mut framebuffers, &display);
+        do_post_processing(scene.uses_post_processing, &mut post_processing, &mut framebuffers, &display);
 
         gui_renderer.render(&scene.guis, &scene.quad_model.raw_model, &scene.texts);
 
@@ -68,12 +68,11 @@ fn main() {
     }
 }
 
-fn do_post_processing(post_processing: &mut PostProcessing, framebuffers: &mut FboMap, display: &Display) {    
-    const POSTPROCESSING: bool = true;
-
+fn do_post_processing(uses_post_processing: bool, post_processing: &mut PostProcessing, framebuffers: &mut FboMap, display: &Display) {    
+    
     gl::helper::push_debug_group(RenderGroup::POST_PROCESSING.id, RenderGroup::POST_PROCESSING.name);
 
-    if POSTPROCESSING {
+    if uses_post_processing {
         do_anti_aliasing_for_fbo(post_processing, framebuffers, display);
         post_processing.do_post_processing(display);
     } else {

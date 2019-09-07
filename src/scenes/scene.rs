@@ -31,4 +31,5 @@ pub struct Scene {
     pub guis: Vec<GuiPanel>,
     pub lights: Vec<Light>,
     pub particle_systems: Vec<(AdvancedParticleSystem, Vector3f)>,
+    pub uses_post_processing: bool,
 }
