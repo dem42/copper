@@ -36,6 +36,7 @@ impl TextShader {
 
         let program = ShaderProgram::new(
             "res/shaders/guiTextVertexShader.glsl",
+            None,
             "res/shaders/guiTextFragShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");

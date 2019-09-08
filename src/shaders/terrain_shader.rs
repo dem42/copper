@@ -67,8 +67,9 @@ impl TerrainShader {
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
-            "res/shaders/terrainVertexShader.glsl", 
-            "res/shaders/terrainFragShader.glsl", 
+            "res/shaders/terrainVertexShader.glsl",
+            None,
+            "res/shaders/terrainFragShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");
                 shader_prog.bind_attribute(RawModel::TEX_COORD_ATTRIB, "tex_coord");

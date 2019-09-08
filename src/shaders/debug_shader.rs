@@ -13,6 +13,7 @@ impl DebugShader {
         let mut location_mvp_matrix = 0;
         let shader_program = ShaderProgram::new(
             "res/shaders/test/debugVertShader.glsl",
+            None,
             "res/shaders/test/debugFragShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");

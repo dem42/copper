@@ -17,6 +17,7 @@ impl ShadowShader {
 
         let shader_program = ShaderProgram::new(
             "res/shaders/shadows/shadowVertexShader.glsl",
+            None,
             "res/shaders/shadows/shadowFragmentShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");

@@ -58,6 +58,7 @@ impl WaterShader {
 
         let program = ShaderProgram::new(
             "res/shaders/waterVertexShader.glsl",
+            None,
             "res/shaders/waterFragShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");

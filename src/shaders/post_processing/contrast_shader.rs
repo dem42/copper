@@ -13,8 +13,9 @@ pub struct ContrastShader {
 impl ContrastShader {
     pub fn new() -> Self {
         let shader_program = ShaderProgram::new(
-            "res/shaders/post_processing/defaultVert.glsl", 
-            "res/shaders/post_processing/contrastFrag.glsl", 
+            "res/shaders/post_processing/defaultVert.glsl",
+            None,
+            "res/shaders/post_processing/contrastFrag.glsl",
             |shader_prog| { 
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
             }, 

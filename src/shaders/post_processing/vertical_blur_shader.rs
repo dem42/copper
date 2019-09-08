@@ -16,8 +16,9 @@ impl VerticalBlurShader {
     pub fn new(viewport_height: usize) -> Self {
         let mut location_size = Default::default();
         let shader_program = ShaderProgram::new(
-            "res/shaders/post_processing/vertBlurVert.glsl", 
-            "res/shaders/post_processing/blurFrag.glsl", 
+            "res/shaders/post_processing/vertBlurVert.glsl",
+            None,
+            "res/shaders/post_processing/blurFrag.glsl",
             |shader_prog| { 
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
             }, 

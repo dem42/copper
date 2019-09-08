@@ -16,8 +16,9 @@ impl HorizontalBlurShader {
     pub fn new(viewport_width: usize) -> Self {
         let mut location_size = Default::default();
         let shader_program = ShaderProgram::new(
-            "res/shaders/post_processing/horizBlurVert.glsl", 
-            "res/shaders/post_processing/blurFrag.glsl", 
+            "res/shaders/post_processing/horizBlurVert.glsl",
+            None,
+            "res/shaders/post_processing/blurFrag.glsl",
             |shader_prog| { 
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
             }, 

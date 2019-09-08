@@ -23,6 +23,7 @@ impl ParticleShader {
 
         let program = ShaderProgram::new(
             "res/shaders/particles/particleVertShader.glsl", 
+            None,
             "res/shaders/particles/particleFragShader.glsl", 
             |shader_program| {
                 shader_program.bind_attribute(RawModel::POS_ATTRIB, "position");

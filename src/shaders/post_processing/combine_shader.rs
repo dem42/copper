@@ -17,8 +17,9 @@ impl CombineShader {
         let (mut location_in_texture, mut location_brightness_texture) = Default::default();
 
         let shader_program = ShaderProgram::new(
-            "res/shaders/post_processing/defaultVert.glsl", 
-            "res/shaders/post_processing/combineFrag.glsl", 
+            "res/shaders/post_processing/defaultVert.glsl",
+            None,
+            "res/shaders/post_processing/combineFrag.glsl",
             |shader_prog| { 
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
             }, 

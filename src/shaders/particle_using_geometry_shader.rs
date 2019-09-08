@@ -17,12 +17,13 @@ impl ParticleUsingGeometryShader {
      
         let shader_program = ShaderProgram::new(
             "res/shaders/particles/simpleParticleVert.glsl", 
+            Some("res/shaders/particles/simpleParticleGeo.glsl"),
             "res/shaders/particles/simpleParticleFrag.glsl", 
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");
             },
             |shader_prog| {                
-                location_projection_view_matrix = shader_prog.get_uniform_location("vp_matrix");
+                location_projection_view_matrix = shader_prog.get_uniform_location("projectionViewMatrix");
         });
 
         Self {

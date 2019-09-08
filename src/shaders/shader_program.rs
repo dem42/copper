@@ -18,25 +18,32 @@ use super::super::math::{
 pub struct ShaderProgram {
     program_id: u32,
     vertex_shader_id: u32,
+    geometry_shader_id: Option<u32>,
     fragment_shader_id: u32,
 }
 
 impl ShaderProgram {
 
-    pub fn new<F1, F2>(vertex_file: &str, fragment_file: &str, attrib_binder_fn: F1, uniform_loader: F2) -> ShaderProgram 
+    pub fn new<F1, F2>(vertex_file: &str, geometry_file: Option<&str>, fragment_file: &str, attrib_binder_fn: F1, uniform_loader: F2) -> ShaderProgram 
         where F1: FnOnce(&ShaderProgram) -> (), 
               F2: FnOnce(&ShaderProgram) -> () {
         let vertex_shader_id = ShaderProgram::load_shader(vertex_file, gl::VERTEX_SHADER)
             .expect("Failed to create vertex shader");
+        let geometry_shader_id = geometry_file.map(|geo_file| { ShaderProgram::load_shader(geo_file, gl::GEOMETRY_SHADER).expect("Failed to create geometry shader") });
         let fragment_shader_id = ShaderProgram::load_shader(fragment_file, gl::FRAGMENT_SHADER)
             .expect("Failed to create fragment shader");
+
         let program_id = gl::create_program();
         gl::attach_shader(program_id, vertex_shader_id);
         gl::attach_shader(program_id, fragment_shader_id);
+        if let Some(geometry_shdr_id) = geometry_shader_id {
+            gl::attach_shader(program_id, geometry_shdr_id);
+        }
         
         let shader_prog = ShaderProgram {
             program_id,
             vertex_shader_id,
+            geometry_shader_id,
             fragment_shader_id,
         };
         attrib_binder_fn(&shader_prog);
@@ -131,6 +138,9 @@ impl Drop for ShaderProgram {
         gl::detach_shader(self.program_id, self.fragment_shader_id);
         gl::delete_shader(self.vertex_shader_id);
         gl::delete_shader(self.fragment_shader_id);
+        if let Some(geometry_shdr_id) = self.geometry_shader_id {
+            gl::delete_shader(geometry_shdr_id);
+        }
         gl::delete_program(self.program_id);
     }
 }

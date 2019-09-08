@@ -56,7 +56,8 @@ impl NormalMapStaticShader {
         ) = Default::default();
         
         let shader_program = ShaderProgram::new(
-            "res/shaders/normalMappedVertShader.glsl", 
+            "res/shaders/normalMappedVertShader.glsl",
+            None,
             "res/shaders/normalMappedFragShader.glsl", 
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "pos");

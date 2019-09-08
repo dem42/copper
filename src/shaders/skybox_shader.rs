@@ -36,6 +36,7 @@ impl SkyboxShader {
 
         let program = ShaderProgram::new(
             "res/shaders/skyboxVertexShader.glsl",
+            None,
             "res/shaders/skyboxFragmentShader.glsl",
             |shader_prog| {
                 shader_prog.bind_attribute(RawModel::POS_ATTRIB, "position");
