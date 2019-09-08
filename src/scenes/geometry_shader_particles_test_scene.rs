@@ -32,6 +32,7 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_debug_cuboid_model();
 
     resource_manager.init_simple_point_particle_model();
+    resource_manager.init_particle_model();
     resource_manager.init_particle_textures();
 }
 
@@ -77,6 +78,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
             additive_blending: false,
         }
     );
+
     let particle_systems = vec![        
         (particle_system, particle_spawn),
     ];

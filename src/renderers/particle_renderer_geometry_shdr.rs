@@ -4,13 +4,9 @@ use crate::gl;
 use crate::math::{
     Matrix4f,
 };
-use crate::display::{
-    Display,
-};
 use crate::models::{
     RawModel,
     ParticleModel,
-    ParticleTexture,
     ParticleTexturedModel,
 };
 use crate::particles::Particle;
@@ -24,10 +20,11 @@ use super::particle_renderer::{
 pub struct ParticleRendererGeometryShader {
     shader: ParticleUsingGeometryShader,
     particle_data: Vec<f32>,
+    projection_matrix: Matrix4f,
 }
 
 impl ParticleRenderer for ParticleRendererGeometryShader {
-    fn render(&mut self, particles: &HashMap<ParticleTexturedModel, Vec<Particle>>, _camera: &Camera) {
+    fn render(&mut self, particles: &HashMap<ParticleTexturedModel, Vec<Particle>>, camera: &Camera) {
         gl::helper::push_debug_group(RenderGroup::PARTICLE_EFFECTS_PASS.id, RenderGroup::PARTICLE_EFFECTS_PASS.name);
         self.prepare();
 
@@ -44,10 +41,13 @@ impl ParticleRenderer for ParticleRendererGeometryShader {
             for i in 0..particle_num {
                 self.particle_data.push(particle_vec[i].position.x);
                 self.particle_data.push(particle_vec[i].position.y);
-                self.particle_data.push(particle_vec[i].position.z);                
+                self.particle_data.push(particle_vec[i].position.z);
             }
             update_vbo(model.model.stream_draw_vbo, &self.particle_data);
         }
+
+        let vp_matrix = &self.projection_matrix * Matrix4f::create_view_matrix(camera);
+        self.shader.load_vp_matrix(&vp_matrix);
 
         gl::bind_vertex_array(model_vao);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
@@ -64,14 +64,12 @@ impl ParticleRenderer for ParticleRendererGeometryShader {
 
 impl ParticleRendererGeometryShader {
     pub fn new(projection_matrix: &Matrix4f) -> Self {
-        let mut shader = ParticleUsingGeometryShader::new();
-        shader.start();
-        shader.load_vp_matrix(projection_matrix);
-        shader.stop();
+        let shader = ParticleUsingGeometryShader::new();        
         ParticleRendererGeometryShader {
             shader,
             // we will use the vbo to write particle positions so vec4
-            particle_data: Vec::with_capacity(ParticleModel::MAX_INSTANCES * 3)
+            particle_data: Vec::with_capacity(ParticleModel::MAX_INSTANCES * 3),
+            projection_matrix: projection_matrix.clone(),
         }
     }
 

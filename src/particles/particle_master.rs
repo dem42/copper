@@ -118,6 +118,7 @@ impl ParticleMaster {
         ParticleMaster {
             particles: HashMap::new(),
             particle_renderer: Box::new(ParticleRendererGeometryShader::new(projection_matrix)),
+            //particle_renderer: Box::new(ParticleRendererGpuInstanced::new(projection_matrix)),
         }
     }
 
