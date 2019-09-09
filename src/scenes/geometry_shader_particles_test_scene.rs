@@ -56,7 +56,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let mut debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
     debug_entity.position.y = 10.0;
 
-    let mut camera = Camera::new(20.0, 50.0);
+    let mut camera = Camera::new(20.0, 30.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
     let skybox = Skybox::new(SkyboxModel {raw_model: RawModel {vao_id: 0, vertex_count: 0}, day_texture_id: 0, night_texture_id: 0}, 0.0);
@@ -71,10 +71,10 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let particle_spawn = player.entity.position.clone();    
     let particle_system = AdvancedParticleSystem::new(resource_manager.simple_point_particle_model(), resource_manager.particle_texture(ResourceManager::SMOKE_ATLAS),
         ParticleSystemProps { 
-            particles_per_sec: 30.0, speed: 15.0, scale: 6.5, 
-            gravity_effect: 0.05, life_length: 1.5, 
+            particles_per_sec: 50.0, speed: 15.0, scale: 6.5, 
+            gravity_effect: 0.5, life_length: 1.5, 
             speed_error: 0.3, life_error: 0.3, scale_error: 0.1, 
-            randomize_rotation: true, direction: Some((Vector3f::new(0.0, 1.0, 0.0), 50.0)),
+            randomize_rotation: true, direction: Some((Vector3f::new(0.0, 1.0, 0.0), 150.0)),
             additive_blending: false,
         }
     );
