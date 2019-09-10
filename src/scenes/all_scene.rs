@@ -29,7 +29,7 @@ use crate::models::{
 use crate::particles::{
     AdvancedParticleSystem,
     ParticleSystemProps,
-};
+}; 
 
 fn init_scene_resources(resource_manager: &mut ResourceManager) {
     //resource_manager.init(&Models::TREE);
@@ -54,7 +54,6 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
 
     resource_manager.init_quad_model();
     resource_manager.init_gui_textures();
-
     resource_manager.init_fonts();
 
     resource_manager.init_particle_model();

@@ -19,7 +19,8 @@ use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    geometry_shader_particles_test_scene::create_scene,
+    geometry_shader_particles_test_scene::create_scene_async,
+    load_screen::*,
 };
 use copper::gl;
 
@@ -27,11 +28,22 @@ fn main() {
     let mut display = Display::create();
     let mut framebuffers = FboMap::new_rendering_fbos(&display);
     let mut resource_manager = ResourceManager::default();
-
-    let mut scene = create_scene(&mut resource_manager, &framebuffers);
-    
-    let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());
     let mut gui_renderer = GuiRenderer::new();
+
+    let mut load_screen = create_load_screen(&mut resource_manager);
+    let mut loading = false;
+
+    let mut to_be_loaded_scene: Option<Scene> = None;
+
+    while !display.is_close_requested() && loading {
+        if !loading {
+            let mut to_be_loaded_scene = Some(create_scene_async(&mut resource_manager, &framebuffers));
+        }
+    }
+
+    let mut scene = to_be_loaded_scene.expect("Error: Loading finished but no scene is available!");
+    
+    let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());    
     
     let mut mouse_picker = MousePicker::new();
 

@@ -23,7 +23,7 @@ use crate::particles::{
     ParticleSystemProps,
 };
 
-fn init_scene_resources(resource_manager: &mut ResourceManager) {
+fn init_scene_resources_async(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::PLAYER);
     
     resource_manager.init_quad_model();
@@ -36,9 +36,8 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_particle_textures();
 }
 
-pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {
-
-    init_scene_resources(resource_manager);
+pub fn create_scene_async(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {
+    init_scene_resources_async(resource_manager);
 
     let entities = Vec::new();
     
