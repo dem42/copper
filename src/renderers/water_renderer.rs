@@ -73,9 +73,9 @@ impl WaterRenderer {
             gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
             
             gl::active_texture(gl::TEXTURE2);
-            gl::bind_texture(gl::TEXTURE_2D, water_tile.model.dudv_tex_id);
+            gl::bind_texture(gl::TEXTURE_2D, water_tile.model.dudv_tex_id.unwrap());
             gl::active_texture(gl::TEXTURE3);
-            gl::bind_texture(gl::TEXTURE_2D, water_tile.model.normal_map_tex_id);
+            gl::bind_texture(gl::TEXTURE_2D, water_tile.model.normal_map_tex_id.unwrap());
 
             gl::draw_arrays(gl::TRIANGLE_STRIP, 0, water_tile.model.raw_model.vertex_count);
 

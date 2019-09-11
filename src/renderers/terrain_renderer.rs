@@ -62,15 +62,15 @@ impl TerrainRenderer {
 
         // configure texture units
         gl::active_texture(gl::TEXTURE0); 
-        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.background_texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.background_texture.tex_id.unwrap());
         gl::active_texture(gl::TEXTURE1); 
-        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.r_texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.r_texture.tex_id.unwrap());
         gl::active_texture(gl::TEXTURE2); 
-        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.g_texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.g_texture.tex_id.unwrap());
         gl::active_texture(gl::TEXTURE3); 
-        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.b_texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.texture_pack.b_texture.tex_id.unwrap());
         gl::active_texture(gl::TEXTURE4); 
-        gl::bind_texture(gl::TEXTURE_2D, terrain.blend_texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, terrain.blend_texture.tex_id.unwrap());
     }
 
     pub fn render(&mut self, terrain: &Terrain) {        

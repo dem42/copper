@@ -13,6 +13,7 @@ use crate::math::{
 };
 use crate::models::{
     RawModel,
+    TextureId,
 };
 
 #[derive(Debug)]
@@ -120,7 +121,7 @@ impl MetaFile {
 #[derive(Clone)]
 pub struct FontType {
     meta_file: Rc<MetaFile>,
-    pub texture_atlas: u32,
+    pub texture_atlas: TextureId,
 }
 
 impl PartialEq for FontType {
@@ -138,7 +139,7 @@ impl Hash for FontType {
 }
 
 impl FontType {
-    pub fn new(fnt_file_name: &str, texture_atlas_id: u32) -> FontType {
+    pub fn new(fnt_file_name: &str, texture_atlas_id: TextureId) -> FontType {
         let meta_file = MetaFile::load_from_file(fnt_file_name).expect(&format!("Unable to load fnt file: {}", fnt_file_name));
         FontType {
             meta_file: Rc::new(meta_file),

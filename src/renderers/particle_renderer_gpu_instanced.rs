@@ -83,7 +83,7 @@ impl ParticleRendererGpuInstanced {
 
     fn bind_texture(&mut self, texture: &ParticleTexture) {
          gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(gl::TEXTURE_2D, texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, texture.tex_id.unwrap());
 
         if texture.additive {
             // use additive blending where the colors are always combined

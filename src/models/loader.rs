@@ -4,6 +4,7 @@ use texture_lib::texture_loader::{
     Texture2DRGBA,
 };
 use crate::math::utils::f32_min;
+use super::texture_id::TextureId;
 
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -17,11 +18,13 @@ pub struct ModelLoader {
     tex_list: Vec<u32>,
     texture_loading_rcv: mpsc::Receiver<TextureResult>,
     loaded_texture_snd: mpsc::Sender<TextureResult>,
-    texture_token_map: HashMap<u32, u32>,
+    pub texture_token_map: HashMap<u32, u32>,
     texture_token_gen: u32,
+    // for cubemaps we need all 6 faces loaded before we can call the graphics functions
+    unprocessed_cubemap_textures: HashMap<u32, Vec<u32>>,
 }
 
-type TextureResult = (Texture2DRGBA, u32);
+type TextureResult = (Texture2DRGBA, u32, TextureParams);
 
 #[derive(Default)]
 pub struct TextureParams {
@@ -62,6 +65,7 @@ impl Default for ModelLoader {
             loaded_texture_snd: transmitter,
             texture_token_map: HashMap::new(),
             texture_token_gen: 0,
+            unprocessed_cubemap_textures: HashMap::new(),
         }
     }
 }
@@ -76,7 +80,7 @@ impl ModelLoader {
     pub fn update_resource_state(&mut self) {
         let recv_res = self.texture_loading_rcv.try_recv();
         if let Ok(texture_result) = recv_res {
-            let tex_id = self.load_texture_into_graphics_lib(texture_result.0);
+            let tex_id = self.load_texture_into_graphics_lib(texture_result.0, texture_result.2);
             self.texture_token_map.insert(texture_result.1, tex_id);
         } else if let Err(mpsc::TryRecvError::Disconnected) = recv_res {
             panic!("The generation side of texture loading has disconnected. This shouldnt happen")
@@ -151,9 +155,23 @@ impl ModelLoader {
         cubemap_id
     }
 
-    fn load_texture_internal(&mut self, file_name: &str, params: TextureParams) -> u32 {
-        let texture = load_rgba_2d_texture(file_name, params.reverse_texture_data).expect(&format!("Failed to load texture: {}", file_name));
-        
+    fn load_texture_internal(&mut self, file_name: &str, params: TextureParams) -> TextureId {
+        self.texture_token_gen += 1;
+        let texture_queue_id = self.texture_token_gen;
+
+        let file_name_str = String::from(file_name);
+
+        let sender = self.loaded_texture_snd.clone();
+        thread::spawn(move || {
+            // make sure to not panic on thread
+            let texture = load_rgba_2d_texture(&file_name_str, params.reverse_texture_data).expect(&format!("Failed to load texture: {}", file_name_str));
+            sender.send((texture, texture_queue_id, params)).expect("Failed to send");
+        });
+
+        TextureId::Loading(texture_queue_id)
+    }
+
+    fn load_texture_into_graphics_lib(&mut self, texture: Texture2DRGBA, params: TextureParams) -> u32 {
         let tex_id = gl::gen_texture();
         self.tex_list.push(tex_id);
         gl::active_texture(gl::TEXTURE0); // even though 0 is default i think, just to be explicit let's activate texture unit 0
@@ -181,14 +199,10 @@ impl ModelLoader {
         }
 
         gl::bind_texture(gl::TEXTURE_2D, 0);        
-        tex_id        
+        tex_id
     }
 
-    fn load_texture_into_graphics_lib(&mut self, texture: Texture2DRGBA) -> u32 {
-        unimplemented!()
-    }
-
-     pub fn load_gui_texture(&mut self, file_name: &str, params: TextureParams) -> u32 {
+     pub fn load_gui_texture(&mut self, file_name: &str, params: TextureParams) -> TextureId {
         self.load_texture_internal(file_name, params)
      }
 
@@ -300,7 +314,7 @@ impl RawModel {
 
 #[derive(Clone)]
 pub struct TerrainTexture {
-    pub tex_id: u32,
+    pub tex_id: TextureId,
 }
 
 #[derive(Clone)]
@@ -313,7 +327,7 @@ pub struct TerrainTexturePack {
 
 #[derive(Clone)]
 pub struct ModelTexture {
-    pub tex_id: u32,
+    pub tex_id: TextureId,
     pub shine_damper: f32,
     pub reflectivity: f32,
     pub has_transparency: bool,
@@ -326,7 +340,7 @@ pub struct ModelTexture {
 impl Default for ModelTexture {
     fn default() -> ModelTexture {
         ModelTexture {
-            tex_id: 0,
+            tex_id: TextureId::Empty,
             shine_damper: 1.0,
             reflectivity: 0.0,
             has_transparency: false,
@@ -340,8 +354,8 @@ impl Default for ModelTexture {
 pub struct TexturedModel {
     pub raw_model: RawModel,
     pub texture: ModelTexture,
-    pub normal_map_tex_id: Option<u32>,
-    pub extra_info_tex_id: Option<u32>,
+    pub normal_map_tex_id: Option<TextureId>,
+    pub extra_info_tex_id: Option<TextureId>,
 }
 
 impl PartialEq for TexturedModel {
@@ -380,8 +394,8 @@ pub struct SkyboxModel {
 #[derive(Clone)]
 pub struct WaterModel {
     pub raw_model: RawModel,
-    pub dudv_tex_id: u32,
-    pub normal_map_tex_id: u32,
+    pub dudv_tex_id: TextureId,
+    pub normal_map_tex_id: TextureId,
 }
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -411,7 +425,7 @@ impl ParticleModel {
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub struct ParticleTexture {
-    pub tex_id: u32,
+    pub tex_id: TextureId,
     pub number_of_rows_in_atlas: usize,
     pub additive: bool,
 }

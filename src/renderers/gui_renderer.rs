@@ -63,7 +63,7 @@ impl GuiRenderer {
         let text_by_font = GuiRenderer::group_text_by_font(texts);
         for (font_type, text_vec) in text_by_font.iter() {
             gl::active_texture(gl::TEXTURE0);
-            gl::bind_texture(gl::TEXTURE_2D, font_type.texture_atlas);
+            gl::bind_texture(gl::TEXTURE_2D, font_type.texture_atlas.unwrap());
 
             for text in text_vec.iter() {
                 self.text_shader.load_position(&text.position);

@@ -68,12 +68,12 @@ impl EntityRenderer {
         self.shader.load_clip_plane(clip_plane);
 
         gl::active_texture(gl::TEXTURE0); // activate bank 0
-        gl::bind_texture(gl::TEXTURE_2D, textured_model.texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, textured_model.texture.tex_id.unwrap());
         match textured_model.extra_info_tex_id {
             Some(extra_info_tex_id) => {
                 self.shader.load_extra_info(true);
                 gl::active_texture(gl::TEXTURE2);
-                gl::bind_texture(gl::TEXTURE_2D, extra_info_tex_id);
+                gl::bind_texture(gl::TEXTURE_2D, extra_info_tex_id.unwrap());
             },
             None => {
                 self.shader.load_extra_info(false);

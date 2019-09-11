@@ -15,6 +15,7 @@ use super::{
         RawModel,
     },
     terrain_generator::HeightsGenerator,
+    texture_id::TextureId,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::{
@@ -51,7 +52,7 @@ pub struct ResourceManager {
     debug_model: Option<DynamicVertexIndexedModel>,
     
     models: HashMap<ModelType, TexturedModel>,
-    gui_textures: HashMap<&'static str, u32>,
+    gui_textures: HashMap<&'static str, TextureId>,
     font_types: HashMap<&'static str, FontType>,
     particle_textures: HashMap<ParticleTextureProps, ParticleTexture>,
 }
@@ -221,6 +222,16 @@ impl ResourceManager {
     pub const SMOKE_ATLAS: ParticleTextureProps = ("res/textures/particles/smoke.png", 8);
     pub const FIRE_ATLAS: ParticleTextureProps = ("res/textures/particles/fire.png", 8);
     
+    pub fn are_textures_loading(&mut self) -> bool {
+        if self.loader.texture_token_map.is_empty() {
+
+            false
+        } else {
+            self.loader.update_resource_state();
+            true
+        }
+    }
+
     pub fn init(&mut self, Model(model_type, obj_file, texture_file, model_props): &Model) {
         // thread safe coz only one mutable reference to resource manager can be held
         if self.models.contains_key(model_type) {
@@ -307,7 +318,7 @@ impl ResourceManager {
 
     pub fn get_gui_texture(&self, texture_name: &str) -> u32 {
          let tex_id = self.gui_textures.get(texture_name).expect("Must call init_gui_textures first");
-         *tex_id
+         tex_id.unwrap()
     }
 
     pub fn init_quad_model(&mut self) {

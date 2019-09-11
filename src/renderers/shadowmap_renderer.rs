@@ -78,7 +78,7 @@ impl ShadowMapRenderer {
 
     pub fn prepare_textured_model(&mut self, model: &TexturedModel) {
         gl::active_texture(gl::TEXTURE0);        
-        gl::bind_texture(gl::TEXTURE_2D, model.texture.tex_id);
+        gl::bind_texture(gl::TEXTURE_2D, model.texture.tex_id.unwrap());
         gl::bind_vertex_array(model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);        
