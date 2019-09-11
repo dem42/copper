@@ -1,17 +1,27 @@
 use crate::gl;
 use texture_lib::texture_loader::{
     load_rgba_2d_texture,
+    Texture2DRGBA,
 };
-use std::hash::{Hash, Hasher};
-use std::rc::Rc;
 use crate::math::utils::f32_min;
 
-#[derive(Default)]
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::rc::Rc;
+use std::sync::mpsc;
+use std::thread;
+
 pub struct ModelLoader {    
     vao_list: Vec<u32>,
     vbo_list: Vec<u32>,
     tex_list: Vec<u32>,
+    texture_loading_rcv: mpsc::Receiver<TextureResult>,
+    loaded_texture_snd: mpsc::Sender<TextureResult>,
+    texture_token_map: HashMap<u32, u32>,
+    texture_token_gen: u32,
 }
+
+type TextureResult = (Texture2DRGBA, u32);
 
 #[derive(Default)]
 pub struct TextureParams {
@@ -41,10 +51,36 @@ impl TextureParams {
     }
 }
 
+impl Default for ModelLoader {
+    fn default() -> Self {
+        let (transmitter, receiver) = mpsc::channel();
+        ModelLoader {
+            vao_list: Vec::new(),
+            vbo_list: Vec::new(),
+            tex_list: Vec::new(),
+            texture_loading_rcv: receiver,
+            loaded_texture_snd: transmitter,
+            texture_token_map: HashMap::new(),
+            texture_token_gen: 0,
+        }
+    }
+}
+
 impl ModelLoader {
     pub fn new() -> ModelLoader {
         // some fancy disambiguation syntax here equivalnet to Default::default() and here also to RawModel::default since no multiple functions with same name
-        <ModelLoader as Default>::default()        
+        // just in case you were wondering what Default::default does haha
+        <ModelLoader as Default>::default()
+    }
+
+    pub fn update_resource_state(&mut self) {
+        let recv_res = self.texture_loading_rcv.try_recv();
+        if let Ok(texture_result) = recv_res {
+            let tex_id = self.load_texture_into_graphics_lib(texture_result.0);
+            self.texture_token_map.insert(texture_result.1, tex_id);
+        } else if let Err(mpsc::TryRecvError::Disconnected) = recv_res {
+            panic!("The generation side of texture loading has disconnected. This shouldnt happen")
+        }
     }
 
     pub fn load_to_vao_with_normal_map(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32], tangents: &[f32]) -> RawModel {
@@ -146,6 +182,10 @@ impl ModelLoader {
 
         gl::bind_texture(gl::TEXTURE_2D, 0);        
         tex_id        
+    }
+
+    fn load_texture_into_graphics_lib(&mut self, texture: Texture2DRGBA) -> u32 {
+        unimplemented!()
     }
 
      pub fn load_gui_texture(&mut self, file_name: &str, params: TextureParams) -> u32 {
