@@ -47,7 +47,7 @@ impl GuiRenderer {
 
         for gui in guis.iter() {
             gl::active_texture(gl::TEXTURE0);
-            gl::bind_texture(gl::TEXTURE_2D, gui.texture_id);
+            gl::bind_texture(gl::TEXTURE_2D, gui.texture_id.unwrap());
             let transform_mat = Matrix4f::create_gui_transform_matrix(&gui.position, &gui.scale);
             self.gui_shader.load_transformation_matrix(&transform_mat);
             gl::draw_arrays(gl::TRIANGLE_STRIP, 0, gui_model.vertex_count);

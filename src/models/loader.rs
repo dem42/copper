@@ -20,6 +20,7 @@ pub struct ModelLoader {
     loaded_texture_snd: mpsc::Sender<TextureResult>,
     pub texture_token_map: HashMap<u32, u32>,
     texture_token_gen: u32,
+    pub loading_texture_cnt: u32,
     // for cubemaps we need all 6 faces loaded before we can call the graphics functions
     unprocessed_cubemap_textures: HashMap<u32, Vec<u32>>,
 }
@@ -66,6 +67,7 @@ impl Default for ModelLoader {
             texture_token_map: HashMap::new(),
             texture_token_gen: 0,
             unprocessed_cubemap_textures: HashMap::new(),
+            loading_texture_cnt: 0,
         }
     }
 }
@@ -82,6 +84,7 @@ impl ModelLoader {
         if let Ok(texture_result) = recv_res {
             let tex_id = self.load_texture_into_graphics_lib(texture_result.0, texture_result.2);
             self.texture_token_map.insert(texture_result.1, tex_id);
+            self.loading_texture_cnt -= 1;
         } else if let Err(mpsc::TryRecvError::Disconnected) = recv_res {
             panic!("The generation side of texture loading has disconnected. This shouldnt happen")
         }
@@ -95,7 +98,8 @@ impl ModelLoader {
                 TextureId::Loaded(*graphics_lib_tex_id)
             },
             TextureId::Loaded(id) => TextureId::Loaded(id),
-            Empty => panic!("Not permitted to resolve an empty texture")
+            TextureId::Empty => panic!("Not permitted to resolve an empty texture"),
+            TextureId::FboTexture(_) => panic!("Not permitted to resolve a texture attachment of a framebuffer object"),
         }
     }
 
@@ -172,6 +176,8 @@ impl ModelLoader {
         let texture_queue_id = self.texture_token_gen;
 
         let file_name_str = String::from(file_name);
+
+        self.loading_texture_cnt += 1;
 
         let sender = self.loaded_texture_snd.clone();
         thread::spawn(move || {

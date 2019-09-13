@@ -16,6 +16,7 @@ use crate::models::{
     ResourceManager,
     Models,
     ModelType,
+    TextureId,
 };
 
 fn init_scene_resources(resource_manager: &mut ResourceManager) {
@@ -76,7 +77,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
 
     let shadow_map = framebuffers.fbos[FboMap::SHADOW_MAP_FBO].depth_texture.expect("Must have shadowmap to show it in gui");
     let guis = vec!{
-        GuiPanel::new(shadow_map, Vector2f::new(0.6, 0.6), Vector2f::new(0.4, 0.4)),
+        GuiPanel::new(TextureId::FboTexture(shadow_map), Vector2f::new(0.6, 0.6), Vector2f::new(0.4, 0.4)),
     };
 
     Scene {

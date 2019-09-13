@@ -19,10 +19,13 @@ use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    geometry_shader_particles_test_scene::create_scene_async,
+    all_scene::*,
     load_screen::*,
 };
 use copper::gl;
+
+use std::thread;
+use std::time::Duration;
 
 fn main() {
     let mut display = Display::create();
@@ -30,18 +33,27 @@ fn main() {
     let mut resource_manager = ResourceManager::default();
     let mut gui_renderer = GuiRenderer::new();
 
-    let mut load_screen = create_load_screen(&mut resource_manager);
-    let mut loading = false;
-
-    let mut to_be_loaded_scene: Option<Scene> = None;
-
-    while !display.is_close_requested() && loading {
-        if !loading {
-            let mut to_be_loaded_scene = Some(create_scene_async(&mut resource_manager, &framebuffers));
-        }
+    
+    init_resourced_for_load_screen(&mut resource_manager);
+    while resource_manager.are_textures_loading() && !display.is_close_requested() {
+        thread::sleep(Duration::from_millis(100));
+    }
+    if display.is_close_requested() {
+        return;
     }
 
-    let mut scene = to_be_loaded_scene.expect("Error: Loading finished but no scene is available!");
+    let load_screen = create_load_screen(&mut resource_manager);
+
+    init_scene_resources(&mut resource_manager);    
+    while resource_manager.are_textures_loading() && !display.is_close_requested() {
+        gui_renderer.render(&load_screen.guis, &load_screen.gui_model.raw_model, &load_screen.texts);
+        display.update_display();
+    }
+    if display.is_close_requested() {
+        return;
+    }
+
+    let mut scene = create_scene(&mut resource_manager, &framebuffers);
     
     let mut master_renderer = MasterRenderer::new(&display.projection_matrix, display.get_aspect_ratio());    
     

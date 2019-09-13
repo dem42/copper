@@ -31,7 +31,7 @@ use crate::particles::{
     ParticleSystemProps,
 }; 
 
-fn init_scene_resources(resource_manager: &mut ResourceManager) {
+pub fn init_scene_resources(resource_manager: &mut ResourceManager) {
     //resource_manager.init(&Models::TREE);
     resource_manager.init(&Models::FERN);
     //resource_manager.init(&Models::GRASS);
@@ -67,8 +67,6 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let mut rng: StdRng = SeedableRng::seed_from_u64(0xb000u64);
     const X_WIDTH: f32 = 1000.0;
     const Z_WIDTH: f32 = -1000.0;
-
-    init_scene_resources(resource_manager);    
     
     let mut terrains = Vec::new();    
     for i in -2..2 {

@@ -214,6 +214,7 @@ impl ResourceManager {
 
     pub const HEALTHBAR_TEXTURE: &'static str = "res/textures/health.png";
     pub const GUI_BACKGROUND_TEXTURE: &'static str = "res/textures/gui_background.png";
+    pub const WHITE_TEXTURE: &'static str = "res/textures/white.png";
         
     pub const COPPER_SDF_FONT_TYPE: &'static str = "res/fonts/copperDf";
 
@@ -223,7 +224,7 @@ impl ResourceManager {
     pub const FIRE_ATLAS: ParticleTextureProps = ("res/textures/particles/fire.png", 8);
     
     pub fn are_textures_loading(&mut self) -> bool {
-        if self.loader.texture_token_map.is_empty() {
+        if self.loader.loading_texture_cnt == 0 {
             self.texture_pack = self.texture_pack.take().map(|mut texture_pack| {
                 texture_pack.background_texture.tex_id = self.loader.resolve(texture_pack.background_texture.tex_id);
                 texture_pack.r_texture.tex_id = self.loader.resolve(texture_pack.r_texture.tex_id);
@@ -237,22 +238,51 @@ impl ResourceManager {
                 blend_texture
             });
 
+            self.water_model = self.water_model.take().map(|mut water_model| {
+                water_model.dudv_tex_id = self.loader.resolve(water_model.dudv_tex_id);
+                water_model.normal_map_tex_id = self.loader.resolve(water_model.normal_map_tex_id);
+                water_model
+            });
 
+            
+            let mut loaded_texture_models = HashMap::new();
+            let model_data: Vec<_> = self.models.drain().collect();
+            for mut model in model_data {
+                model.1.texture.tex_id = self.loader.resolve(model.1.texture.tex_id);
+                model.1.normal_map_tex_id = model.1.normal_map_tex_id.map(|tex_id| {
+                    self.loader.resolve(tex_id)
+                });
+                model.1.extra_info_tex_id = model.1.extra_info_tex_id.map(|tex_id| {
+                    self.loader.resolve(tex_id)
+                });
+                loaded_texture_models.insert(model.0, model.1);
+            };
+            self.models = loaded_texture_models;
+
+            let mut loaded_gui_texs = HashMap::new();
+            let model_data: Vec<_> = self.gui_textures.drain().collect();
+            for model in model_data {
+                let tex_id = self.loader.resolve(model.1);
+                loaded_gui_texs.insert(model.0, tex_id);
+            };
+            self.gui_textures = loaded_gui_texs;
+
+            let mut loaded_font_types = HashMap::new();
+            let model_data: Vec<_> = self.font_types.drain().collect();
+            for mut model in model_data {
+                model.1.texture_atlas = self.loader.resolve(model.1.texture_atlas);
+                loaded_font_types.insert(model.0, model.1);
+            };
+            self.font_types = loaded_font_types;
+
+            let mut loaded_particle_textures = HashMap::new();
+            let model_data: Vec<_> = self.particle_textures.drain().collect();
+            for mut model in model_data {
+                model.1.tex_id = self.loader.resolve(model.1.tex_id);
+                loaded_particle_textures.insert(model.0, model.1);
+            };
+            self.particle_textures = loaded_particle_textures;
     // skybox_model: Option<SkyboxModel>, <- cubemap
-    // water_model: Option<WaterModel>,
-    // // particle models: 
-    // // for gpu instanced use particle model which has stream vbo
-    // // for geometry shader use simple point
-    // particle_model: Option<ParticleModel>,
-    // simple_point_particle_model: Option<ParticleModel>,
-    // // debugging models
-    // debug_model: Option<DynamicVertexIndexedModel>,
-    
-    // models: HashMap<ModelType, TexturedModel>,
-    // gui_textures: HashMap<&'static str, TextureId>,
-    // font_types: HashMap<&'static str, FontType>,
-    // particle_textures: HashMap<ParticleTextureProps, ParticleTexture>,
-
             false
         } else {
             self.loader.update_resource_state();
@@ -342,11 +372,15 @@ impl ResourceManager {
             let texture_id = self.loader.load_gui_texture(ResourceManager::GUI_BACKGROUND_TEXTURE, props.get_texture_params());
             self.gui_textures.insert(ResourceManager::GUI_BACKGROUND_TEXTURE, texture_id);
         }
+
+        if !self.gui_textures.contains_key(ResourceManager::WHITE_TEXTURE) {
+            let texture_id = self.loader.load_gui_texture(ResourceManager::WHITE_TEXTURE, props.get_texture_params());
+            self.gui_textures.insert(ResourceManager::WHITE_TEXTURE, texture_id);
+        }
     }
 
-    pub fn get_gui_texture(&self, texture_name: &str) -> u32 {
-         let tex_id = self.gui_textures.get(texture_name).expect("Must call init_gui_textures first");
-         tex_id.unwrap()
+    pub fn get_gui_texture(&self, texture_name: &str) -> TextureId {
+         self.gui_textures.get(texture_name).expect("Must call init_gui_textures first").clone()    
     }
 
     pub fn init_quad_model(&mut self) {
