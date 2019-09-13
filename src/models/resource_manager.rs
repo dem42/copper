@@ -224,6 +224,34 @@ impl ResourceManager {
     
     pub fn are_textures_loading(&mut self) -> bool {
         if self.loader.texture_token_map.is_empty() {
+            self.texture_pack = self.texture_pack.take().map(|mut texture_pack| {
+                texture_pack.background_texture.tex_id = self.loader.resolve(texture_pack.background_texture.tex_id);
+                texture_pack.r_texture.tex_id = self.loader.resolve(texture_pack.r_texture.tex_id);
+                texture_pack.g_texture.tex_id = self.loader.resolve(texture_pack.g_texture.tex_id);
+                texture_pack.b_texture.tex_id = self.loader.resolve(texture_pack.b_texture.tex_id);
+                texture_pack
+            });
+
+            self.blend_texture = self.blend_texture.take().map(|mut blend_texture| {
+                blend_texture.tex_id = self.loader.resolve(blend_texture.tex_id);
+                blend_texture
+            });
+
+
+    // skybox_model: Option<SkyboxModel>, <- cubemap
+    // water_model: Option<WaterModel>,
+    // // particle models: 
+    // // for gpu instanced use particle model which has stream vbo
+    // // for geometry shader use simple point
+    // particle_model: Option<ParticleModel>,
+    // simple_point_particle_model: Option<ParticleModel>,
+    // // debugging models
+    // debug_model: Option<DynamicVertexIndexedModel>,
+    
+    // models: HashMap<ModelType, TexturedModel>,
+    // gui_textures: HashMap<&'static str, TextureId>,
+    // font_types: HashMap<&'static str, FontType>,
+    // particle_textures: HashMap<ParticleTextureProps, ParticleTexture>,
 
             false
         } else {
