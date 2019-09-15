@@ -43,7 +43,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let terrains = Vec::new();   
     let ground = Ground { terrains };
 
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, 0.0), Vector3f::new(0.0, 0.0, 0.0), 1.0);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 20.0, -50.0), Vector3f::new(0.0, 180.0, 0.0), 1.0);
     let mut player = Player::new(player_entity);
     player.is_invisible_immovable = true;
     
@@ -53,11 +53,12 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let mut debug_entity = DebugEntity::new(resource_manager.debug_cuboid_model());
     debug_entity.position.y = 10.0;
 
-    let mut camera = Camera::new(20.0, 50.0);
+    let mut camera = Camera::new(20.0, 150.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
     let mut skybox = Skybox::new(resource_manager.cathedral_skybox(), 0.0);
     skybox.uses_fog = false;
+    skybox.rotate_speed = 0.0;
 
     let texts = Vec::new();
     
@@ -71,9 +72,9 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let guis = Vec::new();
 
     let entities_with_env_map = vec![
-        Entity::new(resource_manager.model(ModelType::Dragon), Vector3f::new(-50.0, 20.0, -100.0), Vector3f::new(0.0, 0.0, 0.0), 1.0),
-        Entity::new(resource_manager.model(ModelType::Tea), Vector3f::new(0.0, 20.0, -100.0), Vector3f::new(0.0, 0.0, 0.0), 1.0),
-        Entity::new(resource_manager.model(ModelType::Meta), Vector3f::new(50.0, 20.0, -100.0), Vector3f::new(0.0, 0.0, 0.0), 1.0),
+        Entity::new(resource_manager.model(ModelType::Dragon), Vector3f::new(-50.0, 20.0, -50.0), Vector3f::new(0.0, 0.0, 0.0), 3.0),
+        Entity::new(resource_manager.model(ModelType::Tea), Vector3f::new(0.0, 20.0, -50.0), Vector3f::new(0.0, 0.0, 0.0), 3.0),
+        Entity::new(resource_manager.model(ModelType::Meta), Vector3f::new(50.0, 20.0, -50.0), Vector3f::new(0.0, 0.0, 0.0), 3.0),
     ];
 
     Scene {

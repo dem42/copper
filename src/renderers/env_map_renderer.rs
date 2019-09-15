@@ -54,7 +54,7 @@ impl EnvMapRenderer {
         // load transform matrix into shader
         let transform_mat = Matrix4f::create_transform_matrix(&entity.position, &entity.rotation_deg, entity.scale);
         let view_mat = Matrix4f::create_view_matrix(camera);
-        let mvp = transform_mat * (view_mat * &self.proj_mat);
+        let mvp = &self.proj_mat * (view_mat * transform_mat);
         self.shader.load_mvp_matrix(&mvp);
                 
         gl::draw_elements(gl::TRIANGLES, entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);

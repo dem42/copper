@@ -7,12 +7,12 @@ use crate::display::{
     WallClock,
 };
 
-const ROTATE_SPEED: f32 = 1.0;
 const DAY_SEGMENTS: f32 = WallClock::DAY_LENGTH / 4.0;
 
 pub struct Skybox {
     pub model: SkyboxModel,
     pub rotation_yaw_deg: f32,
+    pub rotate_speed: f32,
     // this is a hack for scenes that don't want to show a skybox :(
     pub invisible: bool,
     pub uses_fog: bool,
@@ -25,11 +25,12 @@ impl Skybox {
             rotation_yaw_deg,
             invisible: false,
             uses_fog: true,
+            rotate_speed: 1.0,
         }
     }
 
     pub fn increase_rotation(&mut self, display: &Display) {
-        self.rotation_yaw_deg += ROTATE_SPEED * display.frame_time_sec;
+        self.rotation_yaw_deg += self.rotate_speed * display.frame_time_sec;
     }
 
     pub fn get_day_night_textures(&self, wall_clock: &WallClock) -> (TextureId, TextureId, f32) {
