@@ -25,33 +25,42 @@ use copper::scenes::{
 use copper::gl;
 
 use std::thread;
-use std::time::Duration;
+use std::time::{Instant, Duration};
 
 fn main() {
+    let start = Instant::now();
     let mut display = Display::create();
     let mut framebuffers = FboMap::new_rendering_fbos(&display);
     let mut resource_manager = ResourceManager::default();
     let mut gui_renderer = GuiRenderer::new();
 
+    println!("before load screen. Took: {}", start.elapsed().as_millis());
+    let start = Instant::now();
     
     init_resourced_for_load_screen(&mut resource_manager);
     while resource_manager.are_textures_loading() && !display.is_close_requested() {
-        thread::sleep(Duration::from_millis(100));
+        thread::sleep(Duration::from_millis(10));
     }
     if display.is_close_requested() {
         return;
     }
-
     let load_screen = create_load_screen(&mut resource_manager);
+
+    println!("loading screen now showing. Took: {}", start.elapsed().as_millis());
+    let start = Instant::now();
 
     init_scene_resources(&mut resource_manager);    
     while resource_manager.are_textures_loading() && !display.is_close_requested() {
+        println!("showing load screen!");
         gui_renderer.render(&load_screen.guis, &load_screen.gui_model.raw_model, &load_screen.texts);
         display.update_display();
     }
     if display.is_close_requested() {
         return;
     }
+
+    println!("hmm should be done rendering here. Took: {}", start.elapsed().as_millis());
+
 
     let mut scene = create_scene(&mut resource_manager, &framebuffers);
     

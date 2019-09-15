@@ -17,6 +17,7 @@ use crate::models::{
     ModelType,
     SkyboxModel,
     RawModel,
+    TextureId,
 };
 use crate::particles::{
     AdvancedParticleSystem,
@@ -36,6 +37,8 @@ pub fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_particle_textures();
 }
 
+// to use the particles in this example you need to use the correct renderer in the ParticleMaster
+// at the moment no switching through parameters to simplify things since gpu instancing is more efficient anyway
 pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {    
     let entities = Vec::new();
     
@@ -56,7 +59,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let mut camera = Camera::new(20.0, 30.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
-    let skybox = Skybox::new(SkyboxModel {raw_model: RawModel {vao_id: 0, vertex_count: 0}, day_texture_id: 0, night_texture_id: 0}, 0.0);
+    let skybox = Skybox::new(SkyboxModel {raw_model: RawModel {vao_id: 0, vertex_count: 0}, day_texture_id: TextureId::Empty, night_texture_id: TextureId::Empty}, 0.0);
 
     let texts = Vec::new();
     

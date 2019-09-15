@@ -16,8 +16,7 @@ use crate::models::{
 };
 use crate::renderers::{
     particle_renderer::ParticleRenderer,
-    particle_renderer_gpu_instanced::ParticleRendererGpuInstanced,
-    particle_renderer_geometry_shdr::ParticleRendererGeometryShader,
+    particle_renderer_gpu_instanced::ParticleRendererGpuInstanced,    
 };
 use crate::utils::insertion_sort;
 use super::particle_system::{
@@ -116,9 +115,8 @@ pub struct ParticleMaster {
 impl ParticleMaster {
     pub fn new(projection_matrix: &Matrix4f) -> Self {
         ParticleMaster {
-            particles: HashMap::new(),
-            particle_renderer: Box::new(ParticleRendererGeometryShader::new(projection_matrix)),
-            //particle_renderer: Box::new(ParticleRendererGpuInstanced::new(projection_matrix)),
+            particles: HashMap::new(),            
+            particle_renderer: Box::new(ParticleRendererGpuInstanced::new(projection_matrix)),
         }
     }
 

@@ -282,7 +282,13 @@ impl ResourceManager {
                 loaded_particle_textures.insert(model.0, model.1);
             };
             self.particle_textures = loaded_particle_textures;
-    // skybox_model: Option<SkyboxModel>, <- cubemap
+    
+            self.skybox_model = self.skybox_model.take().map(|mut skybox_model| {
+                skybox_model.day_texture_id = self.loader.resolve(skybox_model.day_texture_id);
+                skybox_model.night_texture_id = self.loader.resolve(skybox_model.night_texture_id);
+                skybox_model
+            });
+
             false
         } else {
             self.loader.update_resource_state();

@@ -10,3 +10,4 @@ texture_lib = { path = "texture_lib" }
 rand = "=0.6.1"
 gl = { path = "gl" }
 bitflags = "1.0"
+threadpool = "1.7.1"

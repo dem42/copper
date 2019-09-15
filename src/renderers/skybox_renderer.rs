@@ -57,9 +57,9 @@ impl SkyboxRenderer {
     fn bind_textures(&mut self, skybox: &Skybox, wall_clock: &WallClock) {
         let (day_tex, night_tex, blend_factor) = skybox.get_day_night_textures(wall_clock);
         gl::active_texture(gl::TEXTURE0);
-        gl::bind_texture(gl::TEXTURE_CUBE_MAP, day_tex);
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, day_tex.unwrap());
         gl::active_texture(gl::TEXTURE1);
-        gl::bind_texture(gl::TEXTURE_CUBE_MAP, night_tex);  
+        gl::bind_texture(gl::TEXTURE_CUBE_MAP, night_tex.unwrap());
 
         self.shader.load_blend_factor(blend_factor);
         self.shader.connect_texture_units();   

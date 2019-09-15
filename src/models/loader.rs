@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::sync::mpsc;
-use std::thread;
+use threadpool::ThreadPool;
 
 pub struct ModelLoader {    
     vao_list: Vec<u32>,
@@ -22,10 +22,20 @@ pub struct ModelLoader {
     texture_token_gen: u32,
     pub loading_texture_cnt: u32,
     // for cubemaps we need all 6 faces loaded before we can call the graphics functions
-    unprocessed_cubemap_textures: HashMap<u32, Vec<u32>>,
+    cubemap_token_gen: u32,
+    unprocessed_cubemap_textures: HashMap<u32, Vec<TextureResult>>,
+    thread_pool: ThreadPool,
 }
 
-type TextureResult = (Texture2DRGBA, u32, TextureParams);
+// the fields are Texture, temp_tex_id, params, texture_order (used for cubemaps)
+type TextureResult = (Texture2DRGBA, u32, TextureParams, ExtraInfo);
+
+#[derive(Default)]
+struct ExtraInfo {
+    is_cubemap: bool,
+    order: usize,
+    cubemap_token: u32,
+}
 
 #[derive(Default)]
 pub struct TextureParams {
@@ -58,6 +68,7 @@ impl TextureParams {
 impl Default for ModelLoader {
     fn default() -> Self {
         let (transmitter, receiver) = mpsc::channel();
+        let pool = ThreadPool::new(8);
         ModelLoader {
             vao_list: Vec::new(),
             vbo_list: Vec::new(),
@@ -66,8 +77,10 @@ impl Default for ModelLoader {
             loaded_texture_snd: transmitter,
             texture_token_map: HashMap::new(),
             texture_token_gen: 0,
+            cubemap_token_gen: 0,
             unprocessed_cubemap_textures: HashMap::new(),
             loading_texture_cnt: 0,
+            thread_pool: pool,
         }
     }
 }
@@ -82,9 +95,20 @@ impl ModelLoader {
     pub fn update_resource_state(&mut self) {
         let recv_res = self.texture_loading_rcv.try_recv();
         if let Ok(texture_result) = recv_res {
-            let tex_id = self.load_texture_into_graphics_lib(texture_result.0, texture_result.2);
-            self.texture_token_map.insert(texture_result.1, tex_id);
-            self.loading_texture_cnt -= 1;
+            if texture_result.3.is_cubemap {
+                let cubemap_token = texture_result.3.cubemap_token;
+                let unprocessed_textures = self.unprocessed_cubemap_textures.get_mut(&cubemap_token).expect("Cubemap id must exist in the map. Make sure the entry is created as the token is generated");
+                unprocessed_textures.push(texture_result);
+                if unprocessed_textures.len() == 6 {
+                    let cubemap_id = self.load_cube_map_into_graphics_lib(cubemap_token);
+                    self.texture_token_map.insert(cubemap_token, cubemap_id);                    
+                }
+                self.loading_texture_cnt -= 1;
+            } else {
+                let tex_id = self.load_texture_into_graphics_lib(texture_result.0, texture_result.2);
+                self.texture_token_map.insert(texture_result.1, tex_id);
+                self.loading_texture_cnt -= 1;
+            }
         } else if let Err(mpsc::TryRecvError::Disconnected) = recv_res {
             panic!("The generation side of texture loading has disconnected. This shouldnt happen")
         }
@@ -150,17 +174,31 @@ impl ModelLoader {
         RawModel::new(vao_id, positions.len() / 2)
     }
 
-    pub fn load_cube_map(&mut self, cube_map_folder: &str) -> u32 {        
+    pub fn load_cube_map(&mut self, cube_map_folder: &str) -> TextureId {
+        self.cubemap_token_gen += 1;
+        let cubemap_token = self.cubemap_token_gen;
+        self.unprocessed_cubemap_textures.insert(cubemap_token, Vec::new());
+        for i in 1..=6 {
+            let filename = format!("{}/{}.png", cube_map_folder, i);
+            self.load_texture_internal(&filename, TextureParams::default(), ExtraInfo { is_cubemap: true, order: i, cubemap_token});
+        }
+        TextureId::Loading(cubemap_token)
+    }
+
+    fn load_cube_map_into_graphics_lib(&mut self, loading_cubemap_id: u32) -> u32 {
         let cubemap_id = gl::gen_texture();
         self.tex_list.push(cubemap_id);
         gl::active_texture(gl::TEXTURE0);
         gl::bind_texture(gl::TEXTURE_CUBE_MAP, cubemap_id);
 
-        for i in 1..=6 {
-            let filename = format!("{}/{}.png", cube_map_folder, i);
-            let texture = load_rgba_2d_texture(&filename, false).expect(&format!("Failed to load texture: {}", &filename));
+        let textures_for_cubemap = self.unprocessed_cubemap_textures.get_mut(&loading_cubemap_id).expect("Called the load with a bad cubemap id");
+        assert!(textures_for_cubemap.len() == 6, "Must have 6 loaded textures for a cubemap");
 
-            gl::tex_image_2d(gl::helper::CUBEMAP_FACES[i-1], 0, gl::RGBA, texture.width, texture.height, gl::UNSIGNED_BYTE, &texture.data);
+        for tex_result in textures_for_cubemap {
+            let face = tex_result.3.order;
+            let width = tex_result.0.width;
+            let height = tex_result.0.height;
+            gl::tex_image_2d(gl::helper::CUBEMAP_FACES[face-1], 0, gl::RGBA, width, height, gl::UNSIGNED_BYTE, &tex_result.0.data);
 
             gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
             gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR);
@@ -168,10 +206,13 @@ impl ModelLoader {
             gl::tex_parameter_iv(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE);            
         }
         gl::bind_texture(gl::TEXTURE_CUBE_MAP, 0);
+
+        self.unprocessed_cubemap_textures.remove(&loading_cubemap_id);
+
         cubemap_id
     }
 
-    fn load_texture_internal(&mut self, file_name: &str, params: TextureParams) -> TextureId {
+    fn load_texture_internal(&mut self, file_name: &str, params: TextureParams, extra_info: ExtraInfo) -> TextureId {
         self.texture_token_gen += 1;
         let texture_queue_id = self.texture_token_gen;
 
@@ -180,10 +221,10 @@ impl ModelLoader {
         self.loading_texture_cnt += 1;
 
         let sender = self.loaded_texture_snd.clone();
-        thread::spawn(move || {
+        self.thread_pool.execute(move || {
             // make sure to not panic on thread
             let texture = load_rgba_2d_texture(&file_name_str, params.reverse_texture_data).expect(&format!("Failed to load texture: {}", file_name_str));
-            sender.send((texture, texture_queue_id, params)).expect("Failed to send");
+            sender.send((texture, texture_queue_id, params, extra_info)).expect("Failed to send");
         });
 
         TextureId::Loading(texture_queue_id)
@@ -221,26 +262,26 @@ impl ModelLoader {
     }
 
      pub fn load_gui_texture(&mut self, file_name: &str, params: TextureParams) -> TextureId {
-        self.load_texture_internal(file_name, params)
+        self.load_texture_internal(file_name, params, ExtraInfo::default())
      }
 
     pub fn load_texture(&mut self, file_name: &str, params: TextureParams) -> ModelTexture {        
         ModelTexture {
-            tex_id: self.load_texture_internal(file_name, params),
+            tex_id: self.load_texture_internal(file_name, params, ExtraInfo::default()),
             ..Default::default()
         }
     }
 
     pub fn load_particle_texture(&mut self, file_name: &str, params: TextureParams) -> ParticleTexture {        
         ParticleTexture {
-            tex_id: self.load_texture_internal(file_name, params),
+            tex_id: self.load_texture_internal(file_name, params, ExtraInfo::default()),
             ..Default::default()
         }
     }
 
     pub fn load_terrain_texture(&mut self, file_name: &str, params: TextureParams) -> TerrainTexture {        
         TerrainTexture {
-            tex_id: self.load_texture_internal(file_name, params),
+            tex_id: self.load_texture_internal(file_name, params, ExtraInfo::default()),
         }
     }
 
@@ -405,8 +446,8 @@ pub struct QuadModel {
 #[derive(Clone)]
 pub struct SkyboxModel {
     pub raw_model: RawModel,
-    pub day_texture_id: u32,
-    pub night_texture_id: u32,
+    pub day_texture_id: TextureId,
+    pub night_texture_id: TextureId,
 }
 
 #[derive(Clone)]
