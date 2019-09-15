@@ -448,6 +448,7 @@ pub struct SkyboxModel {
     pub raw_model: RawModel,
     pub day_texture_id: TextureId,
     pub night_texture_id: TextureId,
+    pub cycles_day_night: bool,
 }
 
 #[derive(Clone)]

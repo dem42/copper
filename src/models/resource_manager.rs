@@ -41,8 +41,10 @@ pub struct ResourceManager {
     blend_texture: Option<TerrainTexture>,
     terrain_model: Option<TerrainModel>,
     quad_model: Option<QuadModel>,
-    skybox_model: Option<SkyboxModel>,
     water_model: Option<WaterModel>,
+    // skyboxes
+    skybox_model: Option<SkyboxModel>,
+    cathedral_skybox: Option<SkyboxModel>,
     // particle models: 
     // for gpu instanced use particle model which has stream vbo
     // for geometry shader use simple point
@@ -83,6 +85,10 @@ pub enum ModelType {
     Boulder,
     FloorTile,
     Lantern,
+    // demo entities
+    Dragon,
+    Tea,
+    Meta,
 }
 
 pub type ParticleTextureProps = (&'static str, usize);
@@ -192,6 +198,9 @@ impl Models {
         extra_info_map: Some("res/textures/extra_info_maps/lantern_spec_glow.png"),
         ..Self::DEFAULT_PROPS
     };
+    const DEMO_PROPS: ModelProps = ModelProps {
+        ..Self::DEFAULT_PROPS
+    };
     
     pub const PLAYER: Model = Model(ModelType::Player, "res/models/person.obj", "res/textures/playerTexture.png", &Models::COMMON_PROPS);
     pub const TREE: Model = Model(ModelType::Tree, "res/models/tree.obj", "res/textures/tree.png", &Models::COMMON_PROPS);
@@ -207,6 +216,9 @@ impl Models {
     pub const BOULDER: Model = Model(ModelType::Boulder, "res/models/boulder.obj", "res/textures/boulder.png", &Models::BOULDER_PROPS);
     pub const FLOOR_TILE: Model = Model(ModelType::FloorTile, "res/models/flat.obj", "res/textures/box.png", &Models::FLOOR_PROPS);
     pub const LANTERN: Model = Model(ModelType::Lantern, "res/models/lantern.obj", "res/textures/lantern.png", &Models::LANTERN_PROPS);
+    pub const DRAGON: Model = Model(ModelType::Dragon, "res/models/demo_entities/dragon.obj", "res/textures/demo_entities/dragon.png", &Models::DEMO_PROPS);
+    pub const TEA: Model = Model(ModelType::Tea, "res/models/demo_entities/tea.obj", "res/textures/demo_entities/tea.png", &Models::DEMO_PROPS);
+    pub const META: Model = Model(ModelType::Meta, "res/models/demo_entities/meta.obj", "res/textures/demo_entities/meta.png", &Models::DEMO_PROPS);    
 }
 
 
@@ -287,6 +299,11 @@ impl ResourceManager {
                 skybox_model.day_texture_id = self.loader.resolve(skybox_model.day_texture_id);
                 skybox_model.night_texture_id = self.loader.resolve(skybox_model.night_texture_id);
                 skybox_model
+            });
+
+            self.cathedral_skybox = self.cathedral_skybox.take().map(|mut cathedral_skybox| {
+                cathedral_skybox.day_texture_id = self.loader.resolve(cathedral_skybox.day_texture_id);
+                cathedral_skybox
             });
 
             false
@@ -414,59 +431,39 @@ impl ResourceManager {
     }
 
     pub fn init_skybox(&mut self) {
+        use SkyboxModelData::*;
+
         if let None = self.skybox_model {
             let day_texture_id = self.loader.load_cube_map("res/textures/cube_maps/day_skybox");
             let night_texture_id = self.loader.load_cube_map("res/textures/cube_maps/night_skybox");
             
-            const SIZE: f32 = 500.0;
-            let positions = vec![
-                -SIZE,  SIZE, -SIZE,
-                -SIZE, -SIZE, -SIZE,
-                SIZE, -SIZE, -SIZE,
-                SIZE, -SIZE, -SIZE,
-                SIZE,  SIZE, -SIZE,
-                -SIZE,  SIZE, -SIZE,
-
-                -SIZE, -SIZE,  SIZE,
-                -SIZE, -SIZE, -SIZE,
-                -SIZE,  SIZE, -SIZE,
-                -SIZE,  SIZE, -SIZE,
-                -SIZE,  SIZE,  SIZE,
-                -SIZE, -SIZE,  SIZE,
-
-                SIZE, -SIZE, -SIZE,
-                SIZE, -SIZE,  SIZE,
-                SIZE,  SIZE,  SIZE,
-                SIZE,  SIZE,  SIZE,
-                SIZE,  SIZE, -SIZE,
-                SIZE, -SIZE, -SIZE,
-
-                -SIZE, -SIZE,  SIZE,
-                -SIZE,  SIZE,  SIZE,
-                SIZE,  SIZE,  SIZE,
-                SIZE,  SIZE,  SIZE,
-                SIZE, -SIZE,  SIZE,
-                -SIZE, -SIZE,  SIZE,
-
-                -SIZE,  SIZE, -SIZE,
-                SIZE,  SIZE, -SIZE,
-                SIZE,  SIZE,  SIZE,
-                SIZE,  SIZE,  SIZE,
-                -SIZE,  SIZE,  SIZE,
-                -SIZE,  SIZE, -SIZE,
-
-                -SIZE, -SIZE, -SIZE,
-                -SIZE, -SIZE,  SIZE,
-                SIZE, -SIZE, -SIZE,
-                SIZE, -SIZE, -SIZE,
-                -SIZE, -SIZE,  SIZE,
-                SIZE, -SIZE,  SIZE
-            ];
-            let raw_model = self.loader.load_simple_model_to_vao(&positions, 3);
+            
+            let raw_model = self.loader.load_simple_model_to_vao(&POSITIONS, 3);
             self.skybox_model = Some(SkyboxModel {
                 raw_model,
                 day_texture_id,
                 night_texture_id,
+                cycles_day_night: true,
+            });
+        }
+    }
+
+    pub fn cathedral_skybox(&self) -> SkyboxModel {
+        self.cathedral_skybox.clone().expect("Need to call init_cathedral_skybox first")
+    }
+
+    pub fn init_cathedral_skybox(&mut self) {
+        use SkyboxModelData::*;
+
+        if let None = self.cathedral_skybox {
+            let cathedral_texture_id = self.loader.load_cube_map("res/textures/cube_maps/cathedral");
+            
+            let raw_model = self.loader.load_simple_model_to_vao(&POSITIONS, 3);
+            self.cathedral_skybox = Some(SkyboxModel {
+                raw_model,
+                day_texture_id: cathedral_texture_id,
+                night_texture_id: TextureId::Empty,
+                cycles_day_night: false,
             });
         }
     }
@@ -625,4 +622,51 @@ impl ResourceManager {
     pub fn debug_cuboid_model(&self) -> DynamicVertexIndexedModel {
         self.debug_model.clone().expect("Need to call init_debug_cuboid_model before accessing the model")
     }
+}
+
+mod SkyboxModelData {
+    const SIZE: f32 = 500.0;
+    pub const POSITIONS: [f32; 108] = [
+        -SIZE,  SIZE, -SIZE,
+        -SIZE, -SIZE, -SIZE,
+        SIZE, -SIZE, -SIZE,
+        SIZE, -SIZE, -SIZE,
+        SIZE,  SIZE, -SIZE,
+        -SIZE,  SIZE, -SIZE,
+
+        -SIZE, -SIZE,  SIZE,
+        -SIZE, -SIZE, -SIZE,
+        -SIZE,  SIZE, -SIZE,
+        -SIZE,  SIZE, -SIZE,
+        -SIZE,  SIZE,  SIZE,
+        -SIZE, -SIZE,  SIZE,
+
+        SIZE, -SIZE, -SIZE,
+        SIZE, -SIZE,  SIZE,
+        SIZE,  SIZE,  SIZE,
+        SIZE,  SIZE,  SIZE,
+        SIZE,  SIZE, -SIZE,
+        SIZE, -SIZE, -SIZE,
+
+        -SIZE, -SIZE,  SIZE,
+        -SIZE,  SIZE,  SIZE,
+        SIZE,  SIZE,  SIZE,
+        SIZE,  SIZE,  SIZE,
+        SIZE, -SIZE,  SIZE,
+        -SIZE, -SIZE,  SIZE,
+
+        -SIZE,  SIZE, -SIZE,
+        SIZE,  SIZE, -SIZE,
+        SIZE,  SIZE,  SIZE,
+        SIZE,  SIZE,  SIZE,
+        -SIZE,  SIZE,  SIZE,
+        -SIZE,  SIZE, -SIZE,
+
+        -SIZE, -SIZE, -SIZE,
+        -SIZE, -SIZE,  SIZE,
+        SIZE, -SIZE, -SIZE,
+        SIZE, -SIZE, -SIZE,
+        -SIZE, -SIZE,  SIZE,
+        SIZE, -SIZE,  SIZE
+    ];
 }

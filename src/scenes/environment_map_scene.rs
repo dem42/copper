@@ -20,13 +20,16 @@ use crate::models::{
     TextureId,
 };
 
-fn init_scene_resources(resource_manager: &mut ResourceManager) {
+pub fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::PLAYER);
+    resource_manager.init(&Models::DRAGON);
+    resource_manager.init(&Models::META);
+    resource_manager.init(&Models::TEA);
     
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
 
-    resource_manager.init_skybox();
+    resource_manager.init_cathedral_skybox();
     
     resource_manager.init_quad_model();
 
@@ -34,24 +37,15 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init_debug_cuboid_model();
 }
 
-pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMap) -> Scene {
-
-    init_scene_resources(resource_manager);
-
+pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboMap) -> Scene {
     let entities = Vec::new();
     
-    let mut terrains = Vec::new();    
-    for i in 0..2 {
-        for j in 0..1 {  
-            let terrain = Terrain::new(i, j, resource_manager.terrain_pack(), resource_manager.blend_texture(), resource_manager.terrain_model());
-            terrains.push(terrain);
-        }
-    }
+    let terrains = Vec::new();   
     let ground = Ground { terrains };
 
-    //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, 0.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
-    let player = Player::new(player_entity);
+    let player_entity = Entity::new(resource_manager.model(ModelType::Player), Vector3f::new(0.0, 0.0, 0.0), Vector3f::new(0.0, 0.0, 0.0), 1.0);
+    let mut player = Player::new(player_entity);
+    player.is_invisible_immovable = true;
     
     let water_tiles = Vec::new();
     let normal_mapped_entities = Vec::new();
@@ -62,7 +56,8 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
     let mut camera = Camera::new(20.0, 50.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
-    let skybox = Skybox::new(resource_manager.skybox(), 0.0);
+    let mut skybox = Skybox::new(resource_manager.cathedral_skybox(), 0.0);
+    skybox.uses_fog = false;
 
     let texts = Vec::new();
     
@@ -73,10 +68,13 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
 
     let particle_systems = Vec::new();
 
-    let shadow_map = framebuffers.fbos[FboMap::SHADOW_MAP_FBO].depth_texture.expect("Must have shadowmaps to show it in gui");
-    let guis = vec!{
-        GuiPanel::new(TextureId::FboTexture(shadow_map), Vector2f::new(0.6, 0.6), Vector2f::new(0.4, 0.4)),
-    };
+    let guis = Vec::new();
+
+    let entities_with_env_map = vec![
+        Entity::new(resource_manager.model(ModelType::Dragon), Vector3f::new(-50.0, 20.0, -100.0), Vector3f::new(0.0, 0.0, 0.0), 1.0),
+        Entity::new(resource_manager.model(ModelType::Tea), Vector3f::new(0.0, 20.0, -100.0), Vector3f::new(0.0, 0.0, 0.0), 1.0),
+        Entity::new(resource_manager.model(ModelType::Meta), Vector3f::new(50.0, 20.0, -100.0), Vector3f::new(0.0, 0.0, 0.0), 1.0),
+    ];
 
     Scene {
         entities, 
@@ -93,5 +91,6 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
         lights,
         particle_systems,
         uses_post_processing: false,
+        entities_with_env_map,
     }
 }

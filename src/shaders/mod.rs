@@ -12,6 +12,7 @@ pub mod shadow_shader;
 pub mod debug_shader;
 pub mod post_processing;
 pub mod particle_using_geometry_shader;
+pub mod env_map_shader;
 
 pub use self::static_shader::StaticShader;
 pub use self::normal_map_static_shader::NormalMapStaticShader;
@@ -23,3 +24,4 @@ pub use self::text_shader::TextShader;
 pub use self::particle_shader::ParticleShader;
 pub use self::shadow_shader::ShadowShader;
 pub use self::debug_shader::DebugShader;
+pub use self::env_map_shader::EnvMapShader;

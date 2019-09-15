@@ -24,6 +24,7 @@ use super::terrain_renderer::TerrainRenderer;
 use super::skybox_renderer::SkyboxRenderer;
 use super::water_renderer::WaterRenderer;
 use super::debug_renderer::DebugRenderer;
+use super::env_map_renderer::EnvMapRenderer;
 
 pub struct RenderGroup {
     pub id: u32,
@@ -51,6 +52,7 @@ pub struct MasterRenderer {
     water_renderer: WaterRenderer,
     shadowmap_renderer: ShadowMapRenderer,
     debug_renderer: DebugRenderer,
+    env_map_renderer: EnvMapRenderer,
 }
 
 impl MasterRenderer {
@@ -65,6 +67,7 @@ impl MasterRenderer {
         let water_renderer = WaterRenderer::new(projection_matrix, &MasterRenderer::SKY_COLOR);
         let shadowmap_renderer = ShadowMapRenderer::new(aspect_ratio);
         let debug_renderer = DebugRenderer::new(projection_matrix);
+        let env_map_renderer = EnvMapRenderer::new(projection_matrix);
 
         MasterRenderer {
             entity_renderer,
@@ -74,12 +77,13 @@ impl MasterRenderer {
             water_renderer,
             shadowmap_renderer,
             debug_renderer,
+            env_map_renderer,
         }
     }
     
     pub fn render(&mut self, lights: &Vec<Light>, camera: &mut Camera, entities: &Vec<Entity>, normal_mapped_entities: &Vec<Entity>, terrains: &Vec<Terrain>, 
                 player: &Player, water_tiles: &Vec<WaterTile>, skybox: &Skybox, display: &Display, framebuffers: &mut FboMap, particle_master: &mut ParticleMaster, 
-                _debug_entity: &mut DebugEntity) {
+                entities_with_env_map: &Vec<Entity>, _debug_entity: &mut DebugEntity) {
 
         self.do_shadowmap_render_passes(camera, framebuffers, entities, normal_mapped_entities, player, lights, terrains);
 
@@ -92,6 +96,9 @@ impl MasterRenderer {
         self.render_pass(lights, camera, entities, normal_mapped_entities, terrains, player, skybox, &display.wall_clock, &above_infinity_plane);
         // render water
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
+
+        // render entities which have an env map -> for the time being this happens outside of render pass but needs to be integrated at some point
+        self.env_map_renderer.render(entities_with_env_map, camera);
 
         // render particles
         particle_master.render(&camera);

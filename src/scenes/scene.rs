@@ -32,4 +32,5 @@ pub struct Scene {
     pub lights: Vec<Light>,
     pub particle_systems: Vec<(AdvancedParticleSystem, Vector3f)>,
     pub uses_post_processing: bool,
+    pub entities_with_env_map: Vec<Entity>,
 }

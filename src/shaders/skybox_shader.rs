@@ -20,6 +20,7 @@ pub struct SkyboxShader {
     location_cube_map2: i32,    
     location_blend_factor: i32,
     location_clip_plane: i32,
+    location_uses_fog: i32,
 }
 
 impl SkyboxShader {
@@ -32,6 +33,7 @@ impl SkyboxShader {
             mut location_cube_map2,
             mut location_blend_factor,
             mut location_clip_plane,
+            mut location_uses_fog,
         ) = Default::default();
 
         let program = ShaderProgram::new(
@@ -49,6 +51,7 @@ impl SkyboxShader {
                 location_cube_map2 = shader_prog.get_uniform_location("cube_map_sampler2");
                 location_blend_factor = shader_prog.get_uniform_location("blend_factor");
                 location_clip_plane = shader_prog.get_uniform_location("clip_plane");
+                location_uses_fog = shader_prog.get_uniform_location("uses_fog");
             }
         );        
 
@@ -61,6 +64,7 @@ impl SkyboxShader {
             location_cube_map2,
             location_blend_factor,
             location_clip_plane,
+            location_uses_fog,
         }
     }
 
@@ -81,8 +85,9 @@ impl SkyboxShader {
         ShaderProgram::load_float(self.location_blend_factor, blend_factor);
     }
 
-    pub fn load_sky_color(&mut self, sky_color: &Vector3f) {
+    pub fn load_sky_color(&mut self, sky_color: &Vector3f, uses_fog: bool) {
         ShaderProgram::load_vector3d(self.location_sky_color, sky_color);
+        ShaderProgram::load_float(self.location_uses_fog, if uses_fog { 1.0 } else { 0.0 });
     }
 
     pub fn load_projection_matrix(&mut self, projection_matrix: &Matrix4f) {

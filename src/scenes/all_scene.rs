@@ -236,5 +236,6 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         lights,
         particle_systems,
         uses_post_processing: true,
+        entities_with_env_map: Vec::new(),
     }
 }

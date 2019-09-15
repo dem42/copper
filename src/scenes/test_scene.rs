@@ -20,7 +20,7 @@ use crate::models::{
     TextureId,
 };
 
-fn init_scene_resources(resource_manager: &mut ResourceManager) {
+pub fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::PLAYER);
     
     resource_manager.init_terrain_textures();
@@ -35,8 +35,6 @@ fn init_scene_resources(resource_manager: &mut ResourceManager) {
 }
 
 pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMap) -> Scene {
-
-    init_scene_resources(resource_manager);
 
     let entities = Vec::new();
     
@@ -93,5 +91,6 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
         lights,
         particle_systems,
         uses_post_processing: false,
+        entities_with_env_map: Vec::new(),
     }
 }

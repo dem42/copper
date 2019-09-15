@@ -393,18 +393,43 @@ impl IndexMut<usize> for Matrix4f {
     }
 }
 
+fn mult_mat4(a: &Matrix4f, b: &Matrix4f) -> [[f32; 4]; 4] {
+    let mut res = [[0f32; 4]; 4];
+    for i in 0..4 {
+        for j in 0..4 {
+            for k in 0..4 {
+                res[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
+    res
+}
+
+impl Mul<Matrix4f> for Matrix4f {
+    type Output = Matrix4f;
+
+    fn mul(mut self, other: Matrix4f) -> Matrix4f {
+        let res = mult_mat4(&self, &other);
+        self.data = res;
+        self
+    }
+}
+
+impl Mul<&Matrix4f> for Matrix4f {
+    type Output = Matrix4f;
+
+    fn mul(mut self, other: &Matrix4f) -> Matrix4f {
+        let res = mult_mat4(&self, other);
+        self.data = res;
+        self
+    }
+}
+
 impl Mul<Matrix4f> for &Matrix4f {
     type Output = Matrix4f;
 
     fn mul(self, mut other: Matrix4f) -> Matrix4f {
-        let mut res = [[0f32; 4]; 4];
-        for i in 0..4 {
-            for j in 0..4 {
-                for k in 0..4 {
-                    res[i][j] += self.data[i][k] * other.data[k][j];
-                }
-            }    
-        }
+        let res = mult_mat4(&self, &other);
         other.data = res;
         other     
     }
@@ -414,14 +439,7 @@ impl Mul<&Matrix4f> for &Matrix4f {
     type Output = Matrix4f;
 
     fn mul(self, other: &Matrix4f) -> Matrix4f {
-        let mut res = [[0f32; 4]; 4];
-        for i in 0..4 {
-            for j in 0..4 {
-                for k in 0..4 {
-                    res[i][j] += self.data[i][k] * other.data[k][j];
-                }
-            }    
-        }
+        let res = mult_mat4(&self, other);
         Matrix4f {
             data: res,
         }

@@ -7,6 +7,7 @@ uniform vec3 fog_color;
 uniform samplerCube cube_map_sampler1;
 uniform samplerCube cube_map_sampler2;
 uniform float blend_factor;
+uniform float uses_fog;
 
 // lower limit is up to where the skybox should have the color of the fog
 const float lower_limit = 0.0;
@@ -37,5 +38,9 @@ void main(void) {
     float factor = (pass_tex_coords.y - lower_limit) / (upper_limit - lower_limit);
     factor = clamp(factor, 0.0, 1.0);
 
-    out_Color = mix(vec4(fog_color, 1.0), final_color, factor);
+    if (uses_fog > 0.5) {
+        out_Color = mix(vec4(fog_color, 1.0), final_color, factor);
+    } else {
+        out_Color = final_color;
+    }
 }

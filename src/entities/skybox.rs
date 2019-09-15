@@ -15,6 +15,7 @@ pub struct Skybox {
     pub rotation_yaw_deg: f32,
     // this is a hack for scenes that don't want to show a skybox :(
     pub invisible: bool,
+    pub uses_fog: bool,
 }
 
 impl Skybox {
@@ -23,6 +24,7 @@ impl Skybox {
             model,
             rotation_yaw_deg,
             invisible: false,
+            uses_fog: true,
         }
     }
 
@@ -31,7 +33,10 @@ impl Skybox {
     }
 
     pub fn get_day_night_textures(&self, wall_clock: &WallClock) -> (TextureId, TextureId, f32) {
-        if wall_clock.time_of_day < DAY_SEGMENTS {
+        if !self.model.cycles_day_night {
+            (self.model.day_texture_id, self.model.day_texture_id, 0.0) 
+        }
+        else if wall_clock.time_of_day < DAY_SEGMENTS {
             (self.model.night_texture_id, self.model.day_texture_id, wall_clock.time_of_day / DAY_SEGMENTS)
         } else if wall_clock.time_of_day < 2.0 * DAY_SEGMENTS {
             (self.model.day_texture_id, self.model.day_texture_id, (wall_clock.time_of_day - DAY_SEGMENTS) / DAY_SEGMENTS)

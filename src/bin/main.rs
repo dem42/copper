@@ -19,7 +19,8 @@ use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    all_scene::*,
+    //all_scene::*,
+    environment_map_scene::*,
     load_screen::*,
 };
 use copper::gl;
@@ -82,7 +83,7 @@ fn main() {
         scene.skybox.increase_rotation(&display);
 
         master_renderer.render(&scene.lights, &mut scene.camera, &scene.entities, &scene.normal_mapped_entities, &scene.ground.terrains, 
-            &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut particle_master, &mut scene.debug_entity);
+            &scene.player, &scene.water, &scene.skybox, &display, &mut framebuffers, &mut particle_master, &mut scene.entities_with_env_map, &mut scene.debug_entity);
 
         do_post_processing(scene.uses_post_processing, &mut post_processing, &mut framebuffers, &display);
 

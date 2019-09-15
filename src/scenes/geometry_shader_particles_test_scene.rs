@@ -59,7 +59,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     let mut camera = Camera::new(20.0, 30.0);
     camera.position = Vector3f::new(0.0, 0.0, 0.0);
 
-    let skybox = Skybox::new(SkyboxModel {raw_model: RawModel {vao_id: 0, vertex_count: 0}, day_texture_id: TextureId::Empty, night_texture_id: TextureId::Empty}, 0.0);
+    let skybox = Skybox::new(SkyboxModel {raw_model: RawModel {vao_id: 0, vertex_count: 0}, day_texture_id: TextureId::Empty, night_texture_id: TextureId::Empty, cycles_day_night: false}, 0.0);
 
     let texts = Vec::new();
     
@@ -100,5 +100,6 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         lights,
         particle_systems,
         uses_post_processing: false,
+        entities_with_env_map: Vec::new(),
     }
 }

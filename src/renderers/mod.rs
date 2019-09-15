@@ -8,6 +8,7 @@ pub mod water_renderer;
 pub mod image_renderer;
 pub mod shadowmap_renderer;
 pub mod debug_renderer;
+pub mod env_map_renderer;
 
 pub mod particle_renderer;
 pub mod particle_renderer_gpu_instanced;
