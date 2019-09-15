@@ -98,7 +98,7 @@ impl MasterRenderer {
         self.water_renderer.render(water_tiles, framebuffers, camera, display, lights);
 
         // render entities which have an env map -> for the time being this happens outside of render pass but needs to be integrated at some point
-        self.env_map_renderer.render(entities_with_env_map, camera);
+        self.env_map_renderer.render(entities_with_env_map, camera, &skybox.model.day_texture_id);
 
         // render particles
         particle_master.render(&camera);
