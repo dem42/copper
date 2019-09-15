@@ -25,17 +25,13 @@ use copper::scenes::{
 use copper::gl;
 
 use std::thread;
-use std::time::{Instant, Duration};
+use std::time::Duration;
 
 fn main() {
-    let start = Instant::now();
     let mut display = Display::create();
     let mut framebuffers = FboMap::new_rendering_fbos(&display);
     let mut resource_manager = ResourceManager::default();
     let mut gui_renderer = GuiRenderer::new();
-
-    println!("before load screen. Took: {}", start.elapsed().as_millis());
-    let start = Instant::now();
     
     init_resourced_for_load_screen(&mut resource_manager);
     while resource_manager.are_textures_loading() && !display.is_close_requested() {
@@ -46,21 +42,18 @@ fn main() {
     }
     let load_screen = create_load_screen(&mut resource_manager);
 
-    println!("loading screen now showing. Took: {}", start.elapsed().as_millis());
-    let start = Instant::now();
-
-    init_scene_resources(&mut resource_manager);    
-    while resource_manager.are_textures_loading() && !display.is_close_requested() {
-        println!("showing load screen!");
+    let mut resource_init_started = false;
+    while (!resource_init_started || resource_manager.are_textures_loading()) && !display.is_close_requested() {        
         gui_renderer.render(&load_screen.guis, &load_screen.gui_model.raw_model, &load_screen.texts);
         display.update_display();
+        if !resource_init_started {
+            init_scene_resources(&mut resource_manager);
+            resource_init_started = true;
+        }
     }
     if display.is_close_requested() {
         return;
     }
-
-    println!("hmm should be done rendering here. Took: {}", start.elapsed().as_millis());
-
 
     let mut scene = create_scene(&mut resource_manager, &framebuffers);
     

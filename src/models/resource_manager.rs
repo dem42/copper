@@ -307,9 +307,9 @@ impl ResourceManager {
             let normal_map = self.loader.load_texture(normal_map_texture, TextureParams::default());
             let raw_model = self.loader.load_to_vao_with_normal_map(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals, &model_data.tangents);
             (raw_model, Some(normal_map.tex_id))
-        } else {
+        } else {            
             let model_data = load_simple_obj_model(obj_file).expect(&format!("Unable to load simple {}", obj_file));
-            let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);
+            let raw_model = self.loader.load_to_vao(&model_data.vertices, &model_data.texture_coords, &model_data.indices, &model_data.normals);            
             (raw_model, None)
         };
 
