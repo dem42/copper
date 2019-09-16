@@ -11,4 +11,5 @@ default-features = false
 version = "0.32.0"
 
 [build-dependencies]
+cmake = "0.1.42"
 gl_generator = "0.10.0"
