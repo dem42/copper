@@ -23,3 +23,4 @@ pub mod renderers;
 pub mod scenes;
 pub mod shaders;
 pub mod shadows;
+pub mod animations;
