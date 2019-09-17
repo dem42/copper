@@ -5,6 +5,7 @@
 A demonstration of a 3d renderer written from scratch in Rust. 
 
 Features:
+- Animation system using skinned meshes (WIP)
 - Specular/diffuse lighting implementation
 - Water with reflection/refraction and distortion maps
 - PCF real-time shadows
