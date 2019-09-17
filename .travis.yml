@@ -11,7 +11,7 @@ addons:
       - libxinerama-dev
       - libxcursor-dev
       - libxi-dev
-      - libmesa-dev
+      - mesa-common-dev
 matrix:
   allow_failures:
     - rust: nightly
