@@ -51,7 +51,6 @@ pub struct MasterRenderer {
     skybox_renderer: SkyboxRenderer,
     water_renderer: WaterRenderer,
     shadowmap_renderer: ShadowMapRenderer,
-    debug_renderer: DebugRenderer,
     env_map_renderer: EnvMapRenderer,
 }
 
@@ -76,7 +75,6 @@ impl MasterRenderer {
             skybox_renderer,
             water_renderer,
             shadowmap_renderer,
-            debug_renderer,
             env_map_renderer,
         }
     }

@@ -1,5 +1,7 @@
 use crate::math::{
     Matrix4f,
+    Vector3f,
+    Quaternion,
 };
 
 pub struct Joint {
@@ -33,4 +35,9 @@ impl Joint {
             child.calc_inverse_bind_transform(&bind_transform);
         }
     }
+}
+
+pub struct JointTransform {
+    pub position: Vector3f,
+    pub rotation: Quaternion,
 }

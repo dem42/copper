@@ -8,16 +8,13 @@ use crate::entities::{
     Player,
     Ground,
     Skybox,
-    Terrain,
     DebugEntity,
 };
-use crate::guis::GuiPanel;
-use crate::math::{Vector3f, Vector2f};
+use crate::math::Vector3f;
 use crate::models::{
     ResourceManager,
     Models,
     ModelType,
-    TextureId,
 };
 
 pub fn init_scene_resources(resource_manager: &mut ResourceManager) {

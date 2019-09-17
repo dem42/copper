@@ -431,14 +431,12 @@ impl ResourceManager {
     }
 
     pub fn init_skybox(&mut self) {
-        use SkyboxModelData::*;
-
         if let None = self.skybox_model {
             let day_texture_id = self.loader.load_cube_map("res/textures/cube_maps/day_skybox");
             let night_texture_id = self.loader.load_cube_map("res/textures/cube_maps/night_skybox");
             
             
-            let raw_model = self.loader.load_simple_model_to_vao(&POSITIONS, 3);
+            let raw_model = self.loader.load_simple_model_to_vao(&skybox_model_data::POSITIONS, 3);
             self.skybox_model = Some(SkyboxModel {
                 raw_model,
                 day_texture_id,
@@ -452,13 +450,11 @@ impl ResourceManager {
         self.cathedral_skybox.clone().expect("Need to call init_cathedral_skybox first")
     }
 
-    pub fn init_cathedral_skybox(&mut self) {
-        use SkyboxModelData::*;
-
+    pub fn init_cathedral_skybox(&mut self) {        
         if let None = self.cathedral_skybox {
             let cathedral_texture_id = self.loader.load_cube_map("res/textures/cube_maps/cathedral");
             
-            let raw_model = self.loader.load_simple_model_to_vao(&POSITIONS, 3);
+            let raw_model = self.loader.load_simple_model_to_vao(&skybox_model_data::POSITIONS, 3);
             self.cathedral_skybox = Some(SkyboxModel {
                 raw_model,
                 day_texture_id: cathedral_texture_id,
@@ -624,7 +620,7 @@ impl ResourceManager {
     }
 }
 
-mod SkyboxModelData {
+mod skybox_model_data {
     const SIZE: f32 = 500.0;
     pub const POSITIONS: [f32; 108] = [
         -SIZE,  SIZE, -SIZE,
