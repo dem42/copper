@@ -2,7 +2,9 @@
 
 # Renderer in rust
 
-A demonstration of a 3d renderer written from scratch in Rust. Features:
+A demonstration of a 3d renderer written from scratch in Rust. 
+
+Features:
 - Specular/diffuse lighting implementation
 - Water with reflection/refraction and distortion maps
 - PCF real-time shadows
@@ -11,10 +13,11 @@ A demonstration of a 3d renderer written from scratch in Rust. Features:
 - Post-processing effects: Gaussian blur, Bloom effect
 - Implementation of 3D maths needed for rendering: Matrices, Vectors, LookAt functions, Euler angles and Quaternions
 - Normal mapped entities, including calculation of tangent space transform
+- Multiple point lights with attenuation
 - Geometry shader support and demo
 - Environment map support and demo
 - Movable, follow-player camera
-- Ray-casting to placing objects in the world 
+- Ray-casting for placing objects in the world 
 - Skyboxes with day/night cycles
 - In-game gui overlays and SDF-shaded gui text
 - Texture atlases
