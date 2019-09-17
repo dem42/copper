@@ -1,17 +1,9 @@
+os: windows
 language: rust
 rust:
   - stable
   - beta
   - nightly
-addons:
-  apt:
-    packages:
-      - cmake
-      - libxrandr-dev
-      - libxinerama-dev
-      - libxcursor-dev
-      - libxi-dev
-      - mesa-common-dev
 matrix:
   allow_failures:
     - rust: nightly

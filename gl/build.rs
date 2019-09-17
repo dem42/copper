@@ -17,7 +17,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     eprintln!("Compiling glfw into: {}", dst.display());
-    println!("cargo:rustc-link-lib=static=lglfw3");
+    //println!("cargo:rustc-link-lib=static=lglfw3");
 
     // link with glfw3 which is our dependency (the link library name seems to be specified inside glfw-rs which is a crate we depend on)
     //println!(r"cargo:rustc-link-search=D:\opengl_workspace\glfw-3.3.bin.WIN64\lib-vc2015"); 
