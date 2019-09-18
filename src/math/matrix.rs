@@ -223,6 +223,10 @@ impl Matrix4f {
         view_mat
     }
 
+    pub fn trace(&self) -> f32 {
+        self.data[0][0] + self.data[1][1] + self.data[2][2] + self.data[3][3]
+    }
+
     // translate using the translation matrix
     pub fn translate(&mut self, t: &Vector3f) {
         let tran_mat = Matrix4f{ data: [[1.0, 0.0, 0.0, t.x], [0.0, 1.0, 0.0, t.y], [0.0, 0.0, 1.0, t.z], [0.0, 0.0, 0.0, 1.0]] };

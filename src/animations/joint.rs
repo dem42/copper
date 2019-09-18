@@ -3,6 +3,7 @@ use crate::math::{
     Vector3f,
     Quaternion,
 };
+use collada::Matrix4;
 
 pub struct Joint {
     pub index: usize,
@@ -40,4 +41,10 @@ impl Joint {
 pub struct JointTransform {
     pub position: Vector3f,
     pub rotation: Quaternion,
+}
+
+impl JointTransform {
+    pub fn create_from_collada(column_mjr_mat: &Matrix4<f32>) -> Self {
+        unimplemented!()
+    }
 }

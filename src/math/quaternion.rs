@@ -35,10 +35,12 @@ impl Quaternion {
     pub fn from_angle_axis(alpha_deg: f32, axis: &Vector3f) -> Self {
         let (sin, cos) = (alpha_deg / 2.0).to_radians().sin_cos();
         let v = sin * axis;
-        Quaternion {
+        let mut q = Quaternion {
             a: cos,
             v,
-        }
+        };
+        q.normalize();
+        q
     }
 
     pub fn as_rot_mat(&self) -> Matrix4f {
@@ -56,6 +58,29 @@ impl Quaternion {
         res[2][2] = 1.0 - 2.0*s*(qi*qi + qj*qj);
         res[3][3] = 1.0;
         res
+    }
+
+    pub fn from_rot_mat(orthogonal_mat: &Matrix4f) -> Quaternion {
+        // we use the face that the trace sums to 3 - 4*(x^2 + y^2 + z^2) which since we want a unit quaternion
+        // is |q| = w^2 + x^2 + y^2 + z^2 = 1 => 4*w^2 = 4 - 4*(x^2 + y^2 + z^2)
+        // so we know the w (first component) is
+        let r = orthogonal_mat.trace(); // since our orthogonal mat has 1 in [3][3] we don't need to add 1 to get 4 - 4(xx+yy+zz)
+        dbg!(r);
+        let w = r.sqrt() / 2.0;
+        // if we change the signs on the diagonal elements then we can build terms that have the following form
+        // Qxx - Qyy - Qzz = -1 + 4xx
+        // or similar for other sign combinations -> from this we can compute the x
+        // but since sqrt has two possible solutions (pos and neg) we need to find the sign from the a combinations of entries that
+        // only depend on x and w (since we took positive w)
+        let x = Self::copysign((1.0 + orthogonal_mat[0][0] - orthogonal_mat[1][1] - orthogonal_mat[2][2]).sqrt() / 2.0, orthogonal_mat[2][1] - orthogonal_mat[1][2]);
+        let y = Self::copysign((1.0 - orthogonal_mat[0][0] + orthogonal_mat[1][1] - orthogonal_mat[2][2]).sqrt() / 2.0, orthogonal_mat[0][2] - orthogonal_mat[2][0]);
+        let z = Self::copysign((1.0 - orthogonal_mat[0][0] - orthogonal_mat[1][1] + orthogonal_mat[2][2]).sqrt() / 2.0, orthogonal_mat[1][0] - orthogonal_mat[0][1]);
+
+        Quaternion::new(w, x, y, z)
+    }
+
+    fn copysign(x: f32, y: f32) -> f32 {
+        y.signum() * x.abs()
     }
 
     pub fn normalize(&mut self) {
@@ -208,6 +233,18 @@ mod tests {
                 assert_f32_eq!(expected[i][j], mat[i][j], test_constants::EPS_MEDIUM, &format!("Mismatch on: ({},{}).", i, j));
             }
         }
+    }
+
+    #[test]
+    fn test_from_rot_mat() {
+        let q = Quaternion::from_angle_axis(90.0, &Vector3f::new(0.3, -3.1, -1.0));
+        let r = q.as_rot_mat();
+        let q_n = Quaternion::from_rot_mat(&r);        
+        
+        assert_f32_eq!(q.a, q_n.a, test_constants::EPS_MEDIUM, "Mismatch on: a");
+        assert_f32_eq!(q.v[0], q_n.v[0], test_constants::EPS_MEDIUM, "Mismatch on: x");
+        assert_f32_eq!(q.v[1], q_n.v[1], test_constants::EPS_MEDIUM, "Mismatch on: y");
+        assert_f32_eq!(q.v[2], q_n.v[2], test_constants::EPS_MEDIUM, "Mismatch on: z");
     }
 
     #[test]
