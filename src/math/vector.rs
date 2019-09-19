@@ -267,6 +267,17 @@ impl Sub for Vector3f {
     }
 }
 
+impl Sub<&Vector3f> for Vector3f {
+    type Output = Vector3f;
+
+    fn sub(mut self, other: &Vector3f) -> Vector3f {
+        self.x -= other.x;
+        self.y -= other.y; 
+        self.z -= other.z;
+        self
+    }
+}
+
 impl Sub<&Vector3f> for &Vector3f {
     type Output = Vector3f;
 

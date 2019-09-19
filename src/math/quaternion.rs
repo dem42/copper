@@ -3,8 +3,11 @@ use crate::math::{
     Vector3f,
 };
 use std::ops::{
+    Add,
+    Sub,
     Index,
     Mul,
+    Neg,    
 };
 
 /**
@@ -91,6 +94,16 @@ impl Quaternion {
         }
     }
 
+    pub fn normalized(&self) -> Quaternion {
+        let mut normed = self.clone();
+        let l = 1.0 / self.length();
+        normed.a *= l;
+        for i in 0..3 {
+            normed.v[i] *= l;
+        }
+        normed
+    }
+
     pub fn length(&self) -> f32 {
         (self.a * self.a + self.v.dot_product(&self.v)).sqrt()
     }
@@ -123,6 +136,58 @@ impl Quaternion {
         let v_as_q = Quaternion { a: 0.0, v: point.clone() };        
         let res = quaternion * v_as_q * quaternion;
         res.v
+    }
+
+    pub fn slerp(start: &Quaternion, end: &Quaternion, alpha: f32) -> Quaternion {        
+        // i.e kind of a half-intuitive explanation
+        // the spherical interpolation is a linear interpolation with weights based on the sine of the angle
+        // with unit quaternions whose powers we can write as q^t = cos t*theta + v sin t*theta
+        // we see that we can get the sin theta factor easily out of the quaternion and so we can use them to do the slerp efficiently
+        let q1 = start.normalized();
+        let mut q2 = end.normalized();
+        
+        let mut real_part = q1.a * q2.a + q1.v.dot_product(&q2.v);
+
+        if real_part < 0.0 {
+            real_part = -real_part;
+            q2 = -q2;
+        }
+        const DOT_THRESHOLD: f32 = 0.9995;
+        if real_part > DOT_THRESHOLD {
+            let step = alpha*(q2 - &q1);
+            let result = q1 + step;
+            return result.normalized();
+        }
+
+        let theta_0 = real_part.acos();
+        let theta = theta_0 * alpha;
+        let (sin_theta, cos_theta) = theta.sin_cos();
+        let sin_theta_0 = theta_0.sin();
+
+        let s0 = cos_theta - real_part * sin_theta / sin_theta_0;
+        let s1 = sin_theta / sin_theta_0; 
+                
+        (s0 * q1) + (s1 * q2)
+    }
+}
+
+impl Add<Quaternion> for Quaternion {
+    type Output = Quaternion;
+
+    fn add(mut self, o: Quaternion) -> Quaternion {
+        self.a += o.a;
+        self.v = self.v + o.v;
+        self
+    }
+}
+
+impl Sub<&Quaternion> for Quaternion {
+    type Output = Quaternion;
+
+    fn sub(mut self, o: &Quaternion) -> Quaternion {
+        self.a -= o.a;
+        self.v = self.v - &o.v;
+        self
     }
 }
 
@@ -167,6 +232,28 @@ impl Mul<Quaternion> for Quaternion {
     }
 }
 
+impl Mul<Quaternion> for f32 {
+    type Output = Quaternion;
+
+    fn mul(self, mut o: Quaternion) -> Quaternion {
+        o.a *= self;
+        o.v = self * o.v;
+        o
+    }
+}
+
+impl Neg for Quaternion {
+    type Output = Quaternion;
+
+    fn neg(mut self) -> Quaternion {        
+        self.a = -self.a;
+        self.v.x = -self.v.x;
+        self.v.y = -self.v.y;
+        self.v.z = -self.v.z;
+        self
+    }
+}
+
 impl Index<usize> for Quaternion {
     type Output = f32;
 
@@ -180,7 +267,6 @@ impl Index<usize> for Quaternion {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -262,5 +348,19 @@ mod tests {
         for i in 0..3 {
             assert_f32_eq!(expected[i], result[i], test_constants::EPS_MEDIUM, &format!("Mismatch on: {}.", i));            
         }
+    }
+
+    #[test]
+    fn test_quaternion_slerp() {        
+        let q1 = Quaternion::from_angle_axis(30.0, &Vector3f::new(1.2, 0.3, -3.0));
+        let q2 = Quaternion::from_angle_axis(50.0, &Vector3f::new(10.2, 4.5, -1.0));
+
+        let res = Quaternion::slerp(&q1, &q2, 0.25);
+        // expected result obtained from Martin Bakers article where there is a slerp calculator
+        // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/index.htm
+        assert_f32_eq!(res.a, 0.6819695635664609, test_constants::EPS_PRECISE);
+        assert_f32_eq!(res.v.x, 0.4754162942171991, test_constants::EPS_PRECISE);
+        assert_f32_eq!(res.v.y, 0.1713716492136952, test_constants::EPS_PRECISE);
+        assert_f32_eq!(res.v.z, -0.5287046288235048, test_constants::EPS_PRECISE);
     }
 }

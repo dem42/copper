@@ -7,6 +7,7 @@ use super::{
 use std::f32;
 use super::super::entities::Camera;
 
+// Row major matrix
 #[derive(Debug, Clone)]
 pub struct Matrix4f {
     data: [[f32; 4]; 4],

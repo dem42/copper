@@ -45,6 +45,18 @@ pub struct JointTransform {
 
 impl JointTransform {
     pub fn create_from_collada(column_mjr_mat: &Matrix4<f32>) -> Self {
-        unimplemented!()
+        let mut row_major_rot_mat = Matrix4f::identity();
+        let mut position = Vector3f::zero();
+        for i in 0..3 {
+            position[i] = column_mjr_mat[3][i];
+            for j in 0..3 {
+                row_major_rot_mat[i][j] = column_mjr_mat[j][i];
+            }
+        }   
+        let rotation = Quaternion::from_rot_mat(&row_major_rot_mat);     
+        JointTransform {
+            position,
+            rotation,
+        }
     }
 }

@@ -140,14 +140,11 @@ impl ModelLoader {
         }
     }
 
-    pub fn load_collada(&mut self, path: &str) -> (AnimatedModel, Animation) {
+    pub fn load_collada_animation(&mut self, path: &str, texture_path: &str) -> (AnimatedModel, Animation) {
         let path = std::path::Path::new(path);
         let collada_doc = ColladaDocument::from_path(&path).expect(&format!("Failed to load collada document: {:?}", path));
 
         let animations = collada_doc.get_animations().expect("Collada file must contain animations");
-        let obj_set = collada_doc.get_obj_set().expect("Collada file must contain objects");
-        let bind_data_set = collada_doc.get_bind_data_set().expect("Collada file must contain bind data");
-        let skeletons = collada_doc.get_skeletons().expect("Collada file must contain skeleton");
 
         let mut animation = Animation {
             length_seconds: 0.0,
@@ -174,6 +171,14 @@ impl ModelLoader {
             );
         }
 
+        let obj_set = collada_doc.get_obj_set().expect("Collada file must contain objects");
+        let texture_id = self.load_texture_internal(texture_path, TextureParams::default(), ExtraInfo::default());
+
+        //self.load_animated_model_to_vao(positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32])
+
+        let bind_data_set = collada_doc.get_bind_data_set().expect("Collada file must contain bind data");
+        let skeletons = collada_doc.get_skeletons().expect("Collada file must contain skeleton");
+
         unimplemented!()
     }
 
@@ -194,6 +199,18 @@ impl ModelLoader {
         self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 3, positions);
         self.store_data_in_attribute_list(RawModel::TEX_COORD_ATTRIB, 2, texture_coords);
         self.store_data_in_attribute_list(RawModel::NORMAL_ATTRIB, 3, normals);
+        self.unbind_vao();
+        RawModel::new(vao_id, indices.len())
+    }
+
+    pub fn load_animated_model_to_vao(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32], joint_weights: &[f32], joint_indices: &[i32]) -> RawModel {
+        let vao_id = self.create_vao();
+        self.bind_indices_buffer(indices);
+        self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 3, positions);
+        self.store_data_in_attribute_list(RawModel::TEX_COORD_ATTRIB, 2, texture_coords);
+        self.store_data_in_attribute_list(RawModel::NORMAL_ATTRIB, 3, normals);
+        self.store_data_in_attribute_list(RawModel::JOINT_IDX_ATTRIB, 3, joint_indices);
+        self.store_data_in_attribute_list(RawModel::JOINT_WEIGHT_ATTRIB, 3, joint_weights);
         self.unbind_vao();
         RawModel::new(vao_id, indices.len())
     }
@@ -375,12 +392,16 @@ impl ModelLoader {
         gl::bind_vertex_array(0);
     }
     
-    fn store_data_in_attribute_list(&mut self, attribute_num: u32, coord_size: u32, data: &[f32]) {
+    fn store_data_in_attribute_list<T: AsGlType>(&mut self, attribute_num: u32, coord_size: u32, data: &[T]) {
         let vbo_id = gl::gen_buffer();
         self.vbo_list.push(vbo_id);
         gl::bind_buffer(gl::ARRAY_BUFFER, vbo_id);
         gl::buffer_data(gl::ARRAY_BUFFER, data, gl::STATIC_DRAW);
-        gl::vertex_attrib_pointer(attribute_num, coord_size, gl::FLOAT);
+        if T::as_gl_type() == gl::INT {
+            gl::vertex_attrib_i_pointer(attribute_num, coord_size, T::as_gl_type());
+        } else {
+            gl::vertex_attrib_pointer(attribute_num, coord_size, T::as_gl_type());
+        }
         gl::bind_buffer(gl::ARRAY_BUFFER, 0);
     }
 
@@ -390,6 +411,22 @@ impl ModelLoader {
         gl::bind_buffer(gl::ELEMENT_ARRAY_BUFFER, vbo_id);
         gl::buffer_data(gl::ELEMENT_ARRAY_BUFFER, indices, gl::STATIC_DRAW);
         // no unbind since we will bind data buffer next -> that means it HAS to be called after        
+    }
+}
+
+trait AsGlType {
+    fn as_gl_type() -> gl::types::GLenum;
+}
+
+impl AsGlType for f32 {
+    fn as_gl_type() -> gl::types::GLenum {
+        gl::FLOAT
+    }
+}
+
+impl AsGlType for i32 {
+    fn as_gl_type() -> gl::types::GLenum {
+        gl::INT
     }
 }
 
@@ -412,6 +449,8 @@ impl RawModel {
     pub const TEX_COORD_ATTRIB: u32 = 1;
     pub const NORMAL_ATTRIB: u32 = 2;
     pub const TANGENT_ATTRIB: u32 = 3;
+    pub const JOINT_IDX_ATTRIB: u32 = 4;
+    pub const JOINT_WEIGHT_ATTRIB: u32 = 5;
 
     pub fn new(vao_id: u32, vertex_count: usize) -> RawModel {
         RawModel {

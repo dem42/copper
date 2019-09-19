@@ -199,8 +199,7 @@ pub fn uniform_matrix4f(location_id: i32, matrix: &[[f32; 4]; 4]) {
 pub fn vertex_attrib_pointer(
     attribute_id: u32,
     components_per_attribute: u32,
-    data_type: types::GLenum,    
-) {
+    data_type: types::GLenum) {
     unsafe {
         let should_normalize = false as u8;
         let stride = 0; // dist between vertices
@@ -210,6 +209,23 @@ pub fn vertex_attrib_pointer(
             components_per_attribute as i32,
             data_type,
             should_normalize,
+            stride,
+            offset,
+        );
+    }
+}
+
+pub fn vertex_attrib_i_pointer(
+    attribute_id: u32,
+    components_per_attribute: u32,
+    data_type: types::GLenum) {
+    unsafe {        
+        let stride = 0; // dist between vertices
+        let offset = ptr::null() as *const _; // offset to start of data in buffer
+        VertexAttribIPointer(
+            attribute_id,
+            components_per_attribute as i32,
+            data_type,
             stride,
             offset,
         );
