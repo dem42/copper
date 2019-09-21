@@ -2,6 +2,7 @@ pub mod loader;
 pub mod resource_manager;
 pub mod terrain_generator;
 pub mod texture_id;
+pub mod collada_load_helper;
 
 pub use self::loader::*;
 pub use self::resource_manager::*;

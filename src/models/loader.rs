@@ -4,18 +4,6 @@ use texture_lib::texture_loader::{
     Texture2DRGBA,
 };
 use crate::math::utils::f32_min;
-use crate::animations::{
-    animation::{
-        Animation,
-        JointAnimation,
-    },
-    keyframe::Keyframe,
-    animated_model::AnimatedModel,    
-    joint::{
-        Joint,
-        JointTransform,
-    },
-};
 use super::texture_id::TextureId;
 
 use std::collections::HashMap;
@@ -23,7 +11,6 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::sync::mpsc;
 use threadpool::ThreadPool;
-use collada::document::ColladaDocument;
 
 pub struct ModelLoader {    
     vao_list: Vec<u32>,
@@ -44,7 +31,7 @@ pub struct ModelLoader {
 type TextureResult = (Texture2DRGBA, u32, TextureParams, ExtraInfo);
 
 #[derive(Default)]
-struct ExtraInfo {
+pub struct ExtraInfo {
     is_cubemap: bool,
     order: usize,
     cubemap_token: u32,
@@ -140,47 +127,7 @@ impl ModelLoader {
         }
     }
 
-    pub fn load_collada_animation(&mut self, path: &str, texture_path: &str) -> (AnimatedModel, Animation) {
-        let path = std::path::Path::new(path);
-        let collada_doc = ColladaDocument::from_path(&path).expect(&format!("Failed to load collada document: {:?}", path));
-
-        let animations = collada_doc.get_animations().expect("Collada file must contain animations");
-
-        let mut animation = Animation {
-            length_seconds: 0.0,
-            joint_animations: Vec::new(),
-        };
-        for a in animations {
-            let mut keyframes = Vec::new();
-            let mut length_seconds = 0.0;
-            for i in 0..a.sample_poses.len() {
-                length_seconds += a.sample_times[i];
-                keyframes.push(
-                    Keyframe {
-                       timestamp: a.sample_times[i],
-                       pose: JointTransform::create_from_collada(&a.sample_poses[i]), 
-                    }
-                );
-            }
-            animation.joint_animations.push(
-                JointAnimation {
-                    name: a.target,
-                    length_seconds,
-                    keyframes,
-                }
-            );
-        }
-
-        let obj_set = collada_doc.get_obj_set().expect("Collada file must contain objects");
-        let texture_id = self.load_texture_internal(texture_path, TextureParams::default(), ExtraInfo::default());
-
-        //self.load_animated_model_to_vao(positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32])
-
-        let bind_data_set = collada_doc.get_bind_data_set().expect("Collada file must contain bind data");
-        let skeletons = collada_doc.get_skeletons().expect("Collada file must contain skeleton");
-
-        unimplemented!()
-    }
+    
 
     pub fn load_to_vao_with_normal_map(&mut self, positions: &[f32], texture_coords: &[f32], indices: &[u32], normals: &[f32], tangents: &[f32]) -> RawModel {
         let vao_id = self.create_vao();
@@ -209,8 +156,8 @@ impl ModelLoader {
         self.store_data_in_attribute_list(RawModel::POS_ATTRIB, 3, positions);
         self.store_data_in_attribute_list(RawModel::TEX_COORD_ATTRIB, 2, texture_coords);
         self.store_data_in_attribute_list(RawModel::NORMAL_ATTRIB, 3, normals);
-        self.store_data_in_attribute_list(RawModel::JOINT_IDX_ATTRIB, 3, joint_indices);
-        self.store_data_in_attribute_list(RawModel::JOINT_WEIGHT_ATTRIB, 3, joint_weights);
+        self.store_data_in_attribute_list(RawModel::JOINT_IDX_ATTRIB, 4, joint_indices);
+        self.store_data_in_attribute_list(RawModel::JOINT_WEIGHT_ATTRIB, 4, joint_weights);
         self.unbind_vao();
         RawModel::new(vao_id, indices.len())
     }
@@ -279,7 +226,7 @@ impl ModelLoader {
         cubemap_id
     }
 
-    fn load_texture_internal(&mut self, file_name: &str, params: TextureParams, extra_info: ExtraInfo) -> TextureId {
+    pub fn load_texture_internal(&mut self, file_name: &str, params: TextureParams, extra_info: ExtraInfo) -> TextureId {
         self.texture_token_gen += 1;
         let texture_queue_id = self.texture_token_gen;
 
