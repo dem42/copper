@@ -25,6 +25,7 @@ use super::skybox_renderer::SkyboxRenderer;
 use super::water_renderer::WaterRenderer;
 use super::debug_renderer::DebugRenderer;
 use super::env_map_renderer::EnvMapRenderer;
+use super::animated_entity_renderer::AnimatedEntityRenderer;
 
 pub struct RenderGroup {
     pub id: u32,
@@ -52,6 +53,7 @@ pub struct MasterRenderer {
     water_renderer: WaterRenderer,
     shadowmap_renderer: ShadowMapRenderer,
     env_map_renderer: EnvMapRenderer,
+    animated_entity_renderer: AnimatedEntityRenderer,
 }
 
 impl MasterRenderer {
@@ -67,6 +69,7 @@ impl MasterRenderer {
         let shadowmap_renderer = ShadowMapRenderer::new(aspect_ratio);
         let debug_renderer = DebugRenderer::new(projection_matrix);
         let env_map_renderer = EnvMapRenderer::new(projection_matrix);
+        let animated_entity_renderer = AnimatedEntityRenderer::new(projection_matrix);
 
         MasterRenderer {
             entity_renderer,
@@ -76,6 +79,7 @@ impl MasterRenderer {
             water_renderer,
             shadowmap_renderer,
             env_map_renderer,
+            animated_entity_renderer,
         }
     }
     
@@ -207,7 +211,7 @@ impl MasterRenderer {
                     self.entity_renderer.unprepare_textured_model(&entity.model);
                 },
                 player::PlayerEntityType::AnimatedModelEntity(entity) => {
-
+                    self.animated_entity_renderer.render(entity, camera);
                 },
             }
         }

@@ -315,6 +315,11 @@ impl ResourceManager {
                 cathedral_skybox
             });
 
+            self.player_model = self.player_model.take().map(|mut player_model| {
+                player_model.tex_id = self.loader.resolve(player_model.tex_id);
+                player_model
+            });
+
             false
         } else {
             self.loader.update_resource_state();
