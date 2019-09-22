@@ -22,6 +22,7 @@ use crate::models::{
 
 pub fn init_scene_resources(resource_manager: &mut ResourceManager) {
     resource_manager.init(&Models::PLAYER);
+    resource_manager.init_player();
     
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
@@ -49,7 +50,9 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
 
     //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, 0.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
-    let player = Player::new(player_entity);
+    let mut player = Player::new(player_entity);
+    player.is_invisible_immovable = true;
+
     
     let water_tiles = Vec::new();
     let normal_mapped_entities = Vec::new();

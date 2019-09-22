@@ -5,6 +5,7 @@ use crate::models::{
 
 use super::joint::Joint;
 
+#[derive(Clone)]
 pub struct AnimatedModel {
     // skin
     pub raw_model: RawModel,

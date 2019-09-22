@@ -5,11 +5,11 @@ use crate::math::{
 };
 use collada::Matrix4;
 
+#[derive(Clone)]
 pub struct Joint {
     pub index: usize,
-    pub parent_idx: usize,
     pub name: String,
-    pub children: Vec<Box<Joint>>,
+    pub children: Vec<Joint>,
     // transform from model space with default joint config to model space with animated joint config
     pub animated_transform_model_space: Matrix4f,    
     // inverse transform to bind_matrix
@@ -17,10 +17,9 @@ pub struct Joint {
 }
 
 impl Joint {
-    pub fn new(index: usize, parent_idx: usize, name: String, inverse_bind_matrix: Matrix4f) -> Self {
+    pub fn new(index: usize, name: String, inverse_bind_matrix: Matrix4f) -> Self {
         Self {
             index,
-            parent_idx,
             name,
             animated_transform_model_space: Matrix4f::identity(),
             inverse_bind_matrix_model_space: inverse_bind_matrix,
@@ -29,6 +28,7 @@ impl Joint {
     }
 }
 
+#[derive(Clone)]
 pub struct JointTransform {
     pub position: Vector3f,
     pub rotation: Quaternion,

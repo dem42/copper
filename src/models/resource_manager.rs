@@ -16,6 +16,11 @@ use super::{
     },
     terrain_generator::HeightsGenerator,
     texture_id::TextureId,
+    collada_load_helper::load_collada_animation,
+};
+use crate::animations::{
+    AnimatedModel,
+    Animation,
 };
 use crate::entities::Terrain;
 use crate::obj_converter::{
@@ -57,6 +62,10 @@ pub struct ResourceManager {
     gui_textures: HashMap<&'static str, TextureId>,
     font_types: HashMap<&'static str, FontType>,
     particle_textures: HashMap<ParticleTextureProps, ParticleTexture>,
+
+    // player model
+    player_model: Option<AnimatedModel>,
+    player_animation: Option<Animation>,
 }
 
 pub enum ResType {
@@ -579,6 +588,23 @@ impl ResourceManager {
         self.particle_textures.get(&texture_prop).expect("Must init_particle_textures before fetching").clone()
     }
 
+    
+    pub fn init_player(&mut self) {
+        if let None = self.player_model {
+            let (animated_model, animation) = load_collada_animation(&mut self.loader, "res/animations/player_model.dae", "res/textures/animations/player_diffuse.png");
+            self.player_model = Some(animated_model);
+            self.player_animation = Some(animation);
+        }
+    }
+
+    pub fn player_model(&self) -> AnimatedModel {
+        self.player_model.as_ref().expect("Must call init_player first").clone()
+    }
+
+    pub fn player_animation(&self) -> Animation {
+        self.player_animation.as_ref().expect("Must call init_player first").clone()
+    }
+
     pub fn init_debug_cuboid_model(&mut self) {
         if let None = self.debug_model {
             let indices_cuboid = [
@@ -594,22 +620,7 @@ impl ResourceManager {
                 6, 7, 3,
                 6, 2, 1,
                 6, 5, 1,
-            ];
-            // to draw a frustum which has a different order of corners
-            // let indices = [
-            //     2, 1, 6,
-            //     2, 7, 6,
-            //     2, 1, 0,
-            //     2, 3, 0,
-            //     2, 7, 5,
-            //     2, 3, 5,
-            //     4, 0, 3,
-            //     4, 5, 3,
-            //     4, 6, 7,
-            //     4, 5, 7,
-            //     4, 6, 1,
-            //     4, 0, 1,
-            // ];
+            ];    
             let model = self.loader.load_dynamic_model_with_indices_to_vao(8, &indices_cuboid, 3);
             self.debug_model = Some(model);
         }

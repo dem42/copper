@@ -22,7 +22,9 @@ use collada::{
     document::ColladaDocument,
 };
 use std::hash::{Hash, Hasher};
+use std::collections::HashMap;
 
+#[derive(Debug)]
 struct VertexData {
     n_vidx: usize,
     vidx: usize,
@@ -56,8 +58,6 @@ pub fn load_collada_animation(loader: &mut ModelLoader, path: &str, texture_path
 
     let animated_raw_model = raw_model_from_obj_set(&collada_doc, loader);
     let texture_id = loader.load_texture_internal(texture_path, TextureParams::default(), ExtraInfo::default());
-
-    let bind_data_set = collada_doc.get_bind_data_set().expect("Collada file must contain bind data");
     
     let root_joint = joints_from_collada(&collada_doc);
     let joint_cnt = root_joint.children.len() + 1;
@@ -73,26 +73,38 @@ pub fn load_collada_animation(loader: &mut ModelLoader, path: &str, texture_path
 }
 
 fn joints_from_collada(collada_doc: &ColladaDocument) -> Joint {
-    let mut joint_vec = Vec::new();
-     
+    let mut cnt = 0;
     let skeletons = collada_doc.get_skeletons().expect("Collada file must contain skeleton");
     assert!(skeletons.len() == 1, "We support only one skeleton in the collada file");
     let skeleton = &skeletons[0];
 
+    let mut adj_mat = HashMap::new();
+    
     let mut root_idx = 0;
-    let mut cnt = 0;
     for bone in skeleton.joints.iter() {
-        let joint = Joint::new(cnt, bone.parent_index as usize, bone.name.clone(), convert_to_row_mat(&bone.inverse_bind_pose));
+        let new_val = adj_mat.entry(bone.parent_index as usize).or_insert(Vec::new());
+        new_val.push(cnt);
         if bone.is_root() {
             root_idx = cnt;
-        }    
-        joint_vec.push(joint);
+        }
         cnt += 1;
     }
-    for joint in joint_vec.iter_mut() {
+    build_joints(root_idx, &skeleton.joints, &adj_mat)
+}
 
+fn build_joints(idx: usize, joints: &Vec<collada::Joint>, adj_mat: &HashMap<usize, Vec<usize>>) -> Joint {
+    let bone = &joints[idx];
+    let joint = Joint::new(idx, bone.name.clone(), convert_to_row_mat(&bone.inverse_bind_pose));
+
+    let mut children = Vec::new();
+
+    let adj_row_opt = adj_mat.get(&idx);
+    if let Some(adj_row) = adj_row_opt {
+        for ch_idx in adj_row {
+            children.push(build_joints(*ch_idx, joints, adj_mat));
+        }
     }
-    joint_vec.remove(root_idx)
+    joint
 }
 
 fn convert_to_row_mat(col_mjr_mat: &Matrix4<f32>) -> Matrix4f {
@@ -184,9 +196,44 @@ fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoade
                     }
                 }
             },
-            _ => panic!("Unsupported geometry"),
+            collada::PrimitiveElement::Polylist(polylist) => {
+                for shape in polylist.shapes.iter() {
+                    match shape {
+                        collada::Shape::Triangle(vt1, vt2, vt3) => {
+                            let vs = [vt1.0, vt2.0, vt3.0];
+                            let ts = [vt1.1.unwrap(), vt2.1.unwrap(), vt3.1.unwrap()];
+                            let ns = [vt1.2.unwrap(), vt2.2.unwrap(), vt3.2.unwrap()];
+                            for j in 0..3 {
+                                let mut nvert_data = VertexData {
+                                    n_vidx: vs[j],
+                                    vidx: vs[j],
+                                    tidx: ts[j],
+                                    nidx: ns[j],
+                                };                                
+                                if !vertex_data.contains(&nvert_data) {
+                                    if vertices_seen.contains(&nvert_data.vidx) {
+                                        nvert_data.n_vidx = nvidx_gen;
+                                        nvidx_gen += 1;
+                                        //println!("Duplicated vertex found -- this is a vertex where for this vertex position we have multiple different (v,t,n) tuples");
+                                    } else {
+                                        vertices_seen.insert(nvert_data.vidx);
+                                    } 
+                                    indices.push(nvert_data.n_vidx as u32);
+                                    vertex_data.insert(nvert_data);
+                                } else {
+                                    let vidx = vertex_data.get(&nvert_data).unwrap().n_vidx;
+                                    indices.push(vidx as u32);
+                                }
+                            }
+                        },
+                        _ => panic!("Unsupported shape in polylist"),
+                    }
+                }
+            },            
         }
     }
+    // looks like there's a lot of duplicate vertices
+    //println!("Duplicates found: {} vs num vertices: {}", nvidx_gen - obj_set.vertices.len(), obj_set.vertices.len());
 
     let mut positions = vec![0f32; nvidx_gen * 3];
     let mut texture_coords = vec![0f32; nvidx_gen * 2];;

@@ -68,7 +68,6 @@ impl Quaternion {
         // is |q| = w^2 + x^2 + y^2 + z^2 = 1 => 4*w^2 = 4 - 4*(x^2 + y^2 + z^2)
         // so we know the w (first component) is
         let r = orthogonal_mat.trace(); // since our orthogonal mat has 1 in [3][3] we don't need to add 1 to get 4 - 4(xx+yy+zz)
-        dbg!(r);
         let w = r.sqrt() / 2.0;
         // if we change the signs on the diagonal elements then we can build terms that have the following form
         // Qxx - Qyy - Qzz = -1 + 4xx

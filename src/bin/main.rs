@@ -19,7 +19,8 @@ use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    all_scene::*,
+    //all_scene::*,
+    test_scene::*,
     //environment_map_scene::*,
     load_screen::*,
 };
