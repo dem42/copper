@@ -54,20 +54,20 @@ impl Camera {
         let (s, c) = self.pitch.to_radians().sin_cos();
         let (camera_vertical_offset_to_player, camera_horizontal_offset_to_player) = (self.distance_to_player * s, self.distance_to_player * c);        
         
-        let (s, c) = (player.entity.rotation_deg.y + self.angle_around_player).to_radians().sin_cos();        
+        let (s, c) = (player.rotation_deg().y + self.angle_around_player).to_radians().sin_cos();        
         let (x_offset, z_offset) = (camera_horizontal_offset_to_player * s, camera_horizontal_offset_to_player * c);
 
-        let player_pos = &player.entity.position;
+        let player_pos = player.position();
         self.position = Vector3f::new(player_pos.x - x_offset, player_pos.y + camera_vertical_offset_to_player, player_pos.z - z_offset);                
-        self.looking_at = player.entity.position.clone();
+        self.looking_at = player.position().clone();
 
         let q1 = Quaternion::from_angle_axis(self.pitch, &Vector3f::POS_X_AXIS);
-        let q2 = Quaternion::from_angle_axis(player.entity.rotation_deg.y + self.angle_around_player, &Vector3f::POS_Y_AXIS);
+        let q2 = Quaternion::from_angle_axis(player.rotation_deg().y + self.angle_around_player, &Vector3f::POS_Y_AXIS);
         // combining like this is like an extrinsic rotation (q1 * q2 would be intrinsic)
         let rot = q2 * q1;
         self.up = Quaternion::rotate_vector(&Vector3f::POS_Y_AXIS, &rot);
 
-        self.yaw = (player.entity.rotation_deg.y + self.angle_around_player - 180.0) % 360.0; // remove the rotation to get player model to face right way
+        self.yaw = (player.rotation_deg().y + self.angle_around_player - 180.0) % 360.0; // remove the rotation to get player model to face right way
     }
 
     fn calc_zoom(&mut self, display: &Display) {

@@ -179,7 +179,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
     entities.push(Entity::new(resource_manager.model(ModelType::Lamp), ground.create_pos_on_terrain(120.0, -240.0), Vector3f::new(0.0, 0.0, 0.0), 1.0));
 
     // particle effect systems
-    let mut particle_spawn_point = player.entity.position.clone();
+    let mut particle_spawn_point = player.position().clone();
     particle_spawn_point.x += 10.0;
     particle_spawn_point.y += 10.0;
     let particle_system = AdvancedParticleSystem::new(resource_manager.particle_model(), resource_manager.particle_texture(ResourceManager::PARTICLE_ATLAS),
@@ -191,7 +191,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
             additive_blending: false,
         }
     );
-    let mut particle_spawn_point_fire = player.entity.position.clone();
+    let mut particle_spawn_point_fire = player.position().clone();
     particle_spawn_point_fire.x -= 50.0;
     particle_spawn_point_fire.z -= 30.0;
     let particle_system_fire = AdvancedParticleSystem::new(resource_manager.particle_model(), resource_manager.particle_texture(ResourceManager::FIRE_ATLAS),
@@ -203,7 +203,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
             additive_blending: true,
         }
     );
-    let mut particle_spawn_point_smoke = player.entity.position.clone();
+    let mut particle_spawn_point_smoke = player.position().clone();
     particle_spawn_point_smoke.z += 50.0;
     particle_spawn_point_smoke.y += 1.0;
     let particle_system_smoke = AdvancedParticleSystem::new(resource_manager.particle_model(), resource_manager.particle_texture(ResourceManager::SMOKE_ATLAS),

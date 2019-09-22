@@ -68,7 +68,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         Light::new_infinite(Vector3f::new(5000.0, 10000.0, -5000.0), Vector3f::new(0.8, 0.8, 0.8)), // sunlight, no attenuation
     };
 
-    let particle_spawn = player.entity.position.clone();    
+    let particle_spawn = player.position().clone();    
     let particle_system = AdvancedParticleSystem::new(resource_manager.simple_point_particle_model(), resource_manager.particle_texture(ResourceManager::SMOKE_ATLAS),
         ParticleSystemProps { 
             particles_per_sec: 50.0, speed: 15.0, scale: 6.5, 

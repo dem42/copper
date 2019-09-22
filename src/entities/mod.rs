@@ -8,6 +8,7 @@ pub mod skybox;
 pub mod entity_traits;
 pub mod water_tile;
 pub mod debug_entity;
+pub mod animated_entity;
 
 pub use self::entity::Entity;
 pub use self::debug_entity::DebugEntity;
@@ -18,3 +19,4 @@ pub use self::player::Player;
 pub use self::ground::Ground;
 pub use self::skybox::Skybox;
 pub use self::water_tile::WaterTile;
+pub use self::animated_entity::AnimatedEntity;

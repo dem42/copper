@@ -135,9 +135,11 @@ impl MasterRenderer {
             self.shadowmap_renderer.cleanup_textured_model();
         }
 
-        self.shadowmap_renderer.prepare_textured_model(&player.entity.model);
-        self.shadowmap_renderer.render_entity(&player.entity);
-        self.shadowmap_renderer.cleanup_textured_model();
+        if let player::PlayerEntityType::StaticModelEntity(entity) = &player.entity {
+            self.shadowmap_renderer.prepare_textured_model(&entity.model);
+            self.shadowmap_renderer.render_entity(entity);
+            self.shadowmap_renderer.cleanup_textured_model();
+        }
 
         self.shadowmap_renderer.render_terrain(terrains);
 
@@ -198,9 +200,16 @@ impl MasterRenderer {
         }        
         // render player
         if !player.is_invisible_immovable {
-            self.entity_renderer.prepare_textured_model(&player.entity.model, clip_plane); 
-            self.entity_renderer.render(&player.entity);
-            self.entity_renderer.unprepare_textured_model(&player.entity.model);
+            match &player.entity {
+                player::PlayerEntityType::StaticModelEntity(entity) => {
+                    self.entity_renderer.prepare_textured_model(&entity.model, clip_plane); 
+                    self.entity_renderer.render(entity);
+                    self.entity_renderer.unprepare_textured_model(&entity.model);
+                },
+                player::PlayerEntityType::AnimatedModelEntity(entity) => {
+
+                },
+            }
         }
 
         self.entity_renderer.stop_render();
