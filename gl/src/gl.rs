@@ -144,13 +144,11 @@ pub fn get_uniform_location(program_id: u32, unifrom_name: &str) -> Result<i32, 
     let unifrom_name_nul_term = CString::new(unifrom_name)?;
     let uniform_loc = unsafe {
          GetUniformLocation(program_id, unifrom_name_nul_term.as_ptr())
-    };
-    if uniform_loc == -1 {
-        Err(Error::new(ErrorKind::Other, format!("Couldn't find uniform: {}", unifrom_name)))
-    }
-    else {
-        Ok(uniform_loc)
-    }
+    };  
+    // The reason it is ok to return -1 is the following: from khronos.org docu on glUniform
+    // If location is equal to -1, the data passed in will be silently ignored
+    // and the specified uniform variable will not be changed. 
+    Ok(uniform_loc)
 }
 
 pub fn uniform1f(location_id: i32, value: f32) {

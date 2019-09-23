@@ -93,8 +93,8 @@ impl ShaderProgram {
         gl::bind_attrib_location(self.program_id, attribute, variable_name).expect("Variable name invalid");
     }
     
-    pub fn get_uniform_location(&self, uniform_name: &str) -> i32 {
-        gl::get_uniform_location(self.program_id, uniform_name).expect("Couldn't get uniform location")
+    pub fn get_uniform_location(&self, uniform_name: &str) -> i32 {        
+        gl::get_uniform_location(self.program_id, uniform_name).expect("Error getting uniform")
     }
 
     ////////////////////////////////////////////////////////////////////

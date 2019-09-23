@@ -1,4 +1,3 @@
-use crate::animations::AnimatedModel;
 use crate::gl;
 use crate::entities::{
     AnimatedEntity,
@@ -51,11 +50,13 @@ impl AnimatedEntityRenderer {
 
         gl::bind_vertex_array(animated_entity.model.raw_model.vao_id);
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
+        gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
+        gl::enable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
 
         // load transform matrix into shader        
         self.mvp_matrix.make_identity();
         // dont use rotation for the moment
-        let transform = Matrix4f::create_transform_matrix(&animated_entity.position, &Vector3f::ZERO, animated_entity.scale);
+        let transform = Matrix4f::create_transform_matrix(&animated_entity.position, &animated_entity.rotation_deg, animated_entity.scale);
         self.mvp_matrix.pre_multiply_in_place(&transform);
         self.mvp_matrix.pre_multiply_in_place(&self.view_matrix);        
         self.mvp_matrix.pre_multiply_in_place(&self.proj_matrix);
@@ -64,6 +65,8 @@ impl AnimatedEntityRenderer {
         gl::draw_elements(gl::TRIANGLES, animated_entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);
         
         gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
+        gl::disable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
+        gl::disable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
         gl::bind_vertex_array(0);
 
         self.shader.stop();

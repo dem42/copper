@@ -22,14 +22,17 @@ void main(void) {
     vec4 pos4 = vec4(in_position, 1.0);
     vec4 norm4 = vec4(in_normal, 0.0);
 
-    for (int i=0; i<MAX_WEIGHTS; i++) {
-        vec4 pos_c += joint_transforms[in_joint_indicies[i]] * pos4;
-        vec4 norm_c += joint_transforms[in_joint_indicies[i]] * norm4;
-        total_pos += pos4 * in_joint_weights[i];
-        total_normal += norm4 * in_joint_weights[i];
-    }
+    // for (int i=0; i<MAX_WEIGHTS; i++) {
+    //     vec4 pos_c += joint_transforms[in_joint_indicies[i]] * pos4;
+    //     vec4 norm_c += joint_transforms[in_joint_indicies[i]] * norm4;
+    //     total_pos += pos4 * in_joint_weights[i];
+    //     total_normal += norm4 * in_joint_weights[i];
+    // }
     
-    gl_Position = projection_view_model * total_pos;
-    pass_normal = total_normal.xyz;
+    // gl_Position = projection_view_model * total_pos;
+    // pass_normal = total_normal.xyz;
+
+    gl_Position = projection_view_model * pos4;
+    pass_normal = norm4.xyz;
     pass_tex_coords = in_tex_coords;
 }

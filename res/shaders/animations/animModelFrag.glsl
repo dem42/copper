@@ -1,7 +1,7 @@
 #version 400 core
 
 // diffuse, ambient factors
-const vec2 light_bias = (0.7, 0.6);
+const vec2 light_bias = vec2(0.7, 0.6);
 
 in vec2 pass_tex_coords;
 in vec3 pass_normal;

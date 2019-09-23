@@ -1,4 +1,3 @@
-use crate::animations::AnimatedModel;
 use crate::constants::GRAVITY;
 use crate::display::{
     Keyboard,
@@ -110,7 +109,7 @@ impl Player {
             self.position_mut().y = terrain_height_at_xz;
             self.is_in_air = false;
             self.upwards_speed = 0.0;
-        }        
+        }
     }
 
     fn check_inputs(&mut self, keyboard: &Keyboard) {

@@ -17,6 +17,7 @@ use super::{
     terrain_generator::HeightsGenerator,
     texture_id::TextureId,
     collada_load_helper::load_collada_animation,
+    CorrectionTransform,
 };
 use crate::animations::{
     AnimatedModel,
@@ -115,6 +116,7 @@ pub struct ModelProps {
     pub normal_map: Option<&'static str>,
     pub extra_info_map: Option<&'static str>,
 }
+
 impl ModelProps {
     fn get_texture_params(&self) -> TextureParams {        
         if self.uses_mipmaps {
@@ -594,9 +596,9 @@ impl ResourceManager {
     }
 
     
-    pub fn init_player(&mut self) {
+    pub fn init_player(&mut self, correction_transform: CorrectionTransform) {
         if let None = self.player_model {
-            let (animated_model, animation) = load_collada_animation(&mut self.loader, "res/animations/player_model.dae", "res/textures/animations/player_diffuse.png");
+            let (animated_model, animation) = load_collada_animation(&mut self.loader, "res/animations/player_model.dae", "res/textures/animations/player_diffuse.png", correction_transform);
             self.player_model = Some(animated_model);
             self.player_animation = Some(animation);
         }

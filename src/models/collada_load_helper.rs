@@ -1,9 +1,10 @@
-use super::loader::{
+use super::loader::{    
     ExtraInfo,
     ModelLoader,
     RawModel,
     TextureParams,
 };
+use super::correction_transform::CorrectionTransform;
 use crate::animations::{
     animation::{
         Animation,
@@ -50,13 +51,13 @@ impl Hash for VertexData {
     }
 }
 
-pub fn load_collada_animation(loader: &mut ModelLoader, path: &str, texture_path: &str) -> (AnimatedModel, Animation) {
+pub fn load_collada_animation(loader: &mut ModelLoader, path: &str, texture_path: &str, correction_transform: CorrectionTransform) -> (AnimatedModel, Animation) {
     let path = std::path::Path::new(path);
     let collada_doc = ColladaDocument::from_path(&path).expect(&format!("Failed to load collada document: {:?}", path));
 
     let animation = animations_from_collada(&collada_doc);
 
-    let animated_raw_model = raw_model_from_obj_set(&collada_doc, loader);
+    let animated_raw_model = raw_model_from_obj_set(&collada_doc, loader, correction_transform);
     let texture_id = loader.load_texture_internal(texture_path, TextureParams::default(), ExtraInfo::default());
     
     let root_joint = joints_from_collada(&collada_doc);
@@ -147,7 +148,7 @@ fn animations_from_collada(collada_doc: &ColladaDocument) -> Animation {
     animation
 }
 
-fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoader) -> RawModel {
+fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoader, correction_transform: CorrectionTransform) -> RawModel {
     let obj_set = collada_doc.get_obj_set().expect("Collada file must contain objects").objects;
     
     assert!(obj_set.len() == 1, "At the moment we support only having one animated object per collada file");
@@ -245,9 +246,10 @@ fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoade
 
     let mut idx = 0;
     for v_data in vertex_data {
-        positions[3*idx] = obj_set.vertices[v_data.vidx].x as f32;
-        positions[3*idx + 1] = obj_set.vertices[v_data.vidx].y as f32;
-        positions[3*idx + 2] = obj_set.vertices[v_data.vidx].z as f32;
+        let (x, y, z) = correction_transform.apply(obj_set.vertices[v_data.vidx].x as f32, obj_set.vertices[v_data.vidx].y as f32, obj_set.vertices[v_data.vidx].z as f32);
+        positions[3*idx] = x;
+        positions[3*idx + 1] = y;
+        positions[3*idx + 2] = z;
 
         for i in 0..4 {
             joint_weights[4*idx + i] = obj_set.joint_weights[v_data.vidx].weights[i] as f32;
@@ -255,11 +257,12 @@ fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoade
         }
         
         texture_coords[2*idx] = obj_set.tex_vertices[v_data.tidx].x as f32;
-        texture_coords[2*idx + 1] = obj_set.tex_vertices[v_data.tidx].y as f32;
+        texture_coords[2*idx + 1] = 1.0 - obj_set.tex_vertices[v_data.tidx].y as f32;
 
-        normals[3*idx] = obj_set.normals[v_data.nidx].x as f32;
-        normals[3*idx + 1] = obj_set.normals[v_data.nidx].y as f32;
-        normals[3*idx + 2] = obj_set.normals[v_data.nidx].z as f32;
+        let (x, y, z) = correction_transform.apply(obj_set.normals[v_data.nidx].x as f32, obj_set.normals[v_data.nidx].y as f32, obj_set.normals[v_data.nidx].z as f32);
+        normals[3*idx] = x;
+        normals[3*idx + 1] = y;
+        normals[3*idx + 2] = z;
         idx += 1;
     }
 
