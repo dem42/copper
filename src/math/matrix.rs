@@ -8,7 +8,7 @@ use std::f32;
 use super::super::entities::Camera;
 
 // Row major matrix
-#[derive(Debug, Clone)]
+#[derive(Clone, Default, Debug)]
 pub struct Matrix4f {
     data: [[f32; 4]; 4],
 }
@@ -37,6 +37,14 @@ impl Matrix4f {
         }
         Matrix4f {
             data,
+        }
+    }
+
+    pub fn fill_from(&mut self, o: &Matrix4f) {
+        for i in 0..4 {
+            for j in 0..4 {
+                self.data[i][j] = o.data[i][j];
+            }
         }
     }
 

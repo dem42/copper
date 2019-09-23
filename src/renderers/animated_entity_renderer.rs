@@ -1,3 +1,4 @@
+use crate::animations::joint::AccumulatedJointTransforms;
 use crate::gl;
 use crate::entities::{
     AnimatedEntity,
@@ -17,6 +18,7 @@ pub struct AnimatedEntityRenderer {
     mvp_matrix: Matrix4f,
     proj_matrix: Matrix4f,
     view_matrix: Matrix4f,
+    accumulator: AccumulatedJointTransforms,
 }
 
 impl AnimatedEntityRenderer {
@@ -32,6 +34,7 @@ impl AnimatedEntityRenderer {
             mvp_matrix,
             proj_matrix,
             view_matrix,
+            accumulator: AccumulatedJointTransforms::new(),
         }
     }
     
@@ -52,6 +55,8 @@ impl AnimatedEntityRenderer {
         gl::enable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
         gl::enable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
+        gl::enable_vertex_attrib_array(RawModel::JOINT_IDX_ATTRIB);
+        gl::enable_vertex_attrib_array(RawModel::JOINT_WEIGHT_ATTRIB);
 
         // load transform matrix into shader        
         self.mvp_matrix.make_identity();
@@ -62,11 +67,16 @@ impl AnimatedEntityRenderer {
         self.mvp_matrix.pre_multiply_in_place(&self.proj_matrix);
         self.shader.load_mvp_matrix(&self.mvp_matrix);
 
+        animated_entity.model.root_joint.collect_transforms(&mut self.accumulator);
+        self.shader.load_joint_transforms(&self.accumulator);
+
         gl::draw_elements(gl::TRIANGLES, animated_entity.model.raw_model.vertex_count, gl::UNSIGNED_INT);
         
         gl::disable_vertex_attrib_array(RawModel::POS_ATTRIB);
         gl::disable_vertex_attrib_array(RawModel::TEX_COORD_ATTRIB);
         gl::disable_vertex_attrib_array(RawModel::NORMAL_ATTRIB);
+        gl::disable_vertex_attrib_array(RawModel::JOINT_IDX_ATTRIB);
+        gl::disable_vertex_attrib_array(RawModel::JOINT_WEIGHT_ATTRIB);
         gl::bind_vertex_array(0);
 
         self.shader.stop();

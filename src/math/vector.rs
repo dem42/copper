@@ -201,6 +201,14 @@ impl Vector3f {
         let cross = v.cross_prod(u);
         cross.length_squared().abs() < 1e-8
     }
+
+    pub fn lerp(v1: &Vector3f, v2: &Vector3f, t: f32) -> Vector3f {
+        Vector3f::new(
+            t*v1.x + (1.0 - t)*v2.x,
+            t*v1.y + (1.0 - t)*v2.y,
+            t*v1.z + (1.0 - t)*v2.z,
+        )
+    }
 }
 
 impl Neg for Vector3f {

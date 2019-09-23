@@ -51,7 +51,7 @@ impl Hash for VertexData {
     }
 }
 
-pub fn load_collada_animation(loader: &mut ModelLoader, path: &str, texture_path: &str, correction_transform: CorrectionTransform) -> (AnimatedModel, Animation) {
+pub fn load_collada_animated_model(loader: &mut ModelLoader, path: &str, texture_path: &str, correction_transform: CorrectionTransform) -> AnimatedModel {
     let path = std::path::Path::new(path);
     let collada_doc = ColladaDocument::from_path(&path).expect(&format!("Failed to load collada document: {:?}", path));
 
@@ -62,15 +62,14 @@ pub fn load_collada_animation(loader: &mut ModelLoader, path: &str, texture_path
     
     let root_joint = joints_from_collada(&collada_doc);
     let joint_cnt = root_joint.children.len() + 1;
-    (
-        AnimatedModel {
-            raw_model: animated_raw_model,
-            tex_id: texture_id,
-            root_joint,
-            joint_cnt,
-        },
-        animation
-    )
+    
+    AnimatedModel {
+        raw_model: animated_raw_model,
+        tex_id: texture_id,
+        root_joint,
+        joint_cnt,
+        animation,
+    }    
 }
 
 fn joints_from_collada(collada_doc: &ColladaDocument) -> Joint {
@@ -139,6 +138,7 @@ fn animations_from_collada(collada_doc: &ColladaDocument) -> Animation {
         }
         animation.joint_animations.push(
             JointAnimation {
+                current_animation_time: 0.0,
                 name: a.target,
                 length_seconds,
                 keyframes,

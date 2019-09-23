@@ -16,7 +16,7 @@ use super::{
     },
     terrain_generator::HeightsGenerator,
     texture_id::TextureId,
-    collada_load_helper::load_collada_animation,
+    collada_load_helper::load_collada_animated_model,
     CorrectionTransform,
 };
 use crate::animations::{
@@ -64,9 +64,8 @@ pub struct ResourceManager {
     font_types: HashMap<&'static str, FontType>,
     particle_textures: HashMap<ParticleTextureProps, ParticleTexture>,
 
-    // player model
+    // animated player model
     player_model: Option<AnimatedModel>,
-    player_animation: Option<Animation>,
 }
 
 pub enum ResType {
@@ -598,18 +597,13 @@ impl ResourceManager {
     
     pub fn init_player(&mut self, correction_transform: CorrectionTransform) {
         if let None = self.player_model {
-            let (animated_model, animation) = load_collada_animation(&mut self.loader, "res/animations/player_model.dae", "res/textures/animations/player_diffuse.png", correction_transform);
-            self.player_model = Some(animated_model);
-            self.player_animation = Some(animation);
+            let animated_model = load_collada_animated_model(&mut self.loader, "res/animations/player_model.dae", "res/textures/animations/player_diffuse.png", correction_transform);
+            self.player_model = Some(animated_model)
         }
     }
 
     pub fn player_model(&self) -> AnimatedModel {
         self.player_model.as_ref().expect("Must call init_player first").clone()
-    }
-
-    pub fn player_animation(&self) -> Animation {
-        self.player_animation.as_ref().expect("Must call init_player first").clone()
     }
 
     pub fn init_debug_cuboid_model(&mut self) {

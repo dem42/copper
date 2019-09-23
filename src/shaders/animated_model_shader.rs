@@ -1,11 +1,11 @@
 use super::shader_program::ShaderProgram;
+use crate::animations::joint::AccumulatedJointTransforms;
 use crate::models::RawModel;
 use crate::math::{
     Matrix4f,
     Vector3f,
 };
-
-const MAX_JOINTS: usize = 50;
+use crate::constants::MAX_JOINTS;
 
 pub struct AnimatedModelShader {
     shader_program: ShaderProgram,
@@ -63,10 +63,11 @@ impl AnimatedModelShader {
         self.shader_program.stop();
     }
 
-    pub fn load_joint_transforms(&mut self, joint_transforms: &Vec<&Matrix4f>) {
-        let joint_cnt = usize::min(joint_transforms.len(), MAX_JOINTS);
-        for i in 0..joint_cnt {
-            ShaderProgram::load_matrix(self.location_joint_transforms[i], joint_transforms[i]);
+    pub fn load_joint_transforms(&mut self, joint_transforms: &AccumulatedJointTransforms) {
+        let mut cnt = 0;
+        for trans in joint_transforms.transforms.iter() {
+            ShaderProgram::load_matrix(self.location_joint_transforms[cnt], trans);
+            cnt += 1;
         }
     }
 

@@ -3,6 +3,7 @@ use crate::models::{
     TextureId,
 };
 
+use super::animation::Animation;
 use super::joint::Joint;
 
 #[derive(Clone)]
@@ -14,4 +15,6 @@ pub struct AnimatedModel {
     // skeleton
     pub root_joint: Joint,
     pub joint_cnt: usize,
+
+    pub animation: Animation,
 }

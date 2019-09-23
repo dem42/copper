@@ -1,5 +1,10 @@
 extern crate copper;
 
+use copper::animations::animator::Animator;
+use copper::entities::player::{
+    Player,
+    PlayerEntityType,
+};
 use copper::display::{
     Display,
     framebuffers::FboMap,
@@ -63,11 +68,15 @@ fn main() {
     
     let mut mouse_picker = MousePicker::new();
 
+    let animator = Animator::default();
+
     // particle effects master
     let mut particle_master = ParticleMaster::new(&display.projection_matrix);
     let mut post_processing = PostProcessing::new(scene.quad_model.clone(), &display);
         
     while !display.is_close_requested() {
+
+        update_animations(&animator, &mut scene.player, &display);
 
         scene.camera.move_camera(&display, &scene.player);
         
@@ -91,6 +100,12 @@ fn main() {
         gui_renderer.render(&scene.guis, &scene.quad_model.raw_model, &scene.texts);
 
         display.update_display();
+    }
+}
+
+fn update_animations(animator: &Animator, player: &mut Player, display: &Display) {
+    if let PlayerEntityType::AnimatedModelEntity(animated_model) = &mut player.entity {
+        animator.update_animation(animated_model, display);
     }
 }
 
