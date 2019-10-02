@@ -330,10 +330,10 @@ mod tests {
         let r = q.as_rot_mat();
         let q_n = Quaternion::from_rot_mat(&r);        
         
-        assert_f32_eq!(q.a, q_n.a, test_constants::EPS_MEDIUM, "Mismatch on: a");
-        assert_f32_eq!(q.v[0], q_n.v[0], test_constants::EPS_MEDIUM, "Mismatch on: x");
-        assert_f32_eq!(q.v[1], q_n.v[1], test_constants::EPS_MEDIUM, "Mismatch on: y");
-        assert_f32_eq!(q.v[2], q_n.v[2], test_constants::EPS_MEDIUM, "Mismatch on: z");
+        assert_f32_eq!(q.a, q_n.a, test_constants::EPS_BAD, "Mismatch on: a");
+        assert_f32_eq!(q.v[0], q_n.v[0], test_constants::EPS_BAD, "Mismatch on: x");
+        assert_f32_eq!(q.v[1], q_n.v[1], test_constants::EPS_BAD, "Mismatch on: y");
+        assert_f32_eq!(q.v[2], q_n.v[2], test_constants::EPS_BAD, "Mismatch on: z");
     }
 
     #[test]
