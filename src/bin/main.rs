@@ -24,8 +24,8 @@ use copper::post_processing::post_processing::PostProcessing;
 use copper::mouse_picker::MousePicker;
 use copper::scenes::{
     scene::Scene,
-    //all_scene::*,
-    test_scene::*,
+    all_scene::*,
+    //test_scene::*,
     //environment_map_scene::*,
     load_screen::*,
 };
@@ -104,7 +104,15 @@ fn main() {
 }
 
 fn update_animations(animator: &Animator, player: &mut Player, display: &Display) {
+    let moving = player.is_moving();
     if let PlayerEntityType::AnimatedModelEntity(animated_model) = &mut player.entity {
+        
+        if moving {
+            animated_model.model.animation.play();
+        } else {
+            animated_model.model.animation.stop();
+        }
+
         animator.update_animation(animated_model, display);
     }
 }

@@ -67,7 +67,7 @@ impl MasterRenderer {
         let skybox_renderer = SkyboxRenderer::new(projection_matrix);
         let water_renderer = WaterRenderer::new(projection_matrix, &MasterRenderer::SKY_COLOR);
         let shadowmap_renderer = ShadowMapRenderer::new(aspect_ratio);
-        let debug_renderer = DebugRenderer::new(projection_matrix);
+        let _debug_renderer = DebugRenderer::new(projection_matrix);
         let env_map_renderer = EnvMapRenderer::new(projection_matrix);
         let animated_entity_renderer = AnimatedEntityRenderer::new(projection_matrix);
 

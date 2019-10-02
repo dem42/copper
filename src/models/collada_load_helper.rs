@@ -122,10 +122,7 @@ fn convert_to_row_mat(col_mjr_mat: &Matrix4<f32>, correction_transform: &Correct
 fn animations_from_collada(collada_doc: &ColladaDocument) -> Animation {
     let animations = collada_doc.get_animations().expect("Collada file must contain animations");
 
-    let mut animation = Animation {
-        length_seconds: 0.0,
-        joint_animations: Vec::new(),
-    };
+    let mut animation = Animation::default();
     for a in animations {
         let mut keyframes = Vec::new();
         let mut length_seconds = 0.0;

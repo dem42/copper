@@ -112,6 +112,10 @@ impl Player {
         }
     }
 
+    pub fn is_moving(&self) -> bool {
+        self.current_speed > 0.0 || self.is_in_air
+    }
+
     fn check_inputs(&mut self, keyboard: &Keyboard) {
         if keyboard.is_pressed(Key::W) {
             self.current_speed = Player::RUN_SPEED;

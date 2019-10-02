@@ -10,6 +10,10 @@ pub struct Animator;
 impl Animator {
     pub fn update_animation(&self, animated_entity: &mut AnimatedEntity, display: &Display) {
         let animation = &mut animated_entity.model.animation;
+        if !animation.is_playing() {
+            return;
+        }
+
         let mut joint_poses = HashMap::new();
         let frame_time = display.frame_time_sec;
         for joint_animation in animation.joint_animations.iter_mut() {

@@ -1,9 +1,39 @@
 use super::keyframe::Keyframe;
 
-#[derive(Clone)]
+#[derive(PartialEq, Hash, Clone)]
+pub enum AnimationState {
+    Playing,
+    Stopped,
+}
+
+impl Default for AnimationState {
+    fn default() -> AnimationState {
+        AnimationState::Stopped
+    }
+}
+
+#[derive(Clone, Default)]
 pub struct Animation {
     pub length_seconds: f32,
     pub joint_animations: Vec<JointAnimation>,
+    animation_state: AnimationState,
+}
+
+impl Animation {
+    pub fn play(&mut self) {
+        self.animation_state = AnimationState::Playing;
+    }
+
+    pub fn stop(&mut self) {
+        self.animation_state = AnimationState::Stopped;
+        for anim in self.joint_animations.iter_mut() {
+            anim.current_animation_time = 0.0;
+        }
+    }
+
+    pub fn is_playing(&self) -> bool {
+        self.animation_state == AnimationState::Playing
+    }
 }
 
 #[derive(Clone, Debug)]

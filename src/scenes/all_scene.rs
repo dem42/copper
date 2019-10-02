@@ -6,6 +6,7 @@ use rand::{Rng, SeedableRng};
 
 use crate::display::framebuffers::FboMap;
 use crate::entities::{
+    AnimatedEntity,
     Entity,
     Camera,
     Light,
@@ -20,11 +21,12 @@ use crate::guis::{
     GuiPanel,
     TextMaterial,
 };
-use crate::math::{Vector3f, Vector2f};
+use crate::math::{Matrix4f, Vector3f, Vector2f};
 use crate::models::{
     ResourceManager,
     Models,
     ModelType,
+    CorrectionTransform,
 };
 use crate::particles::{
     AdvancedParticleSystem,
@@ -38,13 +40,15 @@ pub fn init_scene_resources(resource_manager: &mut ResourceManager) {
     //resource_manager.init(&Models::FLOWERS);
     resource_manager.init(&Models::TOON_ROCKS);
     resource_manager.init(&Models::BOBBLE_TREE);
-    resource_manager.init(&Models::LOW_POLY_TREE);
-    resource_manager.init(&Models::PLAYER);
+    resource_manager.init(&Models::LOW_POLY_TREE);    
     resource_manager.init(&Models::CRATE);
     resource_manager.init(&Models::LAMP);
     resource_manager.init(&Models::BARREL);
     resource_manager.init(&Models::BOULDER);
     resource_manager.init(&Models::LANTERN);
+
+    resource_manager.init(&Models::PLAYER);
+    resource_manager.init_player(CorrectionTransform::create_coord_correction(Matrix4f::get_rotation(-90.0, 0.0, 0.0)));
 
     resource_manager.init_terrain_textures();
     resource_manager.init_terrain_model();
@@ -109,8 +113,13 @@ pub fn create_scene(resource_manager: &mut ResourceManager, _framebuffers: &FboM
         entities.push(Entity::new(resource_manager.model(ModelType::ToonRocks), r_pos, r_rot, 1.0));
     }    
 
-    let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);    
-    let player = Player::new(player_entity);
+    ///////////// animated player but without all the fancy shaders ///////////////////////
+    let player_entity = AnimatedEntity::new(resource_manager.player_model(), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 0.0, 0.0), 0.3);
+    let player = Player::new_animated(player_entity);
+
+    //////////// non animated player with all shaders ///////////////////////////
+    // let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);    
+    // let player = Player::new(player_entity);
 
     let mut box_pos = ground.create_pos_on_terrain(0.0, -150.0);
     box_pos.y += 4.0;

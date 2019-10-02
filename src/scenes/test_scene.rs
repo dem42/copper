@@ -2,8 +2,7 @@ use super::scene::Scene;
 
 use crate::display::framebuffers::FboMap;
 use crate::entities::{
-    AnimatedEntity,
-    Entity,
+    AnimatedEntity,    
     Camera,
     Light,
     Player,
@@ -17,8 +16,7 @@ use crate::math::{Matrix4f, Vector3f, Vector2f};
 use crate::models::{
     CorrectionTransform,
     ResourceManager,
-    Models,
-    ModelType,
+    Models,    
     TextureId,
 };
 
@@ -53,7 +51,7 @@ pub fn create_scene(resource_manager: &mut ResourceManager, framebuffers: &FboMa
     //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(150.0, -250.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     //let player_entity = Entity::new(resource_manager.model(ModelType::Player), ground.create_pos_on_terrain(0.0, 0.0), Vector3f::new(0.0, 180.0, 0.0), 0.3);
     let player_entity = AnimatedEntity::new(resource_manager.player_model(), ground.create_pos_on_terrain(50.0, 50.0), Vector3f::new(0.0, 0.0, 0.0), 0.3);
-    let mut player = Player::new_animated(player_entity);
+    let player = Player::new_animated(player_entity);
     //player.is_invisible_immovable = true;
 
     

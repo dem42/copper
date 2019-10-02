@@ -7,7 +7,6 @@ use crate::entities::{
 use crate::shaders::AnimatedModelShader;
 use crate::math::{
     Matrix4f,
-    Vector3f,
 };
 use crate::models::{    
     RawModel,    
