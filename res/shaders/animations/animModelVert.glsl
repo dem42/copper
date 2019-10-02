@@ -30,8 +30,5 @@ void main(void) {
     }    
     gl_Position = projection_view_model * total_pos;
     pass_normal = total_normal.xyz;
-
-    // gl_Position = projection_view_model * pos4;
-    // pass_normal = norm4.xyz;
     pass_tex_coords = in_tex_coords;
 }

@@ -13,19 +13,15 @@ impl Animator {
         let mut joint_poses = HashMap::new();
         let frame_time = display.frame_time_sec;
         for joint_animation in animation.joint_animations.iter_mut() {
-            joint_animation.current_animation_time += frame_time;
+            joint_animation.current_animation_time = (joint_animation.current_animation_time + frame_time) % joint_animation.length_seconds;
             let progress = joint_animation.get_keyframe_progress();            
             match progress {
-                AnimationProgress::InProgress(k1, k2) => {
+                AnimationProgress::InProgress(k1, k2) | AnimationProgress::LastFrame(k1, k2) => {                    
                     let dt = Self::calculate_progress_time(joint_animation.current_animation_time, k1.timestamp, k2.timestamp);
                     let pose = JointTransform::interpolate(&k1.pose, &k2.pose, dt);
-                    joint_poses.insert(joint_animation.name.clone(), pose);
+                    joint_poses.insert(joint_animation.joint_name.clone(), pose);                    
                 },
                 AnimationProgress::NotStarted => {},
-                AnimationProgress::Finished => {
-                    // loop animation
-                    joint_animation.current_animation_time = joint_animation.current_animation_time % joint_animation.length_seconds;
-                },
             }
         }
 

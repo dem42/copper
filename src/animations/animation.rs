@@ -6,9 +6,10 @@ pub struct Animation {
     pub joint_animations: Vec<JointAnimation>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct JointAnimation {
     pub name: String,
+    pub joint_name: String,
     pub current_animation_time: f32,
     pub length_seconds: f32,
     pub keyframes: Vec<Keyframe>,
@@ -17,7 +18,7 @@ pub struct JointAnimation {
 pub enum AnimationProgress<'a> {
     NotStarted,
     InProgress(&'a Keyframe, &'a Keyframe),
-    Finished,
+    LastFrame(&'a Keyframe, &'a Keyframe),
 }
 
 impl JointAnimation {
@@ -31,6 +32,14 @@ impl JointAnimation {
                 }
             }
         }
-        AnimationProgress::Finished
+        AnimationProgress::LastFrame(&self.keyframes[self.keyframes.len()-1], &self.keyframes[0])
+    }
+
+    pub fn get_joint_name(joint_transform_name: &str) -> Option<String> {
+        let byte_offset_suffix = joint_transform_name.find("/transform");
+        byte_offset_suffix.map(|byte_offset| {
+            let (prefix, _) = joint_transform_name.split_at(byte_offset);
+            String::from(prefix)
+        })
     }
 }

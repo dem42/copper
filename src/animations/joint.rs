@@ -4,6 +4,7 @@ use crate::math::{
     Vector3f,
     Quaternion,
 };
+use crate::models::CorrectionTransform;
 use std::collections::HashMap;
 use collada::Matrix4;
 
@@ -12,6 +13,7 @@ pub struct Joint {
     pub index: usize,
     pub name: String,
     pub children: Vec<Joint>,
+    pub root_correction_transform: Option<CorrectionTransform>,
     // transform from model space with default joint config to model space with animated joint config
     pub animated_transform_model_space: Matrix4f,    
     // inverse transform to bind_matrix
@@ -19,24 +21,29 @@ pub struct Joint {
 }
 
 impl Joint {
-    pub fn new(index: usize, name: String, inverse_bind_matrix: Matrix4f) -> Self {
+    pub fn new(index: usize, name: String, inverse_bind_matrix: Matrix4f, root_correction_transform: Option<CorrectionTransform>) -> Self {
         Self {
             index,
             name,
             animated_transform_model_space: Matrix4f::identity(),
             inverse_bind_matrix_model_space: inverse_bind_matrix,
             children: Vec::new(),
+            root_correction_transform,
         }
     }
 
     pub fn apply_new_joint_poses(&mut self, cumulative_transform: &Matrix4f, poses: &HashMap<String, JointTransform>) {
         let jt = poses.get(&self.name);
-        let joint_transform_os = if let Some(transform) = jt {
+        let mut joint_transform_os = if let Some(transform) = jt {
             transform.as_matrix()
         } else {
             Matrix4f::identity()
         };
-        let joint_transform_os = joint_transform_os * cumulative_transform;
+        if let Some(corr_transform) = &self.root_correction_transform {
+            corr_transform.apply_to_bind_transform(&mut joint_transform_os);
+        }
+        // TODO: why this order??? column major?
+        let joint_transform_os = cumulative_transform * joint_transform_os;        
         self.animated_transform_model_space = &joint_transform_os * &self.inverse_bind_matrix_model_space;
         for ch_joint in self.children.iter_mut() {
             ch_joint.apply_new_joint_poses(&joint_transform_os, poses);
@@ -63,7 +70,7 @@ impl AccumulatedJointTransforms {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct JointTransform {
     // the position and rotation are with respect to the PARENT joint reference frame
     pub position: Vector3f,
@@ -71,15 +78,22 @@ pub struct JointTransform {
 }
 
 impl JointTransform {
+    pub fn identity() -> Self {
+        Self {
+            position: Vector3f::zero(),
+            rotation: Quaternion::identity(),
+        }
+    }
+
     pub fn create_from_collada(column_mjr_mat: &Matrix4<f32>) -> Self {
         let mut row_major_rot_mat = Matrix4f::identity();
         let mut position = Vector3f::zero();
         for i in 0..3 {
-            position[i] = column_mjr_mat[3][i];
+            position[i] = column_mjr_mat[i][3];
             for j in 0..3 {
-                row_major_rot_mat[i][j] = column_mjr_mat[j][i];
+                row_major_rot_mat[i][j] = column_mjr_mat[i][j];
             }
-        }   
+        }
         let rotation = Quaternion::from_rot_mat(&row_major_rot_mat);     
         JointTransform {
             position,

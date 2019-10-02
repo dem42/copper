@@ -17,7 +17,9 @@ use crate::animations::{
         JointTransform,
     },
 };
-use crate::math::Matrix4f;
+use crate::math::{
+    Matrix4f,
+};
 use collada::{
     Matrix4,
     document::ColladaDocument,
@@ -57,10 +59,10 @@ pub fn load_collada_animated_model(loader: &mut ModelLoader, path: &str, texture
 
     let animation = animations_from_collada(&collada_doc);
 
-    let animated_raw_model = raw_model_from_obj_set(&collada_doc, loader, correction_transform);
+    let animated_raw_model = raw_model_from_obj_set(&collada_doc, loader, &correction_transform);
     let texture_id = loader.load_texture_internal(texture_path, TextureParams::default(), ExtraInfo::default());
     
-    let root_joint = joints_from_collada(&collada_doc);
+    let root_joint = joints_from_collada(&collada_doc, &correction_transform);
     let joint_cnt = root_joint.children.len() + 1;
     
     AnimatedModel {
@@ -72,7 +74,7 @@ pub fn load_collada_animated_model(loader: &mut ModelLoader, path: &str, texture
     }    
 }
 
-fn joints_from_collada(collada_doc: &ColladaDocument) -> Joint {
+fn joints_from_collada(collada_doc: &ColladaDocument, correction_transform: &CorrectionTransform) -> Joint {
     let mut cnt = 0;
     let skeletons = collada_doc.get_skeletons().expect("Collada file must contain skeleton");
     assert!(skeletons.len() == 1, "We support only one skeleton in the collada file");
@@ -89,31 +91,31 @@ fn joints_from_collada(collada_doc: &ColladaDocument) -> Joint {
         }
         cnt += 1;
     }
-    build_joints(root_idx, &skeleton.joints, &adj_mat)
+    build_joints(root_idx, &skeleton.joints, &adj_mat, correction_transform)
 }
 
-fn build_joints(idx: usize, joints: &Vec<collada::Joint>, adj_mat: &HashMap<usize, Vec<usize>>) -> Joint {
+fn build_joints(idx: usize, joints: &Vec<collada::Joint>, adj_mat: &HashMap<usize, Vec<usize>>, correction_transform: &CorrectionTransform) -> Joint {
     let bone = &joints[idx];
-    let joint = Joint::new(idx, bone.name.clone(), convert_to_row_mat(&bone.inverse_bind_pose));
-
-    let mut children = Vec::new();
+    let optional_root_coorection = if bone.is_root() { Some(correction_transform.clone()) } else { None };
+    let mut joint = Joint::new(idx, bone.name.clone(), convert_to_row_mat(&bone.inverse_bind_pose, correction_transform), optional_root_coorection);
 
     let adj_row_opt = adj_mat.get(&idx);
     if let Some(adj_row) = adj_row_opt {
         for ch_idx in adj_row {
-            children.push(build_joints(*ch_idx, joints, adj_mat));
+            joint.children.push(build_joints(*ch_idx, joints, adj_mat, correction_transform));
         }
     }
     joint
 }
 
-fn convert_to_row_mat(col_mjr_mat: &Matrix4<f32>) -> Matrix4f {
+fn convert_to_row_mat(col_mjr_mat: &Matrix4<f32>, correction_transform: &CorrectionTransform) -> Matrix4f {        
     let mut res = Matrix4f::zeros();
     for i in 0..4 {
         for j in 0..4 {
-            res[i][j] = col_mjr_mat[j][i];
+            res[i][j] = col_mjr_mat[i][j];
         }
     }
+    correction_transform.apply_to_inverse_bind_transform(&mut res);
     res
 }
 
@@ -128,17 +130,19 @@ fn animations_from_collada(collada_doc: &ColladaDocument) -> Animation {
         let mut keyframes = Vec::new();
         let mut length_seconds = 0.0;
         for i in 0..a.sample_poses.len() {
-            length_seconds += a.sample_times[i];
+            // we assume keyframes are sorted by time
+            length_seconds = a.sample_times[i];
             keyframes.push(
                 Keyframe {
                     timestamp: a.sample_times[i],
-                    pose: JointTransform::create_from_collada(&a.sample_poses[i]), 
+                    pose: JointTransform::create_from_collada(&a.sample_poses[i]),
                 }
             );
         }
         animation.joint_animations.push(
             JointAnimation {
                 current_animation_time: 0.0,
+                joint_name: JointAnimation::get_joint_name(&a.target).expect("The joint animation transform must have the format 'JointName/transform'"),
                 name: a.target,
                 length_seconds,
                 keyframes,
@@ -148,7 +152,7 @@ fn animations_from_collada(collada_doc: &ColladaDocument) -> Animation {
     animation
 }
 
-fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoader, correction_transform: CorrectionTransform) -> RawModel {
+fn raw_model_from_obj_set(collada_doc: &ColladaDocument, loader: &mut ModelLoader, correction_transform: &CorrectionTransform) -> RawModel {
     let obj_set = collada_doc.get_obj_set().expect("Collada file must contain objects").objects;
     
     assert!(obj_set.len() == 1, "At the moment we support only having one animated object per collada file");

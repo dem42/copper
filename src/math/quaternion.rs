@@ -74,11 +74,13 @@ impl Quaternion {
         // or similar for other sign combinations -> from this we can compute the x
         // but since sqrt has two possible solutions (pos and neg) we need to find the sign from the a combinations of entries that
         // only depend on x and w (since we took positive w)
-        let x = Self::copysign((1.0 + orthogonal_mat[0][0] - orthogonal_mat[1][1] - orthogonal_mat[2][2]).sqrt() / 2.0, orthogonal_mat[2][1] - orthogonal_mat[1][2]);
-        let y = Self::copysign((1.0 - orthogonal_mat[0][0] + orthogonal_mat[1][1] - orthogonal_mat[2][2]).sqrt() / 2.0, orthogonal_mat[0][2] - orthogonal_mat[2][0]);
-        let z = Self::copysign((1.0 - orthogonal_mat[0][0] - orthogonal_mat[1][1] + orthogonal_mat[2][2]).sqrt() / 2.0, orthogonal_mat[1][0] - orthogonal_mat[0][1]);
+        let x = Self::copysign((1.0 + orthogonal_mat[0][0] - orthogonal_mat[1][1] - orthogonal_mat[2][2] + 1e-6).sqrt() / 2.0, orthogonal_mat[2][1] - orthogonal_mat[1][2]);
+        let y = Self::copysign((1.0 - orthogonal_mat[0][0] + orthogonal_mat[1][1] - orthogonal_mat[2][2] + 1e-6).sqrt() / 2.0, orthogonal_mat[0][2] - orthogonal_mat[2][0]);
+        let z = Self::copysign((1.0 - orthogonal_mat[0][0] - orthogonal_mat[1][1] + orthogonal_mat[2][2] + 1e-6).sqrt() / 2.0, orthogonal_mat[1][0] - orthogonal_mat[0][1]);
 
-        Quaternion::new(w, x, y, z)
+        let mut res = Quaternion::new(w, x, y, z);
+        res.normalize();
+        res
     }
 
     fn copysign(x: f32, y: f32) -> f32 {
@@ -166,7 +168,9 @@ impl Quaternion {
         let s0 = cos_theta - real_part * sin_theta / sin_theta_0;
         let s1 = sin_theta / sin_theta_0; 
                 
-        (s0 * q1) + (s1 * q2)
+        let mut res = (s0 * q1) + (s1 * q2);
+        res.normalize();
+        res
     }
 }
 
@@ -330,6 +334,29 @@ mod tests {
         assert_f32_eq!(q.v[0], q_n.v[0], test_constants::EPS_MEDIUM, "Mismatch on: x");
         assert_f32_eq!(q.v[1], q_n.v[1], test_constants::EPS_MEDIUM, "Mismatch on: y");
         assert_f32_eq!(q.v[2], q_n.v[2], test_constants::EPS_MEDIUM, "Mismatch on: z");
+    }
+
+    #[test]
+    fn test_identity_as_mat() {
+        let q = Quaternion::identity();        
+        let mut mat = q.as_rot_mat();
+        let expected = Matrix4f::new([[1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0]]
+        );
+        for i in 0..4 {
+            for j in 0..4 {
+                assert_f32_eq!(expected[i][j], mat[i][j], test_constants::EPS_MEDIUM, &format!("Mismatch on: ({},{}).", i, j));
+            }
+        }
+
+        mat.translate(&Vector3f::ZERO);
+        for i in 0..4 {
+            for j in 0..4 {
+                assert_f32_eq!(expected[i][j], mat[i][j], test_constants::EPS_MEDIUM, &format!("Mismatch on: ({},{}).", i, j));
+            }
+        }
     }
 
     #[test]
