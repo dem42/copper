@@ -26,10 +26,10 @@ Features:
 
 ## Screenshots
 * Demo of shadows, point lights, particle effects, water
-![Shadows, particle effects & water](screenshot.png)
+![Shadows, particle effects & water](screenshot.PNG)
 
 * Demo of bloom effect, procedural terrain and water
-![Bloom effect & water](screenshot2.png)
+![Bloom effect & water](screenshot2.PNG)
 
 ## Setup
 Depends on gl_generator to generate opengl function bindings. For this we use the gl_generator's Global generator which will also provide the linking
