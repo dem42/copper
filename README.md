@@ -24,6 +24,13 @@ Features:
 - Texture atlases
 - Background thread for loading and decoding textures
 
+## Screenshots
+* Demo of shadows, point lights, particle effects, water
+![Shadows, particle effects & water](screenshot.png)
+
+* Demo of bloom effect, procedural terrain and water
+![Bloom effect & water](screenshot2.png)
+
 ## Setup
 Depends on gl_generator to generate opengl function bindings. For this we use the gl_generator's Global generator which will also provide the linking
 that you would otherwise need to provide either in your build.rs or somehwere in the code as:
